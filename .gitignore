@@ -1,0 +1,21 @@
+# Node / frontend
+node_modules/
+dist/
+.env
+
+# Backend
+*.env
+node_modules/
+
+# AI Service
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pt
+*.pth
+*.bin
+*.h5
+*.ckpt
+.vscode/
