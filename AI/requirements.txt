@@ -1,7 +1,8 @@
 fastapi
 uvicorn
-pydantic
 transformers
 torch
 sentence-transformers
 keybert
+requests
+pydantic
