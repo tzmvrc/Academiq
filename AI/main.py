@@ -1,10 +1,22 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.routers.ai_router import router as ai_router
 
 app = FastAPI()
 
-@app.get("/")
-async def root():
-    return {"message": "Academiq AI service running ✅"}
+# Allow backend (Express.js) to call this AI service
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # Later we will restrict this
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-#1 activate - venv\scripts\activate
-#2 run server - python -m uvicorn main:app --reload --port 8000
+# Health check route
+@app.get("/health")
+async def health():
+    return {"status": "AI service running"}
+
+# Register Routers
+app.include_router(ai_router, prefix="/ai")
