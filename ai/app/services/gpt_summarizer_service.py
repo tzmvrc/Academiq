@@ -1,11 +1,5 @@
-import os
 import re
-from dotenv import load_dotenv
-from openai import OpenAI
-
-load_dotenv()
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+from app.models.gpt import client
 
 def summarize_content(content):
     if not content or (isinstance(content, list) and len(content) == 0):
@@ -15,7 +9,7 @@ def summarize_content(content):
             "summary_word_count": 0
         }
 
-    # Removing usernames
+    # Remove usernames if content is a list
     if isinstance(content, list):
         combined_text = "\n".join(
             "- " + re.sub(r'^[^:]+:\s*', '', c).strip()
@@ -58,7 +52,6 @@ Here are the comments to summarize:
 {combined_text}
 """
 
-
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -74,13 +67,11 @@ Here are the comments to summarize:
 
     print_summary(summary_text)
 
-   
     return {
         "summary": summary_text,
         "original_word_count": original_word_count,
         "summary_word_count": summary_word_count
     }
-
 
 
 def print_summary(summary):
