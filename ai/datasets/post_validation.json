@@ -1,0 +1,181 @@
+[
+  {
+    "instruction": "You are an AI that validates academic forum posts. ONLY OUTPUT VALID JSON. Follow the verdict rules and return only the specified JSON structure.",
+    "input": {
+      "subject": "Automata Theory",
+      "title": "Time Complexity Analysis of Binary Search",
+      "content": "Binary search is an efficient algorithm used to find an element in a sorted array. It works by repeatedly dividing the search interval in half, which results in a logarithmic time complexity of O(log n).",
+      "tags": ["algorithms", "binary-search", "time-complexity"]
+    },
+    "output": {
+      "is_academic": true,
+      "reason": "The post discusses an algorithm and its time complexity, which is an academic topic.",
+      "is_consistent": true,
+      "issues": [],
+      "verdict": "approved"
+    }
+  },
+  {
+    "instruction": "You are an AI that validates academic forum posts. ONLY OUTPUT VALID JSON. Follow the verdict rules and return only the specified JSON structure.",
+    "input": {
+      "subject": "Mathematics",
+      "title": "Understanding Derivatives",
+      "content": "A derivative represents the rate of change of a function with respect to a variable. It is a fundamental concept in calculus.",
+      "tags": ["calculus", "derivatives"]
+    },
+    "output": {
+      "is_academic": true,
+      "reason": "The content explains a core mathematical concept used in calculus.",
+      "is_consistent": true,
+      "issues": [],
+      "verdict": "approved"
+    }
+  },
+  {
+    "instruction": "You are an AI that validates academic forum posts. ONLY OUTPUT VALID JSON. Follow the verdict rules and return only the specified JSON structure.",
+    "input": {
+      "subject": "Computer Science",
+      "title": "Sorting Algorithms",
+      "content": "Merge sort and quick sort are commonly used sorting algorithms with different performance characteristics.",
+      "tags": ["sorting", "algorithms"]
+    },
+    "output": {
+      "is_academic": true,
+      "reason": "The post discusses sorting algorithms, which are academic computer science topics.",
+      "is_consistent": true,
+      "issues": [],
+      "verdict": "approved"
+    }
+  },
+  {
+    "instruction": "You are an AI that validates academic forum posts. ONLY OUTPUT VALID JSON. Follow the verdict rules and return only the specified JSON structure.",
+    "input": {
+      "subject": "Physics",
+      "title": "Newton's First Law",
+      "content": "Newton's first law states that an object will remain at rest or in uniform motion unless acted upon by an external force.",
+      "tags": ["physics", "laws-of-motion"]
+    },
+    "output": {
+      "is_academic": true,
+      "reason": "The post explains a fundamental physics law.",
+      "is_consistent": true,
+      "issues": [],
+      "verdict": "approved"
+    }
+  },
+
+  {
+    "instruction": "You are an AI that validates academic forum posts. ONLY OUTPUT VALID JSON. Follow the verdict rules and return only the specified JSON structure.",
+    "input": {
+      "subject": "General",
+      "title": "Funny Coding Meme",
+      "content": "Programmers be like: it works, don’t touch it 😂",
+      "tags": ["memes", "fun"]
+    },
+    "output": {
+      "is_academic": false,
+      "reason": "The content is humorous and does not involve learning or academic discussion.",
+      "is_consistent": true,
+      "issues": [],
+      "verdict": "rejected"
+    }
+  },
+  {
+    "instruction": "You are an AI that validates academic forum posts. ONLY OUTPUT VALID JSON. Follow the verdict rules and return only the specified JSON structure.",
+    "input": {
+      "subject": "Automata Theory",
+      "title": "Best Mobile Game?",
+      "content": "What is the best mobile game to play right now?",
+      "tags": ["games", "mobile"]
+    },
+    "output": {
+      "is_academic": false,
+      "reason": "The topic is about entertainment and not related to academic learning.",
+      "is_consistent": false,
+      "issues": ["Subject does not match the title and content."],
+      "verdict": "rejected"
+    }
+  },
+  {
+    "instruction": "You are an AI that validates academic forum posts. ONLY OUTPUT VALID JSON. Follow the verdict rules and return only the specified JSON structure.",
+    "input": {
+      "subject": "Software Engineering",
+      "title": "Agile Development",
+      "content": "Agile is an iterative development approach that focuses on collaboration and customer feedback.",
+      "tags": ["software", "agile"]
+    },
+    "output": {
+      "is_academic": true,
+      "reason": "The post discusses a recognized software engineering methodology.",
+      "is_consistent": true,
+      "issues": [],
+      "verdict": "approved"
+    }
+  },
+
+  {
+    "instruction": "You are an AI that validates academic forum posts. ONLY OUTPUT VALID JSON. Follow the verdict rules and return only the specified JSON structure.",
+    "input": {
+      "subject": "History",
+      "title": "World War II",
+      "content": "World War II began in 1939 and involved many nations across the globe.",
+      "tags": ["history", "war"]
+    },
+    "output": {
+      "is_academic": true,
+      "reason": "The post presents a historical fact suitable for academic discussion.",
+      "is_consistent": true,
+      "issues": [],
+      "verdict": "approved"
+    }
+  },
+  {
+    "instruction": "You are an AI that validates academic forum posts. ONLY OUTPUT VALID JSON. Follow the verdict rules and return only the specified JSON structure.",
+    "input": {
+      "subject": "Psychology",
+      "title": "Random Thoughts",
+      "content": "Sometimes I just feel tired for no reason.",
+      "tags": ["feelings"]
+    },
+    "output": {
+      "is_academic": false,
+      "reason": "The content is personal reflection without academic context.",
+      "is_consistent": true,
+      "issues": [],
+      "verdict": "rejected"
+    }
+  },
+  {
+    "instruction": "You are an AI that validates academic forum posts. ONLY OUTPUT VALID JSON. Follow the verdict rules and return only the specified JSON structure.",
+    "input": {
+      "subject": "Computer Science",
+      "title": "Data Structures",
+      "content": "Stacks follow a last-in-first-out principle, while queues follow first-in-first-out.",
+      "tags": ["data-structures", "stacks", "queues"]
+    },
+    "output": {
+      "is_academic": true,
+      "reason": "The post explains fundamental data structures used in computer science.",
+      "is_consistent": true,
+      "issues": [],
+      "verdict": "approved"
+    }
+  },
+
+  {
+    "instruction": "You are an AI that validates academic forum posts. ONLY OUTPUT VALID JSON. Follow the verdict rules and return only the specified JSON structure.",
+    "input": {
+      "subject": "English",
+      "title": "Essay Writing Tips",
+      "content": "A strong thesis statement clearly presents the main argument of an essay.",
+      "tags": ["writing", "essays"]
+    },
+    "output": {
+      "is_academic": true,
+      "reason": "The post provides guidance related to academic writing.",
+      "is_consistent": true,
+      "issues": [],
+      "verdict": "approved"
+    }
+  }
+]
