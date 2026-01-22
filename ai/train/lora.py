@@ -10,13 +10,16 @@ from transformers import (
 )
 from peft import LoraConfig, get_peft_model, TaskType
 
+import os
+
+BASE_DIR = os.path.dirname(__file__)
 
 MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
 
-DATASET_PATH = "../datasets/post_validation.json"
-OUTPUT_DIR = "../lora/qwen_lora_finetuned"
+DATASET_PATH = os.path.join(BASE_DIR, "../datasets/post_validation.jsonl")
+OUTPUT_DIR = os.path.join(BASE_DIR, "../lora/qwen_lora_finetuned")
 
-MAX_LENGTH = 1024
+MAX_LENGTH = 512
 
 
 tokenizer = AutoTokenizer.from_pretrained(
@@ -26,8 +29,8 @@ tokenizer = AutoTokenizer.from_pretrained(
 
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME,
-    torch_dtype=torch.float16,
-    device_map="auto",
+   dtype=torch.float32,
+    device_map="cpu",
     trust_remote_code=True
 )
 
@@ -54,6 +57,9 @@ model.print_trainable_parameters()
 
 
 dataset = load_dataset("json", data_files=DATASET_PATH)
+dataset["train"] = dataset["train"].select(range(10))
+print("Training samples:", len(dataset["train"]))
+
 
 
 def format_prompt(example):
@@ -89,21 +95,20 @@ def tokenize(example):
 dataset = dataset.map(format_prompt)
 dataset = dataset.map(
     tokenize,
-    remove_columns=dataset["train"].column_names
+    remove_columns=["instruction", "input", "output", "text"]
 )
 
 
 training_args = TrainingArguments(
     output_dir=OUTPUT_DIR,
-    per_device_train_batch_size=2,
-    gradient_accumulation_steps=4,
-    num_train_epochs=3,
+    per_device_train_batch_size=1,
+    gradient_accumulation_steps=1,
+    num_train_epochs=1,
     learning_rate=2e-4,
-    fp16=True,
+    fp16=False,
     logging_steps=10,
     save_steps=500,
-    save_total_limit=2,
-    evaluation_strategy="no",
+    save_total_limit=1,
     report_to="none"
 )
 
