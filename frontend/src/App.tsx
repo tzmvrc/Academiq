@@ -1,18 +1,29 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import LandingPage from "./pages/landingPage/landingPage";
-import NotFoundPage from "./pages/Notfound/notfound";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Landing } from "./pages/Landing";
+import { Login } from "./pages/Login";
+import { SignUp } from "./pages/SignUp";
+import { DashboardLayout } from "./layout/DashboardLayout";
+import { Dashboard } from "./pages/Dashboard";
 
-function App() {
+export function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        {/* Home */}
-        <Route path="/" element={<LandingPage />} />
+        {/* Public routes */}
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
 
-        {/* Catch-all 404 route */}
-        <Route path="*" element={<NotFoundPage />} />
+        {/* Protected dashboard routes */}
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<Dashboard />} /> {/* /dashboard */}
+          {/* If you have more nested pages under dashboard, add here */}
+        </Route>
+
+        {/* Catch-all redirect */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
 

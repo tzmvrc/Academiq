@@ -1,21 +1,37 @@
-// src/components/ui/Button.tsx
-import React from 'react';
+import type { ButtonHTMLAttributes } from "react";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary';
+type ButtonVariant = "primary" | "secondary";
+
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant;
 }
 
-const Button: React.FC<ButtonProps> = ({ variant = 'primary', children, ...props }) => {
-  const base = 'px-6 py-3 text-sm tracking-wide border transition';
-  const styles =
-    variant === 'primary'
-      ? 'border-gray-900 bg-gray-900 text-white hover:bg-white hover:text-gray-900'
-      : 'border-gray-300 text-gray-700 hover:border-gray-900';
+const variants: Record<ButtonVariant, string> = {
+  primary: "bg-accent text-white border-ink",
+  secondary: "bg-white text-ink border-ink",
+};
+
+export function Button({
+  children,
+  variant = "primary",
+  className = "",
+  ...rest
+}: ButtonProps) {
   return (
-    <button className={`${base} ${styles}`} {...props}>
+    <button
+      className={`
+        px-4 py-2
+        border-3
+        shadow-brutal
+        font-semibold
+        transition
+        active:translate-x-[2px] active:translate-y-[2px] active:shadow-none
+        ${variants[variant]}
+        ${className}
+      `}
+      {...rest}
+    >
       {children}
     </button>
   );
-};
-
-export default Button;
+}
