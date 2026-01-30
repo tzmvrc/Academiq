@@ -10,7 +10,7 @@ import {
 import { BrutalTag } from "@/components/ui/BrutalTag";
 import { BrutalButton } from "@/components/ui/BrutalButton";
 import { BrutalCard } from "@/components/ui/BrutalCard";
-import { CommentCard } from "@/components/forum/CommentCard";
+import { CommentCard, Comment } from "@/components/forum/CommentCard";
 import { Sidebar } from "@/components/layout/Sidebar";
 
 // Mock data - in real app, fetch based on postId
@@ -38,38 +38,77 @@ Would love to hear from researchers working in this field!`,
   createdAt: "2 hours ago",
 };
 
-const mockComments = [
+const initialComments: Comment[] = [
   {
     id: "1",
     author: "Dr. Sarah Miller",
+    authorId: "user2",
     content:
       "Great question! Lattice-based cryptography, particularly NTRU and Kyber, are leading candidates for post-quantum encryption. NIST has already begun standardizing these.",
     timestamp: "1 hour ago",
     isAIVerified: true,
+    voteCount: 45,
+    replies: [
+      {
+        id: "1-1",
+        author: "Alex Chen",
+        authorId: "user1",
+        content:
+          "Thanks Dr. Miller! Do you have any resources for learning more about lattice-based approaches?",
+        timestamp: "50 minutes ago",
+        isAIVerified: false,
+        voteCount: 12,
+        replies: [
+          {
+            id: "1-1-1",
+            author: "Dr. Sarah Miller",
+            authorId: "user2",
+            content:
+              'Absolutely! Check out the NIST PQC project documentation and the "Lattice-Based Cryptography" textbook by Peikert.',
+            timestamp: "40 minutes ago",
+            isAIVerified: true,
+            voteCount: 8,
+          },
+        ],
+      },
+    ],
   },
   {
     id: "2",
     author: "James Wilson",
+    authorId: "user3",
     content: `Current estimates suggest we're still 10-15 years away from cryptographically relevant quantum computers. However, the "harvest now, decrypt later" threat means we should start transitioning now.`,
     timestamp: "45 minutes ago",
     isAIVerified: false,
+    voteCount: 32,
   },
   {
     id: "3",
     author: "Maria Santos",
+    authorId: "user4",
     content: `I work in a financial institution and we're already auditing our cryptographic dependencies. The key is to start with an inventory of where you use public-key crypto and plan a staged migration.`,
     timestamp: "30 minutes ago",
     isAIVerified: true,
+    voteCount: 28,
   },
   {
     id: "4",
     author: "David Park",
+    authorId: "user5",
     content:
       "Has anyone looked into hash-based signatures like SPHINCS+? They have a different security basis and might be worth discussing as a complementary approach.",
     timestamp: "15 minutes ago",
     isAIVerified: false,
+    voteCount: 15,
   },
 ];
+
+// Helper to count all comments including nested
+const countComments = (comments: Comment[]): number => {
+  return comments.reduce((acc, comment) => {
+    return acc + 1 + (comment.replies ? countComments(comment.replies) : 0);
+  }, 0);
+};
 
 export const PostDetail: React.FC = () => {
   const { postId } = useParams();
@@ -78,6 +117,9 @@ export const PostDetail: React.FC = () => {
   const [activeTab, setActiveTab] = useState("feed");
   const [newComment, setNewComment] = useState("");
   const [voteCount, setVoteCount] = useState(mockPost.voteCount);
+  const [comments, setComments] = useState<Comment[]>(initialComments);
+
+  const currentUserId = "user1"; // Mock current user
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -86,10 +128,74 @@ export const PostDetail: React.FC = () => {
 
   const handleAddComment = () => {
     if (newComment.trim()) {
-      // In real app, would submit to backend
-      console.log("Adding comment:", newComment);
+      const newCommentObj: Comment = {
+        id: `new-${Date.now()}`,
+        author: "You",
+        authorId: currentUserId,
+        content: newComment,
+        timestamp: "Just now",
+        isAIVerified: false,
+        voteCount: 0,
+      };
+      setComments([newCommentObj, ...comments]);
       setNewComment("");
     }
+  };
+
+  const handleVote = (commentId: string, direction: "up" | "down") => {
+    console.log("Vote:", commentId, direction);
+  };
+
+  const handleEdit = (commentId: string, newContent: string) => {
+    const updateComment = (comments: Comment[]): Comment[] => {
+      return comments.map((c) => {
+        if (c.id === commentId) {
+          return { ...c, content: newContent };
+        }
+        if (c.replies) {
+          return { ...c, replies: updateComment(c.replies) };
+        }
+        return c;
+      });
+    };
+    setComments(updateComment(comments));
+  };
+
+  const handleDelete = (commentId: string) => {
+    const deleteComment = (comments: Comment[]): Comment[] => {
+      return comments
+        .filter((c) => c.id !== commentId)
+        .map((c) => ({
+          ...c,
+          replies: c.replies ? deleteComment(c.replies) : undefined,
+        }));
+    };
+    setComments(deleteComment(comments));
+  };
+
+  const handleReply = (parentId: string, content: string) => {
+    const newReply: Comment = {
+      id: `reply-${Date.now()}`,
+      author: "You",
+      authorId: currentUserId,
+      content,
+      timestamp: "Just now",
+      isAIVerified: false,
+      voteCount: 0,
+    };
+
+    const addReply = (comments: Comment[]): Comment[] => {
+      return comments.map((c) => {
+        if (c.id === parentId) {
+          return { ...c, replies: [...(c.replies || []), newReply] };
+        }
+        if (c.replies) {
+          return { ...c, replies: addReply(c.replies) };
+        }
+        return c;
+      });
+    };
+    setComments(addReply(comments));
   };
 
   return (
@@ -188,7 +294,7 @@ export const PostDetail: React.FC = () => {
             <div className="flex items-center gap-2">
               <MessageCircle className="w-6 h-6" />
               <h2 className="text-2xl font-bold">
-                {mockComments.length} Comments
+                {countComments(comments)} Comments
               </h2>
             </div>
 
@@ -212,13 +318,15 @@ export const PostDetail: React.FC = () => {
 
             {/* Comments List */}
             <div className="space-y-4">
-              {mockComments.map((comment) => (
+              {comments.map((comment) => (
                 <CommentCard
                   key={comment.id}
-                  author={comment.author}
-                  content={comment.content}
-                  timestamp={comment.timestamp}
-                  isAIVerified={comment.isAIVerified}
+                  comment={comment}
+                  currentUserId={currentUserId}
+                  onVote={handleVote}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onReply={handleReply}
                 />
               ))}
             </div>

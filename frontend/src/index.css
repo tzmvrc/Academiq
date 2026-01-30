@@ -1,7 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
-
 @import "tailwindcss";
-
 /* ============================================
    Tailwind v4 Theme Configuration
    ============================================ */
@@ -397,7 +395,7 @@ pre {
    Utility Classes
    ============================================ */
 
-/* Shadow utilities */
+/* Shadow utilities with hover/active variants */
 .shadow-brutal {
   box-shadow: var(--shadow-brutal);
 }
@@ -408,6 +406,20 @@ pre {
 
 .shadow-brutal-sm {
   box-shadow: var(--shadow-brutal-sm);
+}
+
+/* Hover variants for shadows */
+.hover\:shadow-brutal-lg:hover {
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+.hover\:shadow-brutal:hover {
+  box-shadow: var(--shadow-brutal);
+}
+
+/* Active variant for no shadow */
+.active\:shadow-none:active {
+  box-shadow: none;
 }
 
 /* Rotate utilities for playful asymmetry */

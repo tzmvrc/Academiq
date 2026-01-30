@@ -5,6 +5,7 @@ import { FeedTab } from '@/components/dashboard/FeedTab';
 import { PeersTab } from '@/components/dashboard/PeersTab';
 import { LeaderboardsTab } from '@/components/dashboard/LeaderboardsTab';
 import { InterestTab } from '@/components/dashboard/InterestTab';
+import { SettingsTab } from '@/components/dashboard/SettingsTab';
 import { NotificationModal } from '@/components/forum/NotificationModal';
 
 const tabs: Record<string, React.ComponentType> = {
@@ -13,6 +14,7 @@ const tabs: Record<string, React.ComponentType> = {
   peers: PeersTab,
   leaderboards: LeaderboardsTab,
   interest: InterestTab,
+  settings: SettingsTab,
 };
 
 const mockNotifications = [
