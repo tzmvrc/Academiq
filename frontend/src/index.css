@@ -1,12 +1,13 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
 /* ============================================
    Tailwind v4 Theme Configuration
    ============================================ */
 @theme {
   /* Font families */
-  --font-sans: "Space Grotesk", sans-serif;
-  --font-mono: "Space Mono", monospace;
+  --font-sans: 'Space Grotesk', sans-serif;
+  --font-mono: 'Space Mono', monospace;
 
   /* Border radius */
   --radius-sm: 0.25rem;
@@ -24,25 +25,25 @@
   --color-ring: hsl(262 83% 58%);
   --color-background: hsl(50 100% 98%);
   --color-foreground: hsl(0 0% 5%);
-
+  
   --color-primary: hsl(262 83% 58%);
   --color-primary-foreground: hsl(0 0% 100%);
-
+  
   --color-secondary: hsl(48 100% 67%);
   --color-secondary-foreground: hsl(0 0% 5%);
-
+  
   --color-destructive: hsl(0 84% 60%);
   --color-destructive-foreground: hsl(0 0% 100%);
-
+  
   --color-muted: hsl(50 30% 90%);
   --color-muted-foreground: hsl(0 0% 35%);
-
+  
   --color-accent: hsl(174 72% 56%);
   --color-accent-foreground: hsl(0 0% 5%);
-
+  
   --color-popover: hsl(50 100% 98%);
   --color-popover-foreground: hsl(0 0% 5%);
-
+  
   --color-card: hsl(50 100% 96%);
   --color-card-foreground: hsl(0 0% 5%);
 
@@ -178,51 +179,28 @@
    Keyframe Animations
    ============================================ */
 @keyframes accordion-down {
-  from {
-    height: 0;
-  }
-  to {
-    height: var(--radix-accordion-content-height);
-  }
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
 }
 
 @keyframes accordion-up {
-  from {
-    height: var(--radix-accordion-content-height);
-  }
-  to {
-    height: 0;
-  }
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
 }
 
 @keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 @keyframes wiggle {
-  0%,
-  100% {
-    transform: rotate(-3deg);
-  }
-  50% {
-    transform: rotate(3deg);
-  }
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
 }
 
 @keyframes bounce-slight {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
 /* ============================================
@@ -235,23 +213,17 @@
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: "Space Grotesk", sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: "Space Grotesk", sans-serif;
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
   letter-spacing: -0.025em;
 }
 
-code,
-pre {
-  font-family: "Space Mono", monospace;
+code, pre {
+  font-family: 'Space Mono', monospace;
 }
 
 /* ============================================
@@ -420,6 +392,52 @@ pre {
 /* Active variant for no shadow */
 .active\:shadow-none:active {
   box-shadow: none;
+}
+
+/* Marquee animations */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee-reverse {
+  animation: marquee-reverse 25s linear infinite;
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Slight rotation utility */
+.rotate-slight-right {
+  transform: rotate(2deg);
 }
 
 /* Rotate utilities for playful asymmetry */

@@ -74,7 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <Bell className="w-5 h-5 flex-shrink-0" />
             {!isCollapsed && <span>Notifications</span>}
             {notificationCount > 0 && (
-              <span className="absolute top-2 right-2 w-5 h-5 bg-coral text-foreground text-xs font-bold rounded-full flex items-center justify-center border-[2px] border-foreground">
+              <span className="absolute top-0.5 right-1 w-5 h-5 bg-coral text-foreground text-xs font-bold rounded-full flex items-center justify-center border-[2px] border-foreground">
                 {notificationCount > 9 ? '9+' : notificationCount}
               </span>
             )}
@@ -125,7 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Toggle Button */}
       <button
         onClick={onToggle}
-        className="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-secondary border-[3px] border-foreground rounded-full shadow-brutal-sm flex items-center justify-center hover:bg-yellow transition-colors"
+        className="absolute -right-4 top-160 -translate-y-1/2 w-8 h-8 bg-secondary border-[3px] border-foreground rounded-full shadow-brutal-sm flex items-center justify-center hover:bg-yellow transition-colors"
       >
         {isCollapsed ? (
           <ChevronRight className="w-4 h-4" />

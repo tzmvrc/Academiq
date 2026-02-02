@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrutalCard } from "@/components/ui/BrutalCard";
 import { BrutalTag } from "@/components/ui/BrutalTag";
 import { Trophy, Medal, Award, TrendingUp } from "lucide-react";
+import confetti from "canvas-confetti";
 
 const mockLeaderboard = [
   {
@@ -103,6 +104,49 @@ const getRankColor = (rank: number): "yellow" | "teal" | "pink" | "default" => {
 };
 
 export const LeaderboardsTab: React.FC = () => {
+  useEffect(() => {
+    // Fire confetti from both sides when tab opens
+    const duration = 2000;
+    const end = Date.now() + duration;
+
+    const frame = () => {
+      confetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.6 },
+        colors: [
+          "#FFE566",
+          "#5ECFCF",
+          "#FF9ECD",
+          "#FF8E72",
+          "#B39DDB",
+          "#7CFFB2",
+        ],
+      });
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.6 },
+        colors: [
+          "#FFE566",
+          "#5ECFCF",
+          "#FF9ECD",
+          "#FF8E72",
+          "#B39DDB",
+          "#7CFFB2",
+        ],
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    };
+
+    frame();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div>

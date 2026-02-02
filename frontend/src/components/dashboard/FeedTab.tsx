@@ -106,18 +106,24 @@ export const FeedTab: React.FC = () => {
             Discover and engage with academic discussions
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <BrutalButton variant="outline" size="sm">
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
+        <div className="flex items-center gap-4">
+          <BrutalButton
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Filter className="w-4 h-4" />
+            <span>Filter</span>
           </BrutalButton>
+
           <BrutalButton
             variant="primary"
             size="sm"
             onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            New Post
+            <Plus className="w-4 h-4" />
+            <span>New Post</span>
           </BrutalButton>
         </div>
       </div>
