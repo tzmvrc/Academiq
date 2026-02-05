@@ -1,26 +1,33 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { BrutalButton } from '@/components/ui/BrutalButton';
-import { BrutalCard } from '@/components/ui/BrutalCard';
-import { BrutalInput } from '@/components/ui/BrutalInput';
-import { GraduationCap, Mail, Lock, User, Upload, ArrowLeft } from 'lucide-react';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { BrutalButton } from "@/components/ui/BrutalButton";
+import { BrutalCard } from "@/components/ui/BrutalCard";
+import { BrutalInput } from "@/components/ui/BrutalInput";
+import {
+  GraduationCap,
+  Mail,
+  Lock,
+  User,
+  Upload,
+  ArrowLeft,
+} from "lucide-react";
 
 export const Signup: React.FC = () => {
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [avatar, setAvatar] = useState<File | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // For demo purposes, navigate to dashboard
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   const handleGoogleSignup = () => {
     // For demo purposes, navigate to dashboard
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,8 +45,8 @@ export const Signup: React.FC = () => {
 
       <div className="w-full max-w-md relative z-10">
         {/* Back Link */}
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className="inline-flex items-center gap-2 text-foreground font-semibold mb-6 hover:underline"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -66,21 +73,23 @@ export const Signup: React.FC = () => {
               <label className="cursor-pointer">
                 <div className="w-20 h-20 bg-muted rounded-xl border-[3px] border-foreground shadow-brutal flex items-center justify-center overflow-hidden hover:bg-muted/80 transition-colors">
                   {avatar ? (
-                    <img 
-                      src={URL.createObjectURL(avatar)} 
-                      alt="Avatar preview" 
+                    <img
+                      src={URL.createObjectURL(avatar)}
+                      alt="Avatar preview"
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="text-center">
                       <Upload className="w-6 h-6 mx-auto text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">Avatar</span>
+                      <span className="text-xs text-muted-foreground">
+                        Avatar
+                      </span>
                     </div>
                   )}
                 </div>
-                <input 
-                  type="file" 
-                  accept="image/*" 
+                <input
+                  type="file"
+                  accept="image/*"
                   onChange={handleAvatarChange}
                   className="hidden"
                 />
@@ -124,18 +133,24 @@ export const Signup: React.FC = () => {
             </div>
 
             <div className="flex items-start gap-2">
-              <input 
-                type="checkbox" 
-                className="w-4 h-4 mt-1 border-2 border-foreground rounded" 
+              <input
+                type="checkbox"
+                className="w-4 h-4 mt-1 border-2 border-foreground rounded"
                 required
               />
               <span className="text-sm text-muted-foreground">
-                I agree to the{' '}
-                <a href="#" className="font-semibold text-primary hover:underline">
+                I agree to the{" "}
+                <a
+                  href="#"
+                  className="font-semibold text-primary hover:underline"
+                >
                   Terms of Service
-                </a>{' '}
-                and{' '}
-                <a href="#" className="font-semibold text-primary hover:underline">
+                </a>{" "}
+                and{" "}
+                <a
+                  href="#"
+                  className="font-semibold text-primary hover:underline"
+                >
                   Privacy Policy
                 </a>
               </span>
@@ -149,17 +164,19 @@ export const Signup: React.FC = () => {
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
             <div className="flex-1 h-[2px] bg-foreground/20" />
-            <span className="text-sm font-medium text-muted-foreground">or</span>
+            <span className="text-sm font-medium text-muted-foreground">
+              or
+            </span>
             <div className="flex-1 h-[2px] bg-foreground/20" />
           </div>
 
           {/* Google OAuth */}
-          <BrutalButton 
-            variant="outline" 
-            className="w-full"
+          <BrutalButton
+            variant="outline"
+            className="w-full flex items-center justify-center gap-2"
             onClick={handleGoogleSignup}
           >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
               <path
                 fill="currentColor"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -177,13 +194,17 @@ export const Signup: React.FC = () => {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Continue with Google
+
+            <span className="leading-none">Continue with Google</span>
           </BrutalButton>
 
           {/* Login Link */}
           <p className="text-center mt-6 text-sm">
-            Already have an account?{' '}
-            <Link to="/login" className="font-bold text-primary hover:underline">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="font-bold text-primary hover:underline"
+            >
               Sign in
             </Link>
           </p>

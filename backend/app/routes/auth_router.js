@@ -1,17 +1,15 @@
 import express from "express";
-import { authMiddleware } from "../middlewares/auth_middleware.js";
 import { AuthController } from "../services/auth/auth_controller.js";
+import { authMiddleware } from "../middlewares/auth_middleware.js";
 
 const router = express.Router();
 
-// Manual
-router.post("/signup", AuthController.signup);
-router.post("/login",authMiddleware, AuthController.login);
+// Google login route (no middleware needed)
+router.post("/google", AuthController.googleLogin);
 
-// Google
-router.post("/google",authMiddleware, AuthController.googleLogin);
+// Protected route for current user
+router.get("/me", authMiddleware, AuthController.getMe);
 
-// Profile (protected later with middleware)
-router.get("/me", authMiddleware,AuthController.getMe);
+router.post("/logout", authMiddleware, AuthController.logout);
 
 export default router;

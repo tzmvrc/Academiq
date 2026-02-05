@@ -1,4 +1,6 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import axiosInstance from '@/integration/axiosInstance';
 import { cn } from '@/lib/utils';
 import { 
   User, 
@@ -40,6 +42,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onNotificationsClick,
   notificationCount = 0,
 }) => {
+  const navigate = useNavigate();
+
+  // ✅ Logout handler
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post('/auth/logout');
+    } catch (err) {
+      console.error('Logout API failed:', err);
+    }
+
+    // Always clear tokens
+    localStorage.removeItem('userToken');
+    localStorage.removeItem('adminToken');
+
+    navigate('/');
+  };
+
   return (
     <aside
       className={cn(
@@ -59,7 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
 
-      {/* Notifications Button */}
+      {/* Notifications */}
       {onNotificationsClick && (
         <div className="px-4 pt-4">
           <button
@@ -87,7 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
-          
+
           return (
             <button
               key={item.id}
@@ -107,9 +126,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </nav>
 
-      {/* Logout */}
+      {/* ✅ Logout */}
       <div className="p-4 border-t-[3px] border-sidebar-border">
         <button
+          onClick={handleLogout}
           className={cn(
             'w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all',
             'text-sidebar-foreground border-[2px] border-transparent',
@@ -122,7 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
 
-      {/* Toggle Button */}
+      {/* Toggle */}
       <button
         onClick={onToggle}
         className="absolute -right-4 top-160 -translate-y-1/2 w-8 h-8 bg-secondary border-[3px] border-foreground rounded-full shadow-brutal-sm flex items-center justify-center hover:bg-yellow transition-colors"
