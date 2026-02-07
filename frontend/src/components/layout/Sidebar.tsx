@@ -54,7 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     // Always clear tokens
     localStorage.removeItem('userToken');
-    localStorage.removeItem('adminToken');
+    localStorage.removeItem('user');
 
     navigate('/');
   };

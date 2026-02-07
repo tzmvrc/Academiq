@@ -69,8 +69,8 @@ const developers = [
 const topics = [
   'Computer Science', 'Physics', 'Mathematics', 'Biology', 'Chemistry',
   'Philosophy', 'Economics', 'Psychology', 'Engineering', 'Medicine',
-  'Data Science', 'Machine Learning', 'Neuroscience', 'Environmental Science',
-  'Quantum Computing', 'Genetics', 'Sociology', 'Literature', 'History', 'Art',
+  'Data Science', 'Machine Learning', 'Algorithm', 'Environmental Science',
+  'Graphic Design', 'Genetics', 'Sociology', 'Literature', 'History', 'Art',
 ];
 
 export const Landing: React.FC = () => {
@@ -115,7 +115,7 @@ export const Landing: React.FC = () => {
         <div className="absolute bottom-40 left-350 w-24 h-24 bg-teal rounded-full border-[3px] border-foreground opacity-50 animate-float" style={{ animationDelay: '1s' }} />
 
 
-        <div className="container mx-auto px-4 relative z-10">
+        <div className="container mx-auto relative z-10">
           <div className="grid lg:grid-cols-2 items-center">
             {/* Left side - Text content */}
             <div className="text-left ml-15">
@@ -261,7 +261,7 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* Topic Marquee - 2 Layers with Cards */}
-      <section className="py-8 bg-muted border-y-[4px] border-foreground overflow-hidden space-y-4">
+      <section className="py-8 bg-muted border-y-[2px] border-foreground overflow-hidden space-y-4">
         {/* First row - scrolling left */}
         <div className="animate-marquee flex whitespace-nowrap">
           {[...topics.slice(0, 10), ...topics.slice(0, 10)].map((topic, index) => (
@@ -269,7 +269,7 @@ export const Landing: React.FC = () => {
               key={`row1-${index}`} 
               color={(['yellow', 'teal', 'pink', 'coral', 'violet', 'mint'] as const)[index % 6]}
               className="mx-3 px-4 py-2 flex-shrink-0"
-              hoverEffect={false}
+              hoverEffect={true}
             >
               <span className="font-bold text-sm whitespace-nowrap">{topic}</span>
             </BrutalCard>
@@ -283,7 +283,7 @@ export const Landing: React.FC = () => {
               key={`row2-${index}`} 
               color={(['coral', 'mint', 'violet', 'pink', 'teal', 'yellow'] as const)[index % 6]}
               className="mx-3 px-4 py-2 flex-shrink-0"
-              hoverEffect={false}
+              hoverEffect={true}
             >
               <span className="font-bold text-sm whitespace-nowrap">{topic}</span>
             </BrutalCard>

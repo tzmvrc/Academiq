@@ -6,28 +6,19 @@ import { BrutalButton } from "@/components/ui/BrutalButton";
 import { BrutalCard } from "@/components/ui/BrutalCard";
 import { BrutalInput } from "@/components/ui/BrutalInput";
 import { GraduationCap, Mail, Lock, ArrowLeft } from "lucide-react";
+import { useGoogleAuth } from "@/components/auth/useGoogleAuth"; 
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
+  const { loginWithGoogle, loading } = useGoogleAuth();
   // Manual login (currently placeholder)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     navigate("/dashboard");
   };
-
-  const googleLogin = useGoogleLogin({
-  flow: "auth-code", // must be auth-code
-  onSuccess: async (res) => {
-    console.log("Auth code:", (res as any).code);
-    const code = (res as any).code;
-    await axiosInstance.post("/auth/google", { code });
-  },
-});
-
 
 
   return (
@@ -120,7 +111,7 @@ export const Login: React.FC = () => {
           <BrutalButton
             variant="outline"
             className="w-full flex items-center justify-center gap-2"
-            onClick={() => googleLogin()}
+              onClick={loginWithGoogle}
             disabled={loading}
           >
             <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">

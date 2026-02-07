@@ -2,26 +2,36 @@
 
 import axios from "axios";
 
-// Create axios instance
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // use the same env variable as Login.tsx
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Request interceptor to attach JWT
+// Attach JWT automatically
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token"); // read JWT stored by Google login
+    const token = localStorage.getItem("userToken");
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
+  (error) => Promise.reject(error)
+);
+
+// Optional: auto logout on 401
+axiosInstance.interceptors.response.use(
+  (res) => res,
   (error) => {
-    // On error, clear JWT
-    localStorage.removeItem("token");
+    if (error.response?.status === 401) {
+      localStorage.removeItem("userToken");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
     return Promise.reject(error);
   }
 );
