@@ -15,10 +15,13 @@ import {
   Rocket,
 } from "lucide-react";
 import { useGoogleAuth } from "@/components/auth/useGoogleAuth";
+import { useSignup } from "@/components/auth/useSignup";
+import { toast } from "@/components/ui/use-toast";
 
 export const Signup: React.FC = () => {
   const navigate = useNavigate();
   const { loginWithGoogle, loading: googleLoading } = useGoogleAuth();
+  const { sendOTP, verifyOTP, completeSignup, message } = useSignup();
 
   // Step state: 1 = Email, 2 = OTP, 3 = Profile
   const [currentStep, setCurrentStep] = useState(1);
@@ -115,40 +118,58 @@ export const Signup: React.FC = () => {
   };
 
   // Mock sendOTP function
-  const sendOTP = async (emailAddress: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log("OTP sent to:", emailAddress);
-    return { success: true };
-  };
-
-  // Mock verifyOTP function
-  const verifyOTP = async (emailAddress: string, otpCode: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    return { success: otpCode.length === 6 };
-  };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-
     setLoading(true);
     try {
-      await sendOTP(email);
-      console.log("OTP Sent!", `A verification code has been sent to ${email}`);
+      // send OTP
+      const result = await sendOTP(email);
+
+      toast({
+        title: result.title,
+        description: result.message,
+        variant: result.success ? "success" : "destructive",
+      });
+
+      if (!result.success) {
+        return;
+      }
+
+      // start resend timer & move to next step
       setResendTimer(60);
       setCurrentStep(2);
-    } catch (error) {
-      console.log("Error", "Failed to send OTP. Please try again.");
+    } catch (err: any) {
+      // handle specific 409 Conflict (email exists)
+      if (err.response?.status === 409) {
+        toast({
+          title: "Email Already Registered",
+          description: "This email is already registered. Please log in.",
+        });
+      } else {
+        toast({
+          title: "Failed to Send OTP",
+          description: "Failed to send OTP. Please try again.",
+        });
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleOTPVerify = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     const otpString = otp.join("");
 
     if (otpString.length !== 6) {
       console.log("Invalid OTP", "Please enter a 6-digit verification code.");
+      toast({
+        title: "Invalid OTP",
+        description: "Please enter a 6-digit verification code.",
+        variant: "destructive",
+      });
       // Highlight empty boxes
       otp.forEach((digit, index) => {
         if (!digit) {
@@ -171,10 +192,19 @@ export const Signup: React.FC = () => {
     try {
       const result = await verifyOTP(email, otpString);
       if (result.success) {
-        console.log("Verified!", "Email verified successfully.");
+       toast({
+          title: result.title,
+          description: result.message,
+          variant: "success",
+        });
         setCurrentStep(3);
       } else {
-        console.log("Invalid OTP", "The code you entered is incorrect.");
+        
+        toast({
+          title: result.title,
+          description: result.message,
+          variant: "destructive",
+        });
         // Shake animation for all boxes
         otpRefs.current.forEach((ref) => {
           ref?.classList.add("animate-shake", "border-red-500");
@@ -199,6 +229,10 @@ export const Signup: React.FC = () => {
         "OTP Resent!",
         `A new verification code has been sent to ${email}`,
       );
+      toast({
+        title: "OTP Resent",
+        description: `A new verification code has been sent to ${email}`,
+      });
       setResendTimer(60);
       // Clear OTP fields
       setOtp(["", "", "", "", "", ""]);
@@ -217,6 +251,10 @@ export const Signup: React.FC = () => {
         "Passwords don't match",
         "Please make sure your passwords match.",
       );
+      toast({
+        title: "Passwords Don't Match",
+        description: "Please make sure your passwords match.",
+      });
       return;
     }
 
@@ -225,16 +263,23 @@ export const Signup: React.FC = () => {
         "Terms Required",
         "Please agree to the Terms of Service and Privacy Policy.",
       );
+      toast({
+        title: "Terms Not Agreed",
+        description: "Please agree to the Terms of Service and Privacy Policy.",
+      });
       return;
     }
 
     setLoading(true);
-    // TODO: Replace with actual signup logic
+    completeSignup(email, name, password);
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log(
-      "Account Created!",
-      "Welcome to Academiq! Your account has been created successfully.",
-    );
+ 
+    toast({
+      title: "Account Created!",
+      description:
+        "Welcome to Academiq! Your account has been created successfully.",
+      variant: "success",
+    });
     navigate("/dashboard");
     setLoading(false);
   };
@@ -318,7 +363,7 @@ export const Signup: React.FC = () => {
                     className="w-full flex items-center justify-center gap-2 active:translate-y-1 active:shadow-none transition-all"
                     disabled={loading}
                   >
-                    {loading ? "Sending OTP..." : "Continue"}
+                    {loading ? "Loading..." : "Continue"}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </BrutalButton>
                 </form>
