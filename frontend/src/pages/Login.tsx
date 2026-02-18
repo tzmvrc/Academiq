@@ -1,24 +1,36 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useGoogleLogin } from "@react-oauth/google";
-import axiosInstance from "@/integration/axiosInstance";
 import { BrutalButton } from "@/components/ui/BrutalButton";
 import { BrutalCard } from "@/components/ui/BrutalCard";
 import { BrutalInput } from "@/components/ui/BrutalInput";
 import { GraduationCap, Mail, Lock, ArrowLeft } from "lucide-react";
-import { useGoogleAuth } from "@/components/auth/useGoogleAuth"; 
+import { useGoogleAuth } from "@/components/auth/useGoogleAuth";
+import { useLogin } from "@/components/auth/useLogin";
+import { toast } from "@/components/ui/use-toast";
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
+  const { manualLogin, useloading } = useLogin();
   const { loginWithGoogle, loading } = useGoogleAuth();
+
+
   // Manual login (currently placeholder)
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate("/dashboard");
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const result = await manualLogin(email, password);
+
+  if (!result.success) {
+    // show your toast here if you use one
+    toast({
+      title: result.title || "Login Failed",
+      description: result.message,
+      variant: "destructive",
+    });
+  }
+};
 
 
   return (
@@ -111,7 +123,7 @@ export const Login: React.FC = () => {
           <BrutalButton
             variant="outline"
             className="w-full flex items-center justify-center gap-2"
-              onClick={loginWithGoogle}
+            onClick={loginWithGoogle}
             disabled={loading}
           >
             <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
