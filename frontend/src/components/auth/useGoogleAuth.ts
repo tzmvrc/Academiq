@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import axiosInstance from "@/integration/axiosInstance";
+import { toast } from "@/components/ui/use-toast";
 
 export const useGoogleAuth = () => {
   const navigate = useNavigate();
@@ -16,10 +17,7 @@ export const useGoogleAuth = () => {
 
         const code = tokenResponse.code;
 
-        const response = await axiosInstance.post("/auth/google", {
-          code,
-        });
-
+        const response = await axiosInstance.post("/auth/google", { code });
         const { token, user } = response.data;
 
         // ✅ store session
@@ -28,9 +26,29 @@ export const useGoogleAuth = () => {
 
         // ✅ redirect
         navigate("/dashboard", { replace: true });
-      } catch (err) {
+
+        toast({
+          title: "Login Successful",
+          description: `Welcome ${user.name}!`,
+          variant: "success",
+        });
+      } catch (err: any) {
         console.error("Google auth failed:", err);
-        alert("Google login failed");
+
+        // 🔥 handle invalid school email
+        if (err.response?.status === 400) {
+          toast({
+            title: "Invalid School Email",
+            description: "You must use a valid school email to log in.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Google Login Failed",
+            description: "An error occurred. Please try again.",
+            variant: "destructive",
+          });
+        }
       } finally {
         setLoading(false);
       }

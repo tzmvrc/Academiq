@@ -119,44 +119,74 @@ export const Signup: React.FC = () => {
 
   // Mock sendOTP function
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    setLoading(true);
-    try {
-      // send OTP
-      const result = await sendOTP(email);
+const handleEmailSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!email) return;
+  setLoading(true);
 
+  // ----------------------------
+  // FRONTEND DOMAIN CHECK (optional, UX only)
+  // ----------------------------
+  const blockedDomains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com"];
+  const domain = email.split("@")[1]?.toLowerCase();
+
+  if (!domain) {
+    toast({
+      title: "Invalid Email",
+      description: "Please enter a valid email address.",
+      variant: "destructive",
+    });
+    setLoading(false);
+    return;
+  }
+
+  if (blockedDomains.includes(domain)) {
+    toast({
+      title: "Invalid Email",
+      description: "Please use your school email (not personal email).",
+      variant: "destructive",
+    });
+    setLoading(false);
+    return;
+  }
+
+  try {
+    // ----------------------------
+    // SEND OTP (backend will do full validation)
+    // ----------------------------
+    const result = await sendOTP(email);
+
+    toast({
+      title: result.title,
+      description: result.message,
+      variant: result.success ? "success" : "destructive",
+    });
+
+    if (!result.success) return;
+
+    // start resend timer & move to next step
+    setResendTimer(60);
+    setCurrentStep(2);
+  } catch (err: any) {
+    // handle specific 409 Conflict (email exists)
+    if (err.response?.status === 409) {
       toast({
-        title: result.title,
-        description: result.message,
-        variant: result.success ? "success" : "destructive",
+        title: "Email Already Registered",
+        description: "This email is already registered. Please log in.",
+        variant: "destructive",
       });
-
-      if (!result.success) {
-        return;
-      }
-
-      // start resend timer & move to next step
-      setResendTimer(60);
-      setCurrentStep(2);
-    } catch (err: any) {
-      // handle specific 409 Conflict (email exists)
-      if (err.response?.status === 409) {
-        toast({
-          title: "Email Already Registered",
-          description: "This email is already registered. Please log in.",
-        });
-      } else {
-        toast({
-          title: "Failed to Send OTP",
-          description: "Failed to send OTP. Please try again.",
-        });
-      }
-    } finally {
-      setLoading(false);
+    } else {
+      toast({
+        title: "Failed to Send OTP",
+        description: "Failed to send OTP. Please try again.",
+        variant: "destructive",
+      });
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleOTPVerify = async (e: React.FormEvent) => {
     e.preventDefault();
