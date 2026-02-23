@@ -1,5 +1,6 @@
 import { TopicModel } from "../../models/topic_model.js";
 import { UserTopicsModel } from "../../models/userTopics_model.js";
+import { UserModel } from "../../models/user_model.js";
 
 export const TopicsController = {
   // GET /api/topics - all available topics
@@ -27,39 +28,48 @@ export const TopicsController = {
 
   // POST /api/users/topics - save user selected topics
   async saveUserTopics(req, res) {
-    try {
-      const userId = req.user?.id || req.user?.userId;
-      if (!userId) {
-        return res
-          .status(401)
-          .json({ error: "Unauthorized: user ID not found" });
-      }
-
-      const topicIds = Array.isArray(req.body.topicIds)
-        ? req.body.topicIds
-        : [];
-      if (topicIds.length < 3) {
-        return res.status(400).json({ error: "Select at least 3 topics" });
-      }
-
-      // Validate topics exist
-      const validTopics = await TopicModel.findByIds(topicIds);
-      if (validTopics.length !== topicIds.length) {
-        return res
-          .status(400)
-          .json({ error: "One or more selected topics are invalid" });
-      }
-
-      // Remove previous selections and save new ones
-      await UserTopicsModel.removeAllForUser(userId);
-      await UserTopicsModel.addForUser(userId, topicIds);
-
-      res.json({ message: "Topics saved successfully" });
-    } catch (err) {
-      console.error("Save User Topics Error:", err);
-      res.status(500).json({ error: "Failed to save topics" });
+  try {
+    const userId = req.user?.id || req.user?.userId;
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized: user ID not found" });
     }
-  },
+
+    const topicIds = Array.isArray(req.body.topicIds)
+      ? req.body.topicIds
+      : [];
+
+    if (topicIds.length < 3) {
+      return res.status(400).json({ error: "Select at least 3 topics" });
+    }
+
+    // Validate topics exist
+    const validTopics = await TopicModel.findByIds(topicIds);
+    if (validTopics.length !== topicIds.length) {
+      return res
+        .status(400)
+        .json({ error: "One or more selected topics are invalid" });
+    }
+
+    // Remove previous selections
+    await UserTopicsModel.removeAllForUser(userId);
+
+    // Save new topics
+    await UserTopicsModel.addForUser(userId, topicIds);
+
+    // ✅ Mark onboarding as completed
+    await UserModel.updateOnboardingStatus(userId, true);
+
+    res.json({
+      message: "Topics saved successfully",
+      onboardingCompleted: true,
+    });
+  } catch (err) {
+    console.error("Save User Topics Error:", err);
+    res.status(500).json({ error: "Failed to save topics" });
+  }
+},
 
   // in controllers/topics_controller.js
   async unsaveUserTopics(req, res) {

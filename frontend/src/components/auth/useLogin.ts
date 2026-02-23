@@ -18,12 +18,17 @@ export const useLogin = () => {
 
       setMessage(res.data.message);
 
-      // ✅ Store token and user
+      // Store token and user
       if (res.data.token && res.data.user) {
         localStorage.setItem("userToken", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
 
-        navigate("/dashboard", { replace: true });
+        // 🔑 Decide where to go
+        if (res.data.onboardingRequired) {
+          navigate("/onboarding", { replace: true });
+        } else {
+          navigate("/dashboard", { replace: true });
+        }
       }
 
       return {
