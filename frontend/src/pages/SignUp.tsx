@@ -16,12 +16,14 @@ import {
 } from "lucide-react";
 import { useGoogleAuth } from "@/components/auth/useGoogleAuth";
 import { useSignup } from "@/components/auth/useSignup";
+import { useAuth } from "@/components/auth/useAuth";
 import { toast } from "@/components/ui/use-toast";
 
 export const Signup: React.FC = () => {
   const navigate = useNavigate();
   const { loginWithGoogle, loading: googleLoading } = useGoogleAuth();
   const { sendOTP, verifyOTP, completeSignup, message } = useSignup();
+   const { user, loading: authLoading } = useAuth();
 
   // Step state: 1 = Email, 2 = OTP, 3 = Profile
   const [currentStep, setCurrentStep] = useState(1);
@@ -41,6 +43,13 @@ export const Signup: React.FC = () => {
   const [showPasswordValidation, setShowPasswordValidation] = useState(false);
   // Refs for OTP inputs
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user) {
+      navigate('/onboarding');
+    }
+  }, [user, navigate]);
 
   // Auto-focus first OTP input
   useEffect(() => {
@@ -310,7 +319,7 @@ const handleEmailSubmit = async (e: React.FormEvent) => {
         "Welcome to Academiq! Your account has been created successfully.",
       variant: "success",
     });
-    navigate("/dashboard");
+    navigate("/onboarding");
     setLoading(false);
   };
 

@@ -49,22 +49,18 @@ export const AuthController = {
   async googleLogin(req, res) {
     try {
       const { code } = req.body;
-
-      if (!code) {
+      if (!code)
         return res.status(400).json({ error: "Authorization code required" });
-      }
 
-      // STEP 1 — exchange code for tokens
+      // STEP 1 — Exchange code for tokens
       const { tokens } = await client.getToken(code);
       const idToken = tokens.id_token;
-
-      if (!idToken) {
+      if (!idToken)
         return res
           .status(400)
           .json({ error: "No ID token returned from Google" });
-      }
 
-      // STEP 2 — verify id token
+      // STEP 2 — Verify ID token
       const ticket = await client.verifyIdToken({
         idToken,
         audience: GOOGLE_CLIENT_ID,
@@ -73,14 +69,14 @@ export const AuthController = {
       const payload = ticket.getPayload();
       const { sub: google_id, email, name, picture } = payload;
 
-      // STEP 3 — extract root domain for school validation
+      // STEP 3 — Extract root domain for school validation
       const domainParts = email.split("@")[1].split(".");
       const rootDomain =
         domainParts.length > 2
           ? domainParts.slice(-3).join(".")
           : domainParts.join(".");
 
-      // STEP 4 — call university API
+      // STEP 4 — Validate school
       const response = await axios.get(
         `http://universities.hipolabs.com/search?domain=${rootDomain}`,
       );
@@ -90,109 +86,105 @@ export const AuthController = {
           message: "Google login requires a valid school email.",
         });
       }
+      const schoolName = response.data[0].name;
 
-      const schoolName = response.data[0].name; // take first match
-
-      // STEP 5 — fetch or create user
-      // STEP 5 — fetch or link user properly
-
-      // 1. Check if user already exists by email
+      // STEP 5 — Fetch or create user
       let user = await UserModel.findByEmail(email);
 
       if (user) {
-        // User exists
-
+        // Existing user
         if (!user.google_id) {
           // Manual account → link Google
           await UserModel.updateGoogleId(user.id, google_id);
           user.google_id = google_id;
         }
-
-        // If google_id already exists → normal Google login
       } else {
-        // User does NOT exist → create new Google account
+        // New user → create Google account
         user = await UserModel.create({
           email,
           google_id,
           name,
           profile_url: picture,
           school: schoolName,
+          onboarding_completed: false, // mark as new
         });
       }
 
-      // STEP 6 — update last login
+      // STEP 6 — Update last login
       await UserModel.updateLastLogin(user.id);
 
-      // STEP 7 — generate JWT token
+      // STEP 7 — Generate JWT token
       const token = generateToken(user.id);
 
+      // STEP 8 — Send response including onboardingRequired
       res.json({
         message: "Google login successful",
         user,
         token,
+        onboardingRequired: !user.onboarding_completed, // frontend can redirect
       });
     } catch (err) {
       console.error("Google Login Error:", err);
       res.status(401).json({ error: "Invalid Google login" });
     }
   },
-
-
   async manualLogin(req, res) {
-  try {
-    const { email, password } = req.body;
+    try {
+      const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({
-        message: "Email and password are required",
+      if (!email || !password) {
+        return res.status(400).json({
+          message: "Email and password are required",
+        });
+      }
+
+      // 1️⃣ Find user by email
+      const user = await UserModel.findByEmail(email);
+
+      if (!user) {
+        return res
+          .status(400)
+          .json({
+            title: "User Not Found",
+            message: "Please sign up for an account.",
+          });
+      }
+
+      // 2️⃣ Block Google-only accounts
+      if (user.google_id && !user.password) {
+        return res.status(400).json({
+          title: "Google Account Detected",
+          message:
+            "This account was created using Google. Please login using Google.",
+        });
+      }
+
+      // 3️⃣ Verify password
+      const isMatch = await bcrypt.compare(password, user.password);
+
+      if (!isMatch) {
+        return res.status(400).json({
+          title: "Incorrect Credentials",
+          message: "Incorrect email or password.",
+        });
+      }
+
+      // 4️⃣ Update last login
+      await UserModel.updateLastLogin(user.id);
+
+      // 5️⃣ Generate JWT
+      const token = generateToken(user.id);
+
+      res.json({
+        message: "Login successful",
+        user,
+        token,
       });
+    } catch (err) {
+      console.error("Manual Login Error:", err);
+      res.status(500).json({ error: "Login failed" });
     }
-
-    // 1️⃣ Find user by email
-    const user = await UserModel.findByEmail(email);
-
-    if (!user) {
-      return res.status(400).json({title: "User Not Found",
-        message: "Please sign up for an account.",
-      });
-    }
-
-    // 2️⃣ Block Google-only accounts
-    if (user.google_id && !user.password) {
-      return res.status(400).json({
-        title: "Google Account Detected",
-        message: "This account was created using Google. Please login using Google.",
-      });
-    }
-
-    // 3️⃣ Verify password
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(400).json({
-        title: "Incorrect Credentials",
-        message: "Incorrect email or password.",
-      });
-    }
-
-    // 4️⃣ Update last login
-    await UserModel.updateLastLogin(user.id);
-
-    // 5️⃣ Generate JWT
-    const token = generateToken(user.id);
-
-    res.json({
-      message: "Login successful",
-      user,
-      token,
-    });
-
-  } catch (err) {
-    console.error("Manual Login Error:", err);
-    res.status(500).json({ error: "Login failed" });
-  }
-},
-
+  },
 
   // =============================
   // Get Current User
@@ -248,20 +240,20 @@ export const AuthController = {
       // Check if user exists
       const existingUser = await UserModel.findByEmail(email);
 
-if (existingUser) {
-  if (existingUser.google_id && !existingUser.password) {
-    return res.status(409).json({
-      title: "Google Account Detected",
-      message: "This email is registered using Google. Please login using Google.",
-    });
-  }
+      if (existingUser) {
+        if (existingUser.google_id && !existingUser.password) {
+          return res.status(409).json({
+            title: "Google Account Detected",
+            message:
+              "This email is registered using Google. Please login using Google.",
+          });
+        }
 
-  return res.status(409).json({
-    title: "Email Already Registered",
-    message: "This email is already registered. Please log in.",
-  });
-}
-
+        return res.status(409).json({
+          title: "Email Already Registered",
+          message: "This email is already registered. Please log in.",
+        });
+      }
 
       // Extract domain
       const domain = getRootDomain(email.toLowerCase());
@@ -376,81 +368,78 @@ if (existingUser) {
   // Complete Signup
   // =============================
   async completeSignup(req, res) {
-  try {
-    const { email, name, password } = req.body;
+    try {
+      const { email, name, password } = req.body;
 
-    // 1️⃣ Check OTP verification first
-    const record = await OtpModel.findByEmail(email);
-    if (!record || !record.verified) {
-      return res.status(400).json({ error: "Email not verified" });
-    }
+      // STEP 1 — Check OTP verification
+      const record = await OtpModel.findByEmail(email);
+      if (!record || !record.verified) {
+        return res.status(400).json({ error: "Email not verified" });
+      }
 
-    // 2️⃣ CRITICAL: Check if account already exists
-    const existingUser = await UserModel.findByEmail(email);
-
-    if (existingUser) {
-      if (existingUser.google_id && !existingUser.password) {
+      // STEP 2 — Check if user already exists
+      const existingUser = await UserModel.findByEmail(email);
+      if (existingUser) {
+        if (existingUser.google_id && !existingUser.password) {
+          return res.status(400).json({
+            title: "Google Account Detected",
+            message:
+              "This email is already registered using Google. Please login using Google.",
+          });
+        }
         return res.status(400).json({
-          title: "Google Account Detected",
-          message:
-            "This email is already registered using Google. Please login using Google.",
+          title: "Account Already Exists",
+          message: "This email is already registered. Please log in.",
         });
       }
 
-      return res.status(400).json({
-        title: "Account Already Exists",
-        message: "This email is already registered. Please log in.",
+      // STEP 3 — Extract root domain
+      const domainPart = email.split("@")[1];
+      const domainParts = domainPart.split(".");
+      const rootDomain =
+        domainParts.length > 2 ? domainParts.slice(-3).join(".") : domainPart;
+
+      // STEP 4 — Validate school
+      const response = await axios.get(
+        `http://universities.hipolabs.com/search?domain=${rootDomain}`,
+      );
+      if (!response.data || response.data.length === 0) {
+        return res.status(400).json({
+          title: "Invalid School Email",
+          message:
+            "The provided email domain is not recognized as a valid school.",
+        });
+      }
+      const schoolName = response.data[0].name;
+
+      // STEP 5 — Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // STEP 6 — Create user
+      const user = await UserModel.create({
+        email,
+        password: hashedPassword,
+        name,
+        school: schoolName,
+        onboarding_completed: false, // new user must do onboarding
       });
-    }
 
-    // 3️⃣ Extract root domain
-    const domainPart = email.split("@")[1];
-    const domainParts = domainPart.split(".");
-    const rootDomain =
-      domainParts.length > 2 ? domainParts.slice(-3).join(".") : domainPart;
+      // STEP 7 — Cleanup OTP
+      await OtpModel.delete(email);
 
-    // 4️⃣ Validate school domain
-    const response = await axios.get(
-      `http://universities.hipolabs.com/search?domain=${rootDomain}`
-    );
+      // STEP 8 — Generate JWT token
+      const token = generateToken(user.id);
 
-    if (!response.data || response.data.length === 0) {
-      return res.status(400).json({
-        title: "Invalid School Email",
-        message:
-          "The provided email domain is not recognized as a valid school.",
+      // STEP 9 — Respond
+      res.json({
+        message: "Signup successful",
+        user,
+        token,
+        onboardingRequired: true, // new users must do onboarding
       });
+    } catch (err) {
+      console.error("Complete Signup Error:", err);
+      res.status(500).json({ error: "Signup failed" });
     }
-
-    const schoolName = response.data[0].name;
-
-    // 5️⃣ Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // 6️⃣ Create user
-    const user = await UserModel.create({
-      email,
-      password: hashedPassword,
-      name,
-      school: schoolName,
-    });
-
-    // 7️⃣ Cleanup OTP
-    await OtpModel.delete(email);
-
-    // 8️⃣ Generate token
-    const token = generateToken(user.id);
-
-    res.json({
-      message: "Signup successful",
-      user,
-      token,
-    });
-
-  } catch (err) {
-    console.error("Complete Signup Error:", err);
-    res.status(500).json({ error: "Signup failed" });
-  }
-},
-
+  },
 };

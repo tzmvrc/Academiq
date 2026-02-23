@@ -14,6 +14,7 @@ import { Signup } from "./pages/SignUp";
 import { Dashboard } from "./pages/Dashboard";
 import { PostDetail } from "./pages/PostDetail";
 import { UserProfile } from "./pages/UserProfile";
+import { Onboarding } from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 import ProtectedRoute from "./components/protectRoute/protectedRoute";
@@ -82,6 +83,15 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute>
+            <Onboarding />
           </ProtectedRoute>
         }
       />
