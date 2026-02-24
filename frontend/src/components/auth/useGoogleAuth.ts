@@ -18,14 +18,18 @@ export const useGoogleAuth = () => {
         const code = tokenResponse.code;
 
         const response = await axiosInstance.post("/auth/google", { code });
-        const { token, user } = response.data;
+        const { token, user, onboardingRequired } = response.data;
 
-        // ✅ store session
+        // store session
         localStorage.setItem("userToken", token);
         localStorage.setItem("user", JSON.stringify(user));
 
-        // ✅ redirect
-        navigate("/dashboard", { replace: true });
+        // decide redirect
+        if (onboardingRequired) {
+          navigate("/onboarding", { replace: true });
+        } else {
+          navigate("/dashboard", { replace: true });
+        }
 
         toast({
           title: "Login Successful",
@@ -35,7 +39,6 @@ export const useGoogleAuth = () => {
       } catch (err: any) {
         console.error("Google auth failed:", err);
 
-        // 🔥 handle invalid school email
         if (err.response?.status === 400) {
           toast({
             title: "Invalid School Email",

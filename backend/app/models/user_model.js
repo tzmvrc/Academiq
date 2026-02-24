@@ -74,7 +74,16 @@ async updateGoogleId(userId, googleId) {
 
   if (error) throw error;
   return data;
-}
+},
 
+async updateOnboardingStatus(userId, status) {
+  const { data, error } = await supabase
+    .from("users")
+    .update({ onboarding_completed: status })
+    .eq("id", userId);
+
+  if (error) throw error;
+  return data;
+}
 
 };
