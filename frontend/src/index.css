@@ -1,19 +1,531 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
 @import "tailwindcss";
-
+@plugin "tailwindcss-animate";
+/* ============================================
+   Tailwind v4 Theme Configuration
+   ============================================ */
 @theme {
-  --color-accent: #FF4F79;
-  --color-accent2: #FFD400;
-  --color-paper: #FDFBF8;
-  --color-ink: #111827;
+  /* Font families */
+  --font-sans: "Space Grotesk", sans-serif;
+  --font-mono: "Space Mono", monospace;
 
-  --shadow-brutal: 4px 4px 0px #111827;
-  --shadow-brutalMd: 6px 6px 0px #111827;
+  /* Border radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
 
-  --border-width-3: 3px;
+  /* Custom shadows for Tailwind utilities */
+  --shadow-brutal: 4px 4px 0px hsl(0 0% 5%);
+  --shadow-brutal-lg: 6px 6px 0px hsl(0 0% 5%);
+  --shadow-brutal-sm: 2px 2px 0px hsl(0 0% 5%);
+
+  /* Colors - direct HSL values for Tailwind v4 */
+  --color-border: hsl(0 0% 5%);
+  --color-input: hsl(0 0% 5%);
+  --color-ring: hsl(262 83% 58%);
+  --color-background: hsl(50 100% 98%);
+  --color-foreground: hsl(0 0% 5%);
+
+  --color-primary: hsl(262 83% 58%);
+  --color-primary-foreground: hsl(0 0% 100%);
+
+  --color-secondary: hsl(48 100% 67%);
+  --color-secondary-foreground: hsl(0 0% 5%);
+
+  --color-destructive: hsl(0 84% 60%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+
+  --color-muted: hsl(50 30% 90%);
+  --color-muted-foreground: hsl(0 0% 35%);
+
+  --color-accent: hsl(174 72% 56%);
+  --color-accent-foreground: hsl(0 0% 5%);
+
+  --color-popover: hsl(50 100% 98%);
+  --color-popover-foreground: hsl(0 0% 5%);
+
+  --color-card: hsl(50 100% 96%);
+  --color-card-foreground: hsl(0 0% 5%);
+
+  /* Sidebar colors */
+  --color-sidebar: hsl(262 83% 58%);
+  --color-sidebar-foreground: hsl(0 0% 100%);
+  --color-sidebar-primary: hsl(48 100% 67%);
+  --color-sidebar-primary-foreground: hsl(0 0% 5%);
+  --color-sidebar-accent: hsl(262 83% 48%);
+  --color-sidebar-accent-foreground: hsl(0 0% 100%);
+  --color-sidebar-border: hsl(0 0% 5%);
+  --color-sidebar-ring: hsl(48 100% 67%);
+
+  /* Neubrutalism custom colors */
+  --color-violet: hsl(262 83% 58%);
+  --color-yellow: hsl(48 100% 67%);
+  --color-teal: hsl(174 72% 56%);
+  --color-pink: hsl(340 82% 65%);
+  --color-coral: hsl(16 100% 66%);
+  --color-blue: hsl(217 91% 60%);
+  --color-mint: hsl(158 64% 52%);
+
+  /* Animations */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-wiggle: wiggle 2s ease-in-out infinite;
+  --animate-bounce-slight: bounce-slight 2s ease-in-out infinite;
 }
 
-@layer base {
-  body {
-    @apply bg-gray-900 text-gray-100 antialiased;
+/* ============================================
+   CSS Variables for component usage (legacy support)
+   ============================================ */
+:root {
+  --radius: 0.5rem;
+
+  /* Neubrutalism Color Palette */
+  --background: 50 100% 98%;
+  --foreground: 0 0% 5%;
+
+  --card: 50 100% 96%;
+  --card-foreground: 0 0% 5%;
+
+  --popover: 50 100% 98%;
+  --popover-foreground: 0 0% 5%;
+
+  /* Violet Primary */
+  --primary: 262 83% 58%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Yellow Secondary */
+  --secondary: 48 100% 67%;
+  --secondary-foreground: 0 0% 5%;
+
+  --muted: 50 30% 90%;
+  --muted-foreground: 0 0% 35%;
+
+  /* Teal Accent */
+  --accent: 174 72% 56%;
+  --accent-foreground: 0 0% 5%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 0 0% 5%;
+  --input: 0 0% 5%;
+  --ring: 262 83% 58%;
+
+  /* Custom Neubrutalism Colors */
+  --violet: 262 83% 58%;
+  --yellow: 48 100% 67%;
+  --teal: 174 72% 56%;
+  --pink: 340 82% 65%;
+  --coral: 16 100% 66%;
+  --blue: 217 91% 60%;
+  --mint: 158 64% 52%;
+
+  /* Shadows */
+  --shadow-brutal: 4px 4px 0px hsl(0 0% 5%);
+  --shadow-brutal-lg: 6px 6px 0px hsl(0 0% 5%);
+  --shadow-brutal-sm: 2px 2px 0px hsl(0 0% 5%);
+
+  /* Sidebar */
+  --sidebar-background: 262 83% 58%;
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-primary: 48 100% 67%;
+  --sidebar-primary-foreground: 0 0% 5%;
+  --sidebar-accent: 262 83% 48%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 0 0% 5%;
+  --sidebar-ring: 48 100% 67%;
+}
+
+.dark {
+  --background: 0 0% 8%;
+  --foreground: 50 100% 98%;
+
+  --card: 0 0% 12%;
+  --card-foreground: 50 100% 98%;
+
+  --popover: 0 0% 10%;
+  --popover-foreground: 50 100% 98%;
+
+  --primary: 262 83% 65%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 48 100% 67%;
+  --secondary-foreground: 0 0% 5%;
+
+  --muted: 0 0% 20%;
+  --muted-foreground: 50 30% 70%;
+
+  --accent: 174 72% 56%;
+  --accent-foreground: 0 0% 5%;
+
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 50 100% 98%;
+  --input: 50 100% 98%;
+  --ring: 262 83% 65%;
+
+  --sidebar-background: 262 83% 35%;
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-primary: 48 100% 67%;
+  --sidebar-primary-foreground: 0 0% 5%;
+  --sidebar-accent: 262 83% 45%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 50 100% 98%;
+}
+
+/* ============================================
+   Keyframe Animations
+   ============================================ */
+@keyframes accordion-down {
+  from {
+    height: 0;
   }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes bounce-slight {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: "Space Grotesk", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+code,
+pre {
+  font-family: "Space Mono", monospace;
+}
+
+/* ============================================
+   Component Styles
+   ============================================ */
+
+/* Neubrutalist Card */
+.brutal-card {
+  background-color: hsl(var(--card));
+  border-width: 3px;
+  border-style: solid;
+  border-color: hsl(var(--foreground));
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-brutal);
+  transition: all 0.15s ease;
+}
+
+.brutal-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+/* Neubrutalist Button Base */
+.brutal-btn {
+  font-weight: 700;
+  border-width: 3px;
+  border-style: solid;
+  border-color: hsl(var(--foreground));
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  box-shadow: var(--shadow-brutal);
+  transition: all 0.1s ease;
+}
+
+.brutal-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+.brutal-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+/* Button Variants */
+.brutal-btn-primary {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.brutal-btn-secondary {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+.brutal-btn-accent {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.brutal-btn-outline {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* Neubrutalist Input */
+.brutal-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: hsl(var(--background));
+  border-width: 3px;
+  border-style: solid;
+  border-color: hsl(var(--foreground));
+  border-radius: 0.5rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-brutal-sm);
+}
+
+.brutal-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--primary));
+}
+
+/* Sidebar Styles */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.sidebar-item:hover {
+  background-color: hsl(var(--sidebar-accent));
+}
+
+.sidebar-item.active {
+  background-color: hsl(var(--sidebar-primary));
+  color: hsl(var(--sidebar-primary-foreground));
+  box-shadow: var(--shadow-brutal-sm);
+}
+
+/* Forum Card Vote Panel */
+.vote-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-left-width: 3px;
+  border-left-style: solid;
+  border-left-color: hsl(var(--foreground));
+}
+
+/* Tag/Badge */
+.brutal-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-width: 2px;
+  border-style: solid;
+  border-color: hsl(var(--foreground));
+  border-radius: 9999px;
+  box-shadow: var(--shadow-brutal-sm);
+}
+
+/* Asymmetric decoration */
+.brutal-blob {
+  position: absolute;
+  border-radius: 9999px;
+  z-index: -1;
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+/* Shadow utilities with hover/active variants */
+.shadow-brutal {
+  box-shadow: var(--shadow-brutal);
+}
+
+.shadow-brutal-lg {
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+.shadow-brutal-sm {
+  box-shadow: var(--shadow-brutal-sm);
+}
+
+/* Hover variants for shadows */
+.hover\:shadow-brutal-lg:hover {
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+.hover\:shadow-brutal:hover {
+  box-shadow: var(--shadow-brutal);
+}
+
+/* Active variant for no shadow */
+.active\:shadow-none:active {
+  box-shadow: none;
+}
+
+/* Marquee animations */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee-reverse {
+  animation: marquee-reverse 25s linear infinite;
+}
+
+/* Floating animation */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Slight rotation utility */
+.rotate-slight-right {
+  transform: rotate(2deg);
+}
+
+/* Rotate utilities for playful asymmetry */
+.rotate-slight-left {
+  transform: rotate(-2deg);
+}
+
+.rotate-slight-right {
+  transform: rotate(2deg);
+}
+
+.hover-lift {
+  transition: all 0.15s ease;
+}
+
+.hover-lift:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+/* ============================================
+    Neubrutalism Toast Styles
+    ============================================ */
+.brutal-toast {
+  border-width: 4px;
+  border-style: solid;
+  border-color: hsl(var(--foreground));
+  box-shadow: var(--shadow-brutal);
+  transition: all 0.15s ease;
+}
+
+.brutal-toast:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+/* Toast Variants */
+.brutal-toast-default {
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+
+.brutal-toast-success {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.brutal-toast-error {
+  background-color: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+
+.brutal-toast-warning {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+.brutal-toast-info {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
 }

@@ -59,6 +59,31 @@ export const UserModel = {
 
   if (error) return null;
   return data;
+}, 
+
+
+// Link Google account to existing manual user
+async updateGoogleId(userId, googleId) {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update({ google_id: googleId })
+    .eq("id", userId)
+    .is("google_id", null) // extra safety: only link if not already linked
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+},
+
+async updateOnboardingStatus(userId, status) {
+  const { data, error } = await supabase
+    .from("users")
+    .update({ onboarding_completed: status })
+    .eq("id", userId);
+
+  if (error) throw error;
+  return data;
 }
 
 };
