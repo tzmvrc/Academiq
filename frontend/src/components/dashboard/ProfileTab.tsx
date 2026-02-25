@@ -24,7 +24,7 @@ const mockUser = {
 
 export const ProfileTab: React.FC = () => {
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold">My Profile</h1>
 
       {/* Profile Card */}
@@ -42,9 +42,13 @@ export const ProfileTab: React.FC = () => {
                 <h2 className="text-2xl font-bold">{mockUser.name}</h2>
                 <p className="text-muted-foreground">{mockUser.email}</p>
               </div>
-              <BrutalButton variant="outline" size="sm">
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Profile
+              <BrutalButton
+                variant="outline"
+                size="sm"
+                className="flex items-center justify-center gap-2"
+              >
+                <Edit className="w-4 h-4" />
+                <span>Edit Profile</span>
               </BrutalButton>
             </div>
             <p className="mt-4 text-foreground">{mockUser.bio}</p>
