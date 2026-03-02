@@ -1,4 +1,5 @@
 import { CommentModel } from "../../models/comment_model.js";
+import { CommentVoteModel } from "../../models/commentVotes_model.js";
 
 export const CommentsController = {
   // GET /api/forums/:id/comments
@@ -9,7 +10,20 @@ export const CommentsController = {
       const { data, error } = await CommentModel.findByForumId(forumId);
       if (error) throw error;
 
-      res.json({ comments: data });
+      // Fetch vote count for each comment
+      const commentsWithVotes = await Promise.all(
+        data.map(async (comment) => {
+          const { data: voteCount } = await CommentVoteModel.getVoteCount(
+            comment.id,
+          );
+          return {
+            ...comment,
+            vote_count: voteCount || 0,
+          };
+        }),
+      );
+
+      res.json({ comments: commentsWithVotes });
     } catch (err) {
       console.error("Get Forum Comments Error:", err);
       res.status(500).json({ error: "Failed to fetch forum comments" });
@@ -24,7 +38,10 @@ export const CommentsController = {
       const { data, error } = await CommentModel.findById(id);
       if (error) throw error;
 
-      res.json({ comment: data });
+      // Fetch vote count
+      const { data: voteCount } = await CommentVoteModel.getVoteCount(id);
+
+      res.json({ comment: { ...data, vote_count: voteCount || 0 } });
     } catch (err) {
       console.error("Get Comment Error:", err);
       res.status(404).json({ error: "Comment not found" });
@@ -67,10 +84,23 @@ export const CommentsController = {
         parent_comment_id,
       };
 
-      const { data, error } = await CommentModel.create(payload);
+      const { data: created, error } = await CommentModel.create(payload);
       if (error) throw error;
 
-      res.status(201).json({ comment: data });
+      // Fetch the created comment with user info
+      const { data: comment, error: fetchErr } = await CommentModel.findById(
+        created.id,
+      );
+      if (fetchErr) throw fetchErr;
+
+      // Fetch vote count (should be 0 for new comment)
+      const { data: voteCount } = await CommentVoteModel.getVoteCount(
+        created.id,
+      );
+
+      res.status(201).json({
+        comment: { ...comment, vote_count: voteCount || 0 },
+      });
     } catch (err) {
       console.error("Create Comment Error:", err);
       res.status(500).json({ error: "Failed to create comment" });

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { X, Plus, Paperclip, FileText } from 'lucide-react';
-import { BrutalButton } from '@/components/ui/BrutalButton';
-import { BrutalInput } from '@/components/ui/BrutalInput';
-import { BrutalTag } from '@/components/ui/BrutalTag';
+import React, { useState, useEffect } from "react";
+import { X, Plus, Paperclip, FileText, ChevronDown } from "lucide-react";
+import { BrutalButton } from "@/components/ui/BrutalButton";
+import { BrutalInput } from "@/components/ui/BrutalInput";
+import { BrutalTag } from "@/components/ui/BrutalTag";
+import axiosInstance from "@/integration/axiosInstance";
 
 interface UploadedFile {
   name: string;
@@ -22,34 +23,91 @@ interface CreatePostModalProps {
   }) => void;
 }
 
-const subjects = [
-  'Computer Science',
-  'Biology',
-  'Philosophy',
-  'Research Methods',
-  'Environmental Science',
-  'Mathematics',
-  'Physics',
-  'Psychology',
-  'Other',
-];
+interface Subject {
+  id: string;
+  name: string;
+}
 
 export const CreatePostModal: React.FC<CreatePostModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
 }) => {
-  const [title, setTitle] = useState('');
-  const [subject, setSubject] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState("");
+  const [subject, setSubject] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
+  const [tagInput, setTagInput] = useState("");
   const [attachments, setAttachments] = useState<UploadedFile[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
+
+  // Fetch all subjects on mount
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        setIsLoadingSubjects(true);
+        const res = await axiosInstance.get("/subjects");
+        setAllSubjects(res.data.subjects || []);
+      } catch (err) {
+        console.error("Failed to fetch subjects:", err);
+      } finally {
+        setIsLoadingSubjects(false);
+      }
+    };
+
+    if (isOpen) {
+      fetchSubjects();
+    }
+  }, [isOpen]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".subject-dropdown")) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showDropdown]);
+
+  // Filter subjects based on input
+  const filteredSubjects = allSubjects.filter((s) =>
+    s.name.toLowerCase().includes(subject.toLowerCase()),
+  );
+
+  const handleSelectSubject = (subj: Subject) => {
+    setSelectedSubject(subj);
+    setSubject(subj.name);
+    setShowDropdown(false);
+  };
+
+  const handleSubjectInputChange = (value: string) => {
+    setSubject(value);
+    setSelectedSubject(null);
+    setShowDropdown(true);
+  };
+
+  const canCreateNewSubject =
+    subject.trim() &&
+    !selectedSubject &&
+    !filteredSubjects.some(
+      (s) => s.name.toLowerCase() === subject.toLowerCase(),
+    );
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       setTags([...tags, tagInput.trim()]);
-      setTagInput('');
+      setTagInput("");
     }
   };
 
@@ -67,7 +125,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
       }));
       setAttachments([...attachments, ...newFiles]);
     }
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const handleRemoveAttachment = (fileName: string) => {
@@ -75,25 +133,47 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   };
 
-  const handleSubmit = () => {
-    if (title && subject && content) {
-      onSubmit({ title, subject, content, tags, attachments });
-      setTitle('');
-      setSubject('');
-      setContent('');
+  const handleSubmit = async () => {
+    if (!title || !subject || !content) return;
+
+    // Ensure a subject has been selected (either existing or created)
+    if (!selectedSubject && !canCreateNewSubject) {
+      alert("Please select or create a subject");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await onSubmit({
+        title,
+        subject: selectedSubject?.name || subject,
+        content,
+        tags,
+        attachments,
+      });
+      setTitle("");
+      setSubject("");
+      setContent("");
+      setSelectedSubject(null);
       setTags([]);
       setAttachments([]);
+      setShowDropdown(false);
       onClose();
+    } catch (err) {
+      console.error("Submit error:", err);
+      // Error handling is done in parent component
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleAddTag();
     }
@@ -104,16 +184,15 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-foreground/50"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-foreground/50" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative bg-card border-[4px] border-foreground rounded-xl shadow-brutal-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="bg-primary p-4 flex items-center justify-between border-b-[4px] border-foreground">
-          <h2 className="text-2xl font-bold text-primary-foreground">Create New Post</h2>
+          <h2 className="text-2xl font-bold text-primary-foreground">
+            Create New Post
+          </h2>
           <button
             onClick={onClose}
             className="w-10 h-10 bg-background border-[2px] border-foreground rounded-lg shadow-brutal-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
@@ -125,20 +204,96 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
         {/* Form */}
         <div className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-180px)]">
           {/* Subject */}
-          <div>
+          <div className="relative subject-dropdown">
             <label className="block text-lg font-bold mb-2">Subject</label>
-            <select
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              className="w-full px-4 py-3 bg-background border-[3px] border-foreground rounded-lg font-medium shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="">Select a subject...</option>
-              {subjects.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => handleSubjectInputChange(e.target.value)}
+                onFocus={() => setShowDropdown(true)}
+                placeholder="Type to search or create a subject..."
+                className="w-full px-4 py-3 bg-background border-[3px] border-foreground rounded-lg font-medium shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <ChevronDown
+                className={`absolute right-3 top-3 w-5 h-5 text-foreground transition-transform ${showDropdown ? "rotate-180" : ""}`}
+              />
+            </div>
+
+            {/* Dropdown */}
+            {showDropdown && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-card border-[3px] border-foreground rounded-lg shadow-brutal-lg z-10 max-h-48 overflow-y-auto">
+                {isLoadingSubjects ? (
+                  <div className="p-3 text-center text-sm text-muted-foreground">
+                    Loading subjects...
+                  </div>
+                ) : filteredSubjects.length > 0 ? (
+                  <>
+                    {filteredSubjects.map((subj) => (
+                      <button
+                        key={subj.id}
+                        onClick={() => handleSelectSubject(subj)}
+                        className="w-full text-left px-4 py-2.5 hover:bg-primary hover:text-primary-foreground transition-colors border-b-[2px] border-foreground/30 font-medium last:border-b-0"
+                      >
+                        {subj.name}
+                      </button>
+                    ))}
+                    {canCreateNewSubject && (
+                      <>
+                        <div className="border-t-[2px] border-foreground/50" />
+                        <button
+                          onClick={async () => {
+                            try {
+                              const res = await axiosInstance.post(
+                                "/subjects",
+                                { name: subject },
+                              );
+                              const newSubject = res.data.subject;
+                              handleSelectSubject(newSubject);
+                              setAllSubjects([...allSubjects, newSubject]);
+                            } catch (err) {
+                              console.error("Failed to create subject:", err);
+                            }
+                          }}
+                          className="w-full text-left px-4 py-2.5 hover:bg-green-500 hover:text-green-foreground transition-colors font-bold text-green-700"
+                        >
+                          + Create &quot;{subject}&quot;
+                        </button>
+                      </>
+                    )}
+                  </>
+                ) : canCreateNewSubject ? (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await axiosInstance.post("/subjects", {
+                          name: subject,
+                        });
+                        const newSubject = res.data.subject;
+                        handleSelectSubject(newSubject);
+                        setAllSubjects([...allSubjects, newSubject]);
+                      } catch (err) {
+                        console.error("Failed to create subject:", err);
+                      }
+                    }}
+                    className="w-full text-left px-4 py-3 hover:bg-green-500 hover:text-green-foreground transition-colors font-bold text-green-700"
+                  >
+                    + Create &quot;{subject}&quot;
+                  </button>
+                ) : (
+                  <div className="p-3 text-center text-sm text-muted-foreground">
+                    No subjects found
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Selected Subject */}
+            {selectedSubject && (
+              <div className="mt-2 text-sm text-green-700 font-medium">
+                ✓ Selected: {selectedSubject.name}
+              </div>
+            )}
           </div>
 
           {/* Title */}
@@ -174,14 +329,23 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                 placeholder="Add a tag..."
                 className="flex-1"
               />
-              <BrutalButton type="button" variant="secondary" onClick={handleAddTag}>
+              <BrutalButton
+                type="button"
+                variant="secondary"
+                onClick={handleAddTag}
+              >
                 <Plus className="w-5 h-5" />
               </BrutalButton>
             </div>
             {tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3">
                 {tags.map((tag) => (
-                  <BrutalTag key={tag} color="teal" className="cursor-pointer" onClick={() => handleRemoveTag(tag)}>
+                  <BrutalTag
+                    key={tag}
+                    color="teal"
+                    className="cursor-pointer"
+                    onClick={() => handleRemoveTag(tag)}
+                  >
                     {tag}
                     <X className="w-3 h-3 ml-1" />
                   </BrutalTag>
@@ -202,7 +366,9 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                 className="hidden"
               />
               <Paperclip className="w-5 h-5" />
-              <span className="font-medium">Click to upload documents, images, or files</span>
+              <span className="font-medium">
+                Click to upload documents, images, or files
+              </span>
             </label>
             {attachments.length > 0 && (
               <div className="mt-3 space-y-2">
@@ -213,8 +379,12 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                   >
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4" />
-                      <span className="font-medium truncate max-w-[200px]">{file.name}</span>
-                      <span className="text-sm text-muted-foreground">({formatFileSize(file.size)})</span>
+                      <span className="font-medium truncate max-w-[200px]">
+                        {file.name}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        ({formatFileSize(file.size)})
+                      </span>
                     </div>
                     <button
                       type="button"
@@ -232,11 +402,19 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
 
         {/* Footer */}
         <div className="p-4 border-t-[3px] border-foreground bg-muted flex justify-end gap-3">
-          <BrutalButton variant="outline" onClick={onClose}>
+          <BrutalButton
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
             Cancel
           </BrutalButton>
-          <BrutalButton variant="primary" onClick={handleSubmit}>
-            Post Discussion
+          <BrutalButton
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={isSubmitting || !title || !subject || !content}
+          >
+            {isSubmitting ? "Posting..." : "Post Discussion"}
           </BrutalButton>
         </div>
       </div>

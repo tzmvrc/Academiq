@@ -1,5 +1,6 @@
 import express from "express";
 import { ForumsController } from "../services/forum/forum_controller.js";
+import { ForumSavesController } from "../services/forum/forumSaves_controller.js";
 import { CommentsController } from "../services/comment/comment_controller.js";
 import { authMiddleware } from "../middlewares/auth_middleware.js";
 
@@ -8,40 +9,50 @@ const router = express.Router();
 /* -----------------------
    Forums (Public)
 ------------------------ */
-// Public - get all forums (optionally prioritized if req.user exists)
+// Public - get all forums
 router.get("/", ForumsController.getAllForums);
-
-// Public - get forum by ID
-router.get("/:id", ForumsController.getForumById);
 
 /* -----------------------
    Forums (Protected)
 ------------------------ */
-// Protected - get forums by logged-in user
+// ✅ Put specific routes BEFORE "/:id"
 router.get("/users/me", authMiddleware, ForumsController.getMyForums);
 
-// Protected - create forum (supports topicIds in body)
+// Protected - get all saved forums for user
+router.get("/saved/list", authMiddleware, ForumSavesController.getSavedForums);
+
+// (Optional) get my vote state for a forum (for UI highlight)
+router.get("/:id/my-vote", authMiddleware, ForumsController.getMyVote);
+
+// (Optional) check if forum is saved
+router.get("/:id/save", authMiddleware, ForumSavesController.getSaveStatus);
+
+/* -----------------------
+   Forums (Public by ID)
+------------------------ */
+// Public - get forum by ID
+router.get("/:id", ForumsController.getForumById);
+
+/* -----------------------
+   Forums (Protected actions)
+------------------------ */
 router.post("/", authMiddleware, ForumsController.createForum);
-
-// Protected - update forum
 router.put("/:id", authMiddleware, ForumsController.updateForum);
-
-// Protected - delete forum
 router.delete("/:id", authMiddleware, ForumsController.deleteForum);
 
-// Protected - vote / unvote forum
+// Reddit-style vote / unvote
 router.post("/:id/vote", authMiddleware, ForumsController.voteForum);
 router.delete("/:id/vote", authMiddleware, ForumsController.unvoteForum);
 
+// Toggle save status
+router.post("/:id/save", authMiddleware, ForumSavesController.toggleSave);
+
 /* -----------------------
-   Comments (Public)
+   Comments
 ------------------------ */
 // Public - get comments by forum ID
 router.get("/:id/comments", CommentsController.getCommentsByForumId);
 
-/* -----------------------
-   Comments (Protected)
------------------------- */
 // Protected - create comment for a forum
 router.post("/:id/comments", authMiddleware, CommentsController.createComment);
 

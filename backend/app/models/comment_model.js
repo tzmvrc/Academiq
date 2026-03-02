@@ -14,9 +14,12 @@ export const CommentModel = {
       .from(TABLE)
       .select(
         `
-        *,
+        id, user_id, forum_id, parent_comment_id,
+        content,
+        is_ai_verified,
+        created_at, updated_at,
         users ( id, name, profile_url )
-      `
+      `,
       )
       .eq("id", id)
       .single();
@@ -28,9 +31,12 @@ export const CommentModel = {
       .from(TABLE)
       .select(
         `
-        *,
+        id, user_id, forum_id, parent_comment_id,
+        content,
+        is_ai_verified,
+        created_at, updated_at,
         users ( id, name, profile_url )
-      `
+      `,
       )
       .eq("forum_id", forumId)
       .order("created_at", { ascending: true });

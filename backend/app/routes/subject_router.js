@@ -4,6 +4,9 @@ import { authMiddleware } from "../middlewares/auth_middleware.js";
 
 const router = express.Router();
 
+// Public - get all subjects
+router.get("/", SubjectsController.getAllSubjects);
+
 // Public - get subjects under a topic
 router.get("/:topicId", SubjectsController.getSubjectsByTopic);
 

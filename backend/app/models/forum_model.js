@@ -11,7 +11,11 @@ export const ForumModel = {
     return supabase
       .from(TABLE)
       .select(`
-        *,
+        id, user_id, subject_id,
+        title, content,
+        document_url, ai_summary, is_ai_verified,
+        comments_count, vote_count,
+        created_at, updated_at,
         users ( id, name, profile_url ),
         subjects ( id, name )
       `)
@@ -23,7 +27,11 @@ export const ForumModel = {
     return supabase
       .from(TABLE)
       .select(`
-        *,
+        id, user_id, subject_id,
+        title, content,
+        document_url, is_ai_verified,
+        comments_count, vote_count,
+        created_at,
         users ( id, name, profile_url ),
         subjects ( id, name )
       `)
@@ -33,7 +41,15 @@ export const ForumModel = {
   async findByUserId(userId) {
     return supabase
       .from(TABLE)
-      .select("*")
+      .select(`
+        id, user_id, subject_id,
+        title, content,
+        document_url, is_ai_verified,
+        comments_count, vote_count,
+        created_at,
+        users ( id, name, profile_url ),
+        subjects ( id, name )
+      `)
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
   },
