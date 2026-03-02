@@ -20,7 +20,7 @@ const client = new OAuth2Client(
 
 // Generate JWT
 const generateToken = (userId) => {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: "7d" });
 };
 
 const PERSONAL_EMAIL_DOMAINS = [
@@ -129,71 +129,70 @@ export const AuthController = {
     }
   },
 
-
   async manualLogin(req, res) {
-  try {
-    const { email, password } = req.body;
+    try {
+      const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({
-        message: "Email and password are required",
+      if (!email || !password) {
+        return res.status(400).json({
+          message: "Email and password are required",
+        });
+      }
+
+      // 1. Find user
+      const user = await UserModel.findByEmail(email);
+
+      if (!user) {
+        return res.status(400).json({
+          title: "User Not Found",
+          message: "Please sign up for an account.",
+        });
+      }
+
+      // 2. Prevent manual login if Google-only account
+      if (user.google_id && !user.password) {
+        return res.status(400).json({
+          title: "Google Account Detected",
+          message:
+            "This account was created using Google. Please login using Google.",
+        });
+      }
+
+      // 3. Verify password
+      const isMatch = await bcrypt.compare(password, user.password);
+
+      if (!isMatch) {
+        return res.status(400).json({
+          title: "Incorrect Credentials",
+          message: "Incorrect email or password.",
+        });
+      }
+
+      // 4. Update last login
+      await UserModel.updateLastLogin(user.id);
+
+      // 5. Generate token
+      const token = generateToken(user.id);
+
+      // 6. Send response
+      res.json({
+        message: "Login successful",
+        user,
+        token,
+        onboardingRequired: !user.onboarding_completed,
       });
+    } catch (err) {
+      console.error("Manual Login Error:", err);
+      res.status(500).json({ error: "Login failed" });
     }
-
-    // 1. Find user
-    const user = await UserModel.findByEmail(email);
-
-    if (!user) {
-      return res.status(400).json({
-        title: "User Not Found",
-        message: "Please sign up for an account.",
-      });
-    }
-
-    // 2. Prevent manual login if Google-only account
-    if (user.google_id && !user.password) {
-      return res.status(400).json({
-        title: "Google Account Detected",
-        message:
-          "This account was created using Google. Please login using Google.",
-      });
-    }
-
-    // 3. Verify password
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(400).json({
-        title: "Incorrect Credentials",
-        message: "Incorrect email or password.",
-      });
-    }
-
-    // 4. Update last login
-    await UserModel.updateLastLogin(user.id);
-
-    // 5. Generate token
-    const token = generateToken(user.id);
-
-    // 6. Send response
-    res.json({
-      message: "Login successful",
-      user,
-      token,
-      onboardingRequired: !user.onboarding_completed,
-    });
-  } catch (err) {
-    console.error("Manual Login Error:", err);
-    res.status(500).json({ error: "Login failed" });
-  }
-},
+  },
 
   // =============================
   // Get Current User
   // =============================
   async getMe(req, res) {
     try {
-      const userId = req.user.userId;
+      const userId = req.user.id;
       const user = await UserModel.findById(userId);
 
       if (!user) return res.status(404).json({ error: "User not found" });
@@ -217,7 +216,7 @@ export const AuthController = {
   // =============================
   async logout(req, res) {
     try {
-      const userId = req.user.userId;
+      const userId = req.user.id;
 
       // Optional: update last activity or logout time
       await UserModel.updateLastLogin(userId);

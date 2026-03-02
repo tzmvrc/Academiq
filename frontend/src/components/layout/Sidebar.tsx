@@ -1,20 +1,20 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import axiosInstance from '@/integration/axiosInstance';
-import { cn } from '@/lib/utils';
-import { 
-  User, 
-  Newspaper, 
-  Users, 
-  Trophy, 
-  Sparkles, 
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import axiosInstance, { clearAuth } from "@/integration/axiosInstance";
+import { cn } from "@/lib/utils";
+import {
+  User,
+  Newspaper,
+  Users,
+  Trophy,
+  Sparkles,
   LogOut,
   ChevronLeft,
   ChevronRight,
   GraduationCap,
   Bell,
   Settings,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -26,12 +26,12 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { id: 'profile', label: 'Profile', icon: User },
-  { id: 'feed', label: 'Feed', icon: Newspaper },
-  { id: 'peers', label: 'Peers', icon: Users },
-  { id: 'leaderboards', label: 'Leaderboards', icon: Trophy },
-  { id: 'interest', label: 'Interest', icon: Sparkles },
-  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: "profile", label: "Profile", icon: User },
+  { id: "feed", label: "Feed", icon: Newspaper },
+  { id: "peers", label: "Peers", icon: Users },
+  { id: "leaderboards", label: "Leaderboards", icon: Trophy },
+  { id: "interest", label: "Interest", icon: Sparkles },
+  { id: "settings", label: "Settings", icon: Settings },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -47,23 +47,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // ✅ Logout handler
   const handleLogout = async () => {
     try {
-      await axiosInstance.post('/auth/logout');
+      await axiosInstance.post("/auth/logout");
     } catch (err) {
-      console.error('Logout API failed:', err);
+      console.error("Logout API failed:", err);
     }
 
-    // Always clear tokens
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('user');
-
-    navigate('/');
+    // Clear auth and redirect to home
+    clearAuth();
   };
 
   return (
     <aside
       className={cn(
-        'h-screen sticky top-0 bg-sidebar border-r-[4px] border-foreground shadow-brutal flex flex-col transition-all duration-300',
-        isCollapsed ? 'w-20' : 'w-64'
+        "h-screen sticky top-0 bg-sidebar border-r-[4px] border-foreground shadow-brutal flex flex-col transition-all duration-300",
+        isCollapsed ? "w-20" : "w-64",
       )}
     >
       {/* Logo */}
@@ -73,7 +70,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <GraduationCap className="w-6 h-6 text-foreground" />
           </div>
           {!isCollapsed && (
-            <span className="text-xl font-bold text-sidebar-foreground">Academiq</span>
+            <span className="text-xl font-bold text-sidebar-foreground">
+              Academiq
+            </span>
           )}
         </div>
       </div>
@@ -84,17 +83,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={onNotificationsClick}
             className={cn(
-              'relative w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all',
-              'text-sidebar-foreground border-[2px] border-transparent',
-              'hover:border-foreground hover:shadow-brutal-sm hover:bg-sidebar-accent',
-              isCollapsed && 'justify-center px-2'
+              "relative w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all",
+              "text-sidebar-foreground border-[2px] border-transparent",
+              "hover:border-foreground hover:shadow-brutal-sm hover:bg-sidebar-accent",
+              isCollapsed && "justify-center px-2",
             )}
           >
             <Bell className="w-5 h-5 flex-shrink-0" />
             {!isCollapsed && <span>Notifications</span>}
             {notificationCount > 0 && (
               <span className="absolute top-0.5 right-1 w-5 h-5 bg-coral text-foreground text-xs font-bold rounded-full flex items-center justify-center border-[2px] border-foreground">
-                {notificationCount > 9 ? '9+' : notificationCount}
+                {notificationCount > 9 ? "9+" : notificationCount}
               </span>
             )}
           </button>
@@ -112,11 +111,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               key={item.id}
               onClick={() => onTabChange(item.id)}
               className={cn(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all',
-                'border-[2px]',
-                isActive && 'bg-secondary text-secondary-foreground shadow-brutal-sm border-foreground',
-                !isActive && 'text-sidebar-foreground border-transparent hover:border-foreground hover:shadow-brutal-sm hover:bg-sidebar-accent',
-                isCollapsed && 'justify-center px-2'
+                "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all",
+                "border-[2px]",
+                isActive &&
+                  "bg-secondary text-secondary-foreground shadow-brutal-sm border-foreground",
+                !isActive &&
+                  "text-sidebar-foreground border-transparent hover:border-foreground hover:shadow-brutal-sm hover:bg-sidebar-accent",
+                isCollapsed && "justify-center px-2",
               )}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
@@ -131,10 +132,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <button
           onClick={handleLogout}
           className={cn(
-            'w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all',
-            'text-sidebar-foreground border-[2px] border-transparent',
-            'hover:border-foreground hover:shadow-brutal-sm hover:bg-destructive hover:text-destructive-foreground',
-            isCollapsed && 'justify-center px-2'
+            "w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all",
+            "text-sidebar-foreground border-[2px] border-transparent",
+            "hover:border-foreground hover:shadow-brutal-sm hover:bg-destructive hover:text-destructive-foreground",
+            isCollapsed && "justify-center px-2",
           )}
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />

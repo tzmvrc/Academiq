@@ -54,7 +54,7 @@ export const useSignup = () => {
       if (res.data.token && res.data.user) {
         localStorage.setItem("userToken", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
-        navigate("/dashboard", { replace: true });
+        navigate("/onboarding", { replace: true });
       }
 
       return { success: true, message: res.data.message };

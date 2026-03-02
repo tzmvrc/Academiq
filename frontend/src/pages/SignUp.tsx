@@ -23,7 +23,7 @@ export const Signup: React.FC = () => {
   const navigate = useNavigate();
   const { loginWithGoogle, loading: googleLoading } = useGoogleAuth();
   const { sendOTP, verifyOTP, completeSignup, message } = useSignup();
-   const { user, loading: authLoading } = useAuth();
+
 
   // Step state: 1 = Email, 2 = OTP, 3 = Profile
   const [currentStep, setCurrentStep] = useState(1);
@@ -44,12 +44,7 @@ export const Signup: React.FC = () => {
   // Refs for OTP inputs
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (user) {
-      navigate('/onboarding');
-    }
-  }, [user, navigate]);
+  
 
   // Auto-focus first OTP input
   useEffect(() => {
