@@ -1,0 +1,4502 @@
+[
+  {
+    "test_num": 1,
+    "title": "Time Complexity of Merge Sort",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 2,
+    "title": "Study Group for Calculus Midterm",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to learning or subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 3,
+    "title": "Biology Club Hiking Trip",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about a social activity, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 4,
+    "title": "Exam Answers for Quantum Mechanics",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses exam preparation rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 5,
+    "title": "Organic Chemistry Mechanism Question",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to chemistry subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 6,
+    "title": "Free Coffee in the Nursing Lounge",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about social activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 7,
+    "title": "Help sa binary search",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses algorithm implementation rather than computer science concepts.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 8,
+    "title": "Exam week mood 😂",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses personal stress rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 9,
+    "title": "Selling my calculator rush",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 10,
+    "title": "Normal ba mahirapan sa derivatives?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses calculus concepts rather than learning or academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 11,
+    "title": "May answers ba sa quiz mamaya?",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses gaming and not academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 12,
+    "title": "Process vs Thread",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses core operating systems concepts.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 13,
+    "title": "Free donuts sa lobby!",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses food preferences rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 14,
+    "title": "Why does light behave as a wave and particle?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses advanced physics concepts but do not align with the defined scope.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 15,
+    "title": "Who's playing ML later?",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses gaming content rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 16,
+    "title": "Why is pH important in reactions?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses chemistry concepts but is unrelated to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 17,
+    "title": "Looking for part-time job",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses student employment rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 18,
+    "title": "Primary key vs foreign key",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses database concepts but is unrelated to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 19,
+    "title": "Prof cancelled class today",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is a casual announcement and not related to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 20,
+    "title": "How does photosynthesis work?",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses a biology concept.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 21,
+    "title": "Stress na stress na ako 😭",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses personal stress rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 22,
+    "title": "Agile vs Waterfall",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to software engineering.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 23,
+    "title": "Selling extra headphones",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about buying items for personal use, not academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 24,
+    "title": "What is the purpose of subnetting?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses networking concepts but does not align with the defined topic.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 25,
+    "title": "Random thought",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is unrelated to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 26,
+    "title": "What is overfitting in machine learning?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to artificial intelligence subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 27,
+    "title": "What is the intuition behind limits?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but not related to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 28,
+    "title": "Movie night after exams",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses entertainment activities unrelated to learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 29,
+    "title": "Stack vs Queue",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to programming concepts.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 30,
+    "title": "Selling old textbooks",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 31,
+    "title": "Difference between speed and velocity",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses physics concepts but is unrelated to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 32,
+    "title": "Late na ako lagi",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about student life advice rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 33,
+    "title": "What is standard deviation?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content discusses statistical concepts but is unrelated to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 34,
+    "title": "Pa send naman project code",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses help-seeking rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 35,
+    "title": "Covalent vs Ionic bonds",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "Chemistry content is academic but not related to learning.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 36,
+    "title": "Kain tayo sa labas",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is unrelated to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 37,
+    "title": "Difference between AI and Machine Learning",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses advanced AI concepts but is not related to learning or academic content.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 38,
+    "title": "LF roommate near campus",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses housing preferences rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 39,
+    "title": "What causes inflation?",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content explains macroeconomic principles correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 40,
+    "title": "Buy 1 take 1 pens",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about buying items for sale rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 41,
+    "title": "Causes of World War 1",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains historical causes accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 42,
+    "title": "Crush ko si prof",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is personal gossip and not related to learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 43,
+    "title": "What is recursion?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to programming subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 44,
+    "title": "Exam coverage leak",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses academic cheating rather than learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 45,
+    "title": "What is cognitive dissonance?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content discusses psychological theory but is unrelated to learning or academic discussion.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 46,
+    "title": "Valorant later?",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses gaming content unrelated to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 47,
+    "title": "What is a catalyst?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to chemistry subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 48,
+    "title": "LF study buddy for finals",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests study buddy advice, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 49,
+    "title": "What is a derivative?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to mathematics.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 50,
+    "title": "Pa share naman notes",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about sharing notes rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 51,
+    "title": "What is a binary tree?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to computer science.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 52,
+    "title": "LF group for project",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests a study group for a project, not related to learning or academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 53,
+    "title": "What is Newton's second law?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to physics.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 54,
+    "title": "Kain tayo sa labas",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is unrelated to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 55,
+    "title": "Difference between AI and Machine Learning",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses advanced AI concepts but is not related to learning or academic content.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 56,
+    "title": "LF roommate near campus",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses housing preferences rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 57,
+    "title": "What causes inflation?",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content explains macroeconomic principles correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 58,
+    "title": "Buy 1 take 1 pens",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about buying items for sale rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 59,
+    "title": "Causes of World War 1",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains historical causes accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 60,
+    "title": "Crush ko si prof",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is personal gossip and not related to learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 61,
+    "title": "What is recursion?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to programming.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 62,
+    "title": "Exam coverage leak",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses academic cheating rather than learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 63,
+    "title": "What is cognitive dissonance?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content discusses psychological theory but is unrelated to learning or academic discussion.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 64,
+    "title": "Valorant later?",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses gaming content unrelated to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 65,
+    "title": "What is a catalyst?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to chemistry subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 66,
+    "title": "LF study buddy for finals",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests study buddy advice, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 67,
+    "title": "What is a derivative?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to mathematics.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 68,
+    "title": "Pa share naman notes",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about sharing notes rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 69,
+    "title": "What is a binary tree?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to computer science.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 70,
+    "title": "LF group for project",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests a study group for a project, not related to learning or academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 71,
+    "title": "What is Newton's second law?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to physics.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 72,
+    "title": "Chain Rule confusion",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately explains a calculus concept.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 73,
+    "title": "Tambay sa cafeteria",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is casual gossip and not related to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 74,
+    "title": "What is normalization?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to database studies.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 75,
+    "title": "Rush sale laptop",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 76,
+    "title": "What is Newton's Second Law?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to physics.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 77,
+    "title": "Absent ako today",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about personal life and not academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 78,
+    "title": "Mean vs Median",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content discusses statistical concepts rather than academic learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 79,
+    "title": "Share nyo naman thesis",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests help with homework instead of discussing learning concepts.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 80,
+    "title": "What is electronegativity?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to chemistry subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 81,
+    "title": "Birthday ko today",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses personal activities and not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 82,
+    "title": "What is supervised learning?",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 83,
+    "title": "Lost ID",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses lost IDs rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 84,
+    "title": "Supply and Demand",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately explains a core economic concept.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 85,
+    "title": "Selling lab gown",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 86,
+    "title": "Cold War overview",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post discusses historical facts accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 87,
+    "title": "Traffic grabe",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is a personal rant and not related to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 88,
+    "title": "Object Oriented Programming",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to programming subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 89,
+    "title": "May sagot ba sa assignment 3?",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about sharing answers rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 90,
+    "title": "Nature vs Nurture",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 91,
+    "title": "Integration by parts",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post discusses advanced calculus technique.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 92,
+    "title": "May pasok ba bukas?",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses holiday plans rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 93,
+    "title": "TCP vs UDP",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post is about computer networking rather than academic learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 94,
+    "title": "Selling graphing calculator",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses selling educational tools rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 95,
+    "title": "What is entropy?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses physics concept but does not align with the defined topic.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 96,
+    "title": "Study break",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about personal activities and not academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 97,
+    "title": "What is hypothesis testing?",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post discusses statistics correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 98,
+    "title": "Answer key pls",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests answers for an exam, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 99,
+    "title": "What is molarity?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content discusses chemistry concepts but is unrelated to academic discussion.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 100,
+    "title": "Gym later",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses personal activities unrelated to learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 101,
+    "title": "What is reinforcement learning?",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post discusses advanced AI theory accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 102,
+    "title": "May extra ticket",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about entertainment and not academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 103,
+    "title": "GDP vs GNP",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains an economic concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 104,
+    "title": "Selling lab manual",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses selling educational materials rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 105,
+    "title": "French Revolution causes",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains historical causes accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 106,
+    "title": "Walang tulog",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses personal habits and not academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 107,
+    "title": "Difference between array and linked list",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses computer science concepts unrelated to learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 108,
+    "title": "Sagot sa lab activity",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses answers rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 109,
+    "title": "Maslow's hierarchy",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but not related to psychology.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 110,
+    "title": "Inom later",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses social activities unrelated to learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 111,
+    "title": "What is a mole?",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post discusses a recognized scientific concept.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 112,
+    "title": "LF study group",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about a study group discussion, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 113,
+    "title": "What is a limit?",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a mathematical concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 114,
+    "title": "Pa share notes sa class today",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses sharing notes rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 115,
+    "title": "What is a stack?",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post discusses a computer science topic.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 116,
+    "title": "ML rank push",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about gaming and not academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 117,
+    "title": "Eigenvalues and Eigenvectors",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a mathematical concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 118,
+    "title": "Tambay sa parking",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is casual commentary and not related to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 119,
+    "title": "Big O notation basics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses computer science concepts.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 120,
+    "title": "Selling printer",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 121,
+    "title": "Difference between scalar and vector",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 122,
+    "title": "Group study later",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses social activities rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 123,
+    "title": "Correlation vs Causation",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content discusses statistical analysis accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 124,
+    "title": "Pa copy ng code",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content asks for help on copying code rather than discussing learning or academic skills.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 125,
+    "title": "Acid vs Base",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a chemical concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 126,
+    "title": "Netflix reco",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses entertainment content rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 127,
+    "title": "Neural Networks basics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post discusses advanced AI concepts accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 128,
+    "title": "Brownout today",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is random announcement and not related to learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 129,
+    "title": "Opportunity Cost",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content discusses economic concepts but is unrelated to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 130,
+    "title": "Selling flash drive",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling items, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 131,
+    "title": "Industrial Revolution impact",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains historical context accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 132,
+    "title": "Uwi na ako",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is a casual rant and not related to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 133,
+    "title": "What is polymorphism?",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 134,
+    "title": "Quiz answers pls",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post asks for answers to a quiz, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 135,
+    "title": "Classical Conditioning",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but not related to psychology.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 136,
+    "title": "Beach trip",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses vacation plans rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 137,
+    "title": "What is a catalyst?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to chemistry subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 138,
+    "title": "LF group study",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post asks for study group information rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 139,
+    "title": "What is a derivative?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to mathematics.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 140,
+    "title": "Pa share notes sa class today",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses sharing notes rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 141,
+    "title": "What is a stack?",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post discusses a computer science topic.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 142,
+    "title": "ML rank push",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about gaming and not academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 143,
+    "title": "Eigenvalues and Eigenvectors",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a mathematical concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 144,
+    "title": "Tambay sa parking",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is casual commentary and not related to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 145,
+    "title": "Big O notation basics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses computer science concepts.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 146,
+    "title": "Selling printer",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 147,
+    "title": "Difference between scalar and vector",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 148,
+    "title": "Group study later",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses social activities rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 149,
+    "title": "Correlation vs Causation",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content discusses statistical analysis accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 150,
+    "title": "Pa copy ng code",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content asks for help on copying code rather than discussing learning or academic skills.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 151,
+    "title": "Acid vs Base",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a chemical concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 152,
+    "title": "Netflix reco",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses entertainment content rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 153,
+    "title": "Neural Networks basics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post discusses advanced AI concepts accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 154,
+    "title": "Brownout today",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is random announcement and not related to learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 155,
+    "title": "Opportunity Cost",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content discusses economic concepts but is unrelated to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 156,
+    "title": "Selling flash drive",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling items, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 157,
+    "title": "Industrial Revolution impact",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains historical context accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 158,
+    "title": "Uwi na ako",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is a casual rant and not related to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 159,
+    "title": "What is polymorphism?",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 160,
+    "title": "Quiz answers pls",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post asks for answers to a quiz, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 161,
+    "title": "Classical Conditioning",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but not related to psychology.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 162,
+    "title": "Beach trip",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses vacation plans rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 163,
+    "title": "What is a catalyst?",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to chemistry subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 164,
+    "title": "Taylor Series Expansion",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post discusses advanced mathematical concepts accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 165,
+    "title": "Libre snacks",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about food preferences rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 166,
+    "title": "DFS vs BFS",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to computer science.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 167,
+    "title": "Selling tablet",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 168,
+    "title": "Projectile Motion",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses physics concepts.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 169,
+    "title": "Send lab answers",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about sending homework instead of discussing learning methods.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 170,
+    "title": "Cellular Respiration",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 171,
+    "title": "ML game later",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about gaming and not academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 172,
+    "title": "Balancing equations",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses chemistry concepts but is unrelated to academic discussion.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 173,
+    "title": "Selling notebook bundle",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling items, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 174,
+    "title": "What is gradient descent?",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains an advanced ML concept accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 175,
+    "title": "Lost wallet",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses lost items rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 176,
+    "title": "Confidence Intervals",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a statistical concept accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 177,
+    "title": "Exam answers leak",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses exam cheating rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 178,
+    "title": "Renaissance period",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to History.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 179,
+    "title": "Chill sa park",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is personal gossip and not related to learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 180,
+    "title": "What is encapsulation?",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content discusses a recognized programming principle.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 181,
+    "title": "Selling keyboard",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 182,
+    "title": "What is emotional intelligence?",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to psychology.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 183,
+    "title": "Inom tonight",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses partying and not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 184,
+    "title": "Partial Derivatives",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 185,
+    "title": "Lunch tayo",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about food preferences rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 186,
+    "title": "Dynamic Programming",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 187,
+    "title": "Selling review books",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling books rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 188,
+    "title": "Ohm's Law",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses a physics principle.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 189,
+    "title": "Copy ng assignment",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about copying homework instead of discussing learning concepts.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 190,
+    "title": "DNA Replication",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a biological process correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 191,
+    "title": "Movie marathon",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses entertainment activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 192,
+    "title": "Periodic Trends",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post is about a physics concept rather than chemistry.",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 193,
+    "title": "Selling mouse",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling products rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 194,
+    "title": "Cognitive Dissonance",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses a recognized psychological concept.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 195,
+    "title": "Study break plans",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses study breaks, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 196,
+    "title": "Overfitting vs Underfitting",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to artificial intelligence.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 197,
+    "title": "Library closed",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about a library announcement rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 198,
+    "title": "ANOVA basics",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 199,
+    "title": "Final exam leak",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses a personal issue unrelated to learning or academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 200,
+    "title": "American Revolution",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains historical cause accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 201,
+    "title": "Antok na ako",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is a casual rant and not related to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 202,
+    "title": "What is abstraction?",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content discusses advanced programming principles.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 203,
+    "title": "Selling monitor",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 204,
+    "title": "Behaviorism theory",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 205,
+    "title": "Basketball game",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses sports activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 206,
+    "title": "Complex Numbers Basics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post discusses advanced mathematics content accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 207,
+    "title": "Campus meetup later",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about socializing and not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 208,
+    "title": "Recursion Explained",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post discusses a computer science topic.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 209,
+    "title": "Selling headphones",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 210,
+    "title": "Newton's Laws",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 211,
+    "title": "Help with assignment code",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests help for homework instead of discussing learning concepts.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 212,
+    "title": "Enzyme Catalysis",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses enzyme activity.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 213,
+    "title": "Movie night",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about entertainment activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 214,
+    "title": "Chemical Bonds",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to chemistry.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 215,
+    "title": "Selling textbook",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling textbooks rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 216,
+    "title": "Supervised Learning",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains advanced machine learning correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 217,
+    "title": "Lost keys",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses lost items and not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 218,
+    "title": "Hypothesis Testing",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 219,
+    "title": "Final project solutions",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses answers rather than learning or academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 220,
+    "title": "World War II Causes",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content discusses historical facts correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 221,
+    "title": "Napagod na ako",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is a casual rant and not related to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 222,
+    "title": "Inheritance in OOP",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post discusses advanced programming concepts correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 223,
+    "title": "Selling mousepad",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling products rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 224,
+    "title": "Cognitive Dissonance",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately addresses an academic topic.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 225,
+    "title": "Football match tonight",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses sports activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 226,
+    "title": "Linear Algebra Eigenvalues",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but not related to learning or knowledge.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 227,
+    "title": "Coffee sa lounge",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses social activities and not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 228,
+    "title": "Big O Notation",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains advanced CS terminology correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 229,
+    "title": "Selling chair",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses selling furniture rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 230,
+    "title": "Thermodynamics Laws",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a physics concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 231,
+    "title": "Copy ng homework",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content asks for help rather than discussing learning concepts.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 232,
+    "title": "Photosynthesis Process",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately describes a biology concept.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 233,
+    "title": "Board games night",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses entertainment activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 234,
+    "title": "Acid-Base Reactions",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a chemical concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 235,
+    "title": "Selling backpack",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling items, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 236,
+    "title": "Maslow's Hierarchy of Needs",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but not related to psychology.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 237,
+    "title": "Karaoke night",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses entertainment activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 238,
+    "title": "Integration by Parts",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately explains a mathematical technique.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 239,
+    "title": "Study group later",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about a study group discussion, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 240,
+    "title": "Data Structures",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to CS subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 241,
+    "title": "Selling phone case",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling products rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 242,
+    "title": "Quantum Mechanics Basics",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 243,
+    "title": "Help with coding assignment",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests help rather than discussing learning or academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 244,
+    "title": "Cell Division Process",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 245,
+    "title": "Game night",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses gaming activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 246,
+    "title": "Organic Chemistry Basics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a core concept in chemistry correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 247,
+    "title": "Selling laptop",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 248,
+    "title": "Freud's Psychoanalysis",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 249,
+    "title": "Volleyball game",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses sports activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 250,
+    "title": "Probability Theory",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but not related to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 251,
+    "title": "Study break plans",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses study breaks, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 252,
+    "title": "Overfitting vs Underfitting",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to artificial intelligence.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 253,
+    "title": "Library closed",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about a library announcement rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 254,
+    "title": "ANOVA basics",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 255,
+    "title": "Final exam leak",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses a personal issue unrelated to learning or academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 256,
+    "title": "American Revolution",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains historical cause accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 257,
+    "title": "Reinforcement Learning Basics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains advanced AI techniques correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 258,
+    "title": "Lost bag",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses lost items rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 259,
+    "title": "Regression Analysis",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 260,
+    "title": "Final exam hacks",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses study techniques rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 261,
+    "title": "Industrial Revolution",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to History.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 262,
+    "title": "Napagod na",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is a casual rant and not related to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 263,
+    "title": "Polymorphism in OOP",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to programming subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 264,
+    "title": "Selling desk lamp",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling items, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 265,
+    "title": "Motivation Theories",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a recognized psychological concept accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 266,
+    "title": "Ping pong game",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses sports activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 267,
+    "title": "Integration Techniques",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses mathematical concepts.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 268,
+    "title": "Snack sa lounge",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses social activities rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 269,
+    "title": "Sorting Algorithms",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to CS.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 270,
+    "title": "Selling keyboard",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling products rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 271,
+    "title": "Electromagnetic Waves",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a physics concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 272,
+    "title": "Assignment Solutions",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests homework solutions rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 273,
+    "title": "Cell Division",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to biology.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 274,
+    "title": "Movie night",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses entertainment activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 275,
+    "title": "Oxidation-Reduction",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post is about a chemistry topic rather than academic learning.",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 276,
+    "title": "Selling water bottle",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling items, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 277,
+    "title": "Behaviorism Theory",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 278,
+    "title": "Basketball game",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses sports activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 279,
+    "title": "Differential Equations",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 280,
+    "title": "Free coffee",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses social activities rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 281,
+    "title": "Algorithm Complexity",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content discusses computer science concepts unrelated to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 282,
+    "title": "Selling headphones",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling products rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 283,
+    "title": "Relativity Theory",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "Physics content is discussed correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 284,
+    "title": "Exam answers request",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests exam answers rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 285,
+    "title": "French Revolution Causes",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content discusses historical events correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 286,
+    "title": "Pagod na",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is a casual rant and not related to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 287,
+    "title": "Encapsulation in OOP",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a complex programming concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 288,
+    "title": "Selling desk chair",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling furniture, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 289,
+    "title": "Memory Types",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 290,
+    "title": "Volleyball game",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses sports activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 291,
+    "title": "Convolutional Neural Networks",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to artificial intelligence subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 292,
+    "title": "Lost wallet",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses random lost items and not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 293,
+    "title": "Chi-Square Test",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 294,
+    "title": "Exam answers request",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests exam answers rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 295,
+    "title": "French Revolution Causes",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content discusses historical events correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 296,
+    "title": "Pagod na",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is a casual rant and not related to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 297,
+    "title": "Encapsulation in OOP",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a complex programming concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 298,
+    "title": "Selling desk chair",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling furniture, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 299,
+    "title": "Memory Types",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 300,
+    "title": "Volleyball game",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses sports activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 301,
+    "title": "Differential Equations",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 302,
+    "title": "Lunch sa lounge",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is about social activities and not academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 303,
+    "title": "Hash Tables",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to computer science.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 304,
+    "title": "Selling textbooks",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling books rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 305,
+    "title": "Optics",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 306,
+    "title": "Share project code",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests sharing code rather than discussing learning or academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 307,
+    "title": "DNA Replication",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post discusses biology correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 308,
+    "title": "Movie marathon",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses entertainment activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 309,
+    "title": "Stoichiometry",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses a core chemical principle.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 310,
+    "title": "Selling earphones",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling products rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 311,
+    "title": "Cognitive Dissonance",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses a recognized psychological concept.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 312,
+    "title": "Soccer game",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses sports activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 313,
+    "title": "Natural Language Processing",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 314,
+    "title": "Lost umbrella",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses lost items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 315,
+    "title": "ANOVA Test",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 316,
+    "title": "Midterm answers",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses exam preparation rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 317,
+    "title": "Renaissance Era",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content aligns with the defined definitions.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 318,
+    "title": "Pagod na naman",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content is a casual rant and not related to learning or academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 319,
+    "title": "Abstraction in OOP",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 320,
+    "title": "Selling lamp",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling products rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 321,
+    "title": "Personality Theories",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a recognized area of psychology accurately.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 322,
+    "title": "Basketball game",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses sports activities, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 323,
+    "title": "Social Contract",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 324,
+    "title": "Dorm rules",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses personal life and not academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 325,
+    "title": "Game Theory",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses advanced economic theory but is unrelated to learning or academic content.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 326,
+    "title": "Service for hire",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post asks for help with homework rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 327,
+    "title": "Carbon Cycle",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a scientific concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 328,
+    "title": "Uniform for sale",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling items, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 329,
+    "title": "Circle of Fifths",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 330,
+    "title": "Ulan tips",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses weather advice rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 331,
+    "title": "Fluid Mechanics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to civil engineering.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 332,
+    "title": "Cheating service",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests help rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 333,
+    "title": "Climate Change Effects",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a scientific concept related to environmental studies.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 334,
+    "title": "Selling bike",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 335,
+    "title": "Existentialism",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 336,
+    "title": "Dorm rules inquiry",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses personal living arrangements rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 337,
+    "title": "Social Contract",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 338,
+    "title": "Dorm rules",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses personal life and not academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 339,
+    "title": "Game Theory",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses advanced economic theory but is unrelated to learning or academic content.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 340,
+    "title": "Service for hire",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post asks for help with homework rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 341,
+    "title": "Carbon Cycle",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a scientific concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 342,
+    "title": "Uniform for sale",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling items, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 343,
+    "title": "Circle of Fifths",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 344,
+    "title": "Ulan tips",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The content discusses weather advice rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 345,
+    "title": "Fluid Mechanics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to civil engineering.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 346,
+    "title": "Pharmacology",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately addresses a nursing-related topic.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 347,
+    "title": "Software Cracks",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses software piracy rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 348,
+    "title": "Impressionism",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses art history content but is inconsistent with the definition of academic discussion.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 349,
+    "title": "P-Value",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content discusses statistical concepts but is unrelated to learning or academic discussion.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 350,
+    "title": "Lost ID",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses lost items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 351,
+    "title": "Ethnocentrism",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content discusses a recognized concept in anthropology.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 352,
+    "title": "Plate Tectonics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses geology concepts.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 353,
+    "title": "Registration error",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses registration errors rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 354,
+    "title": "Titration",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content discusses chemistry concepts but is unrelated to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 355,
+    "title": "4Ps of Marketing",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately explains marketing principles.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 356,
+    "title": "Commission",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 357,
+    "title": "Brutalism",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately describes a significant architectural movement.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 358,
+    "title": "Locker Rental",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests help with locker rentals, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 359,
+    "title": "Classical Conditioning",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to psychology.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 360,
+    "title": "Thesis for Sale",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling a thesis rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 361,
+    "title": "Double Jeopardy",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately addresses a legal principle.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 362,
+    "title": "Calculators",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 363,
+    "title": "Mitochondria",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to biology.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 364,
+    "title": "Gym hours",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses fitness activities rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 365,
+    "title": "Gram Staining",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a biological concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 366,
+    "title": "Metaphor vs Simile",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses literary terms.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 367,
+    "title": "Exam Proxy",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests help with exams rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 368,
+    "title": "French Revolution",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to History.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 369,
+    "title": "Trigonometry",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a math concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 370,
+    "title": "Commute tips",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses travel advice rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 371,
+    "title": "Quantum Mechanics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains advanced physics correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 372,
+    "title": "Feminism",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 373,
+    "title": "Food trip",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses food experiences and not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 374,
+    "title": "Big O Notation",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses computer science concepts but is unrelated to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 375,
+    "title": "Time Value of Money",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "Financial concepts are discussed correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 376,
+    "title": "Netflix Sharing",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses sharing content rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 377,
+    "title": "Enzyme Kinetics",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 378,
+    "title": "Study group",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about a study group discussion, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 379,
+    "title": "Utilitarianism",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses philosophical concepts but is inconsistent with the defined topic.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 380,
+    "title": "Assignment Help",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests assistance for homework rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 381,
+    "title": "Nucleophilic Substitution",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately explains chemical reaction types.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 382,
+    "title": "Heisenberg Uncertainty",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 383,
+    "title": "Fiscal Policy",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 384,
+    "title": "Phonology vs Phonetics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a recognized academic discipline correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 385,
+    "title": "Structural Analysis",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a technical concept related to civil engineering.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 386,
+    "title": "Epistemology",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post is about philosophy rather than academic learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 387,
+    "title": "Random Forest",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content explains statistical machine learning correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 388,
+    "title": "CRISPR-Cas9",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 389,
+    "title": "Meiji Restoration",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains historical event correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 390,
+    "title": "Complex Analysis",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but not related to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 391,
+    "title": "Cognitive Dissonance",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a relevant concept from psychology correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 392,
+    "title": "Intellectual Property",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to legal studies.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 393,
+    "title": "Black Holes",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to astronomy subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 394,
+    "title": "Realism vs Idealism",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 395,
+    "title": "Wastewater Treatment",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 396,
+    "title": "Sustainable Design",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to architecture.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 397,
+    "title": "P vs NP",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses advanced computer science concepts unrelated to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 398,
+    "title": "Synaptic Plasticity",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is related to learning sciences.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 399,
+    "title": "Constructivism",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 400,
+    "title": "Laplace Transform",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses a learned concept.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 401,
+    "title": "Binary Search Trees",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to computer science.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 402,
+    "title": "Quantum Mechanics Basics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a physics concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 403,
+    "title": "Protein Synthesis",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to biology.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 404,
+    "title": "Periodic Trends",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post is about a physics concept rather than chemistry.",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 405,
+    "title": "Confidence Intervals",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a statistical concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 406,
+    "title": "Decision Trees",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to artificial intelligence.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 407,
+    "title": "Cold War Era",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to History.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 408,
+    "title": "Multithreading",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to programming subjects.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 409,
+    "title": "Classical Conditioning",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately explains a learned behavioral principle.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 410,
+    "title": "Supply and Demand",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 411,
+    "title": "Shakespearean Tragedies",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately addresses an academic topic.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 412,
+    "title": "Lost ID",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses lost items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 413,
+    "title": "Ethnocentrism",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content discusses a recognized concept in anthropology.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 414,
+    "title": "Plate Tectonics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses geology concepts.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 415,
+    "title": "Registration error",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses registration errors rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 416,
+    "title": "Titration",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content discusses chemistry concepts but is unrelated to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 417,
+    "title": "4Ps of Marketing",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately explains marketing principles.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 418,
+    "title": "Commission",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 419,
+    "title": "Brutalism",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately describes a significant architectural movement.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 420,
+    "title": "Locker Rental",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests help with locker rentals, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 421,
+    "title": "Classical Conditioning",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to psychology.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 422,
+    "title": "Thesis for Sale",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about selling a thesis rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 423,
+    "title": "Double Jeopardy",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately addresses a legal principle.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 424,
+    "title": "Calculators",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses selling items rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 425,
+    "title": "Mitochondria",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The content is academic but unrelated to biology.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 426,
+    "title": "Gym hours",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses fitness activities rather than academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 427,
+    "title": "Gram Staining",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a biological concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 428,
+    "title": "Metaphor vs Simile",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately discusses literary terms.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 429,
+    "title": "Exam Proxy",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests help with exams rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 430,
+    "title": "French Revolution",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content is academic but unrelated to History.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 431,
+    "title": "Trigonometry",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a math concept correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 432,
+    "title": "Commute tips",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses travel advice rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 433,
+    "title": "Quantum Mechanics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains advanced physics correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 434,
+    "title": "Feminism",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 435,
+    "title": "Food trip",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses food experiences and not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 436,
+    "title": "Big O Notation",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses computer science concepts but is unrelated to learning.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 437,
+    "title": "Time Value of Money",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "Financial concepts are discussed correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 438,
+    "title": "Netflix Sharing",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post discusses sharing content rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 439,
+    "title": "Enzyme Kinetics",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 440,
+    "title": "Study group",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post is about a study group discussion, not academic content.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 441,
+    "title": "Utilitarianism",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post discusses philosophical concepts but is inconsistent with the defined topic.",
+    "is_academic": true,
+    "is_consistent": false
+  },
+  {
+    "test_num": 442,
+    "title": "Assignment Help",
+    "expected": "rejected",
+    "predicted": "rejected",
+    "correct": true,
+    "reason": "The post requests assistance for homework rather than academic discussion.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 443,
+    "title": "Nucleophilic Substitution",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content accurately explains chemical reaction types.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 444,
+    "title": "Heisenberg Uncertainty",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 445,
+    "title": "Fiscal Policy",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  },
+  {
+    "test_num": 446,
+    "title": "Phonology vs Phonetics",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a recognized academic discipline correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 447,
+    "title": "Structural Analysis",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The post explains a technical concept related to civil engineering.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 448,
+    "title": "Epistemology",
+    "expected": "approved",
+    "predicted": "rejected",
+    "correct": false,
+    "reason": "The post is about philosophy rather than academic learning.",
+    "is_academic": false,
+    "is_consistent": true
+  },
+  {
+    "test_num": 449,
+    "title": "Random Forest",
+    "expected": "approved",
+    "predicted": "approved",
+    "correct": true,
+    "reason": "The content explains statistical machine learning correctly.",
+    "is_academic": true,
+    "is_consistent": true
+  },
+  {
+    "test_num": 450,
+    "title": "CRISPR-Cas9",
+    "expected": "approved",
+    "predicted": "error",
+    "correct": false,
+    "reason": "Failed to parse AI output",
+    "is_academic": false,
+    "is_consistent": false
+  }
+]
