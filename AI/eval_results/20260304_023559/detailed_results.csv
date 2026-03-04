@@ -1,0 +1,451 @@
+test_num,title,expected,predicted,correct,reason,is_academic,is_consistent
+1,Time Complexity of Merge Sort,approved,error,False,Failed to parse AI output,False,False
+2,Study Group for Calculus Midterm,approved,rejected,False,The content is academic but unrelated to learning or subjects.,True,False
+3,Biology Club Hiking Trip,rejected,rejected,True,"The post is about a social activity, not academic content.",False,True
+4,Exam Answers for Quantum Mechanics,rejected,rejected,True,The post discusses exam preparation rather than academic discussion.,False,True
+5,Organic Chemistry Mechanism Question,approved,rejected,False,The content is academic but unrelated to chemistry subjects.,True,False
+6,Free Coffee in the Nursing Lounge,rejected,rejected,True,"The post is about social activities, not academic content.",False,True
+7,Help sa binary search,approved,rejected,False,The post discusses algorithm implementation rather than computer science concepts.,False,True
+8,Exam week mood 😂,rejected,rejected,True,The post discusses personal stress rather than academic content.,False,True
+9,Selling my calculator rush,rejected,rejected,True,The post discusses selling items rather than academic discussion.,False,True
+10,Normal ba mahirapan sa derivatives?,approved,rejected,False,The post discusses calculus concepts rather than learning or academic content.,False,True
+11,May answers ba sa quiz mamaya?,rejected,rejected,True,The content discusses gaming and not academic discussion.,False,True
+12,Process vs Thread,approved,approved,True,The content accurately discusses core operating systems concepts.,True,True
+13,Free donuts sa lobby!,rejected,rejected,True,The post discusses food preferences rather than academic content.,False,True
+14,Why does light behave as a wave and particle?,approved,rejected,False,The post discusses advanced physics concepts but do not align with the defined scope.,True,False
+15,Who's playing ML later?,rejected,rejected,True,The post discusses gaming content rather than academic discussion.,False,True
+16,Why is pH important in reactions?,approved,rejected,False,The post discusses chemistry concepts but is unrelated to learning.,True,False
+17,Looking for part-time job,rejected,rejected,True,The post discusses student employment rather than academic content.,False,True
+18,Primary key vs foreign key,approved,rejected,False,The post discusses database concepts but is unrelated to learning.,True,False
+19,Prof cancelled class today,rejected,rejected,True,The content is a casual announcement and not related to learning or academic discussion.,False,True
+20,How does photosynthesis work?,approved,approved,True,The content accurately discusses a biology concept.,True,True
+21,Stress na stress na ako 😭,rejected,rejected,True,The content discusses personal stress rather than academic discussion.,False,True
+22,Agile vs Waterfall,approved,approved,True,The content is academic but unrelated to software engineering.,True,True
+23,Selling extra headphones,rejected,rejected,True,"The content is about buying items for personal use, not academic discussion.",False,True
+24,What is the purpose of subnetting?,approved,rejected,False,The post discusses networking concepts but does not align with the defined topic.,True,False
+25,Random thought,rejected,rejected,True,The content is unrelated to learning or academic discussion.,False,True
+26,What is overfitting in machine learning?,approved,rejected,False,The content is academic but unrelated to artificial intelligence subjects.,True,False
+27,What is the intuition behind limits?,approved,rejected,False,The content is academic but not related to learning.,True,False
+28,Movie night after exams,rejected,rejected,True,The post discusses entertainment activities unrelated to learning.,False,True
+29,Stack vs Queue,approved,rejected,False,The content is academic but unrelated to programming concepts.,True,False
+30,Selling old textbooks,rejected,rejected,True,The post discusses selling items rather than academic discussion.,False,True
+31,Difference between speed and velocity,approved,rejected,False,The post discusses physics concepts but is unrelated to learning.,True,False
+32,Late na ako lagi,rejected,rejected,True,The content is about student life advice rather than academic discussion.,False,True
+33,What is standard deviation?,approved,rejected,False,The content discusses statistical concepts but is unrelated to learning.,True,False
+34,Pa send naman project code,rejected,rejected,True,The content discusses help-seeking rather than academic discussion.,False,True
+35,Covalent vs Ionic bonds,approved,approved,True,Chemistry content is academic but not related to learning.,True,True
+36,Kain tayo sa labas,rejected,rejected,True,The content is unrelated to learning or academic discussion.,False,True
+37,Difference between AI and Machine Learning,approved,rejected,False,The post discusses advanced AI concepts but is not related to learning or academic content.,True,False
+38,LF roommate near campus,rejected,rejected,True,The post discusses housing preferences rather than academic content.,False,True
+39,What causes inflation?,approved,approved,True,The content explains macroeconomic principles correctly.,True,True
+40,Buy 1 take 1 pens,rejected,rejected,True,The content is about buying items for sale rather than academic discussion.,False,True
+41,Causes of World War 1,approved,approved,True,The post explains historical causes accurately.,True,True
+42,Crush ko si prof,rejected,rejected,True,The content is personal gossip and not related to learning.,False,True
+43,What is recursion?,approved,rejected,False,The content is academic but unrelated to programming subjects.,True,False
+44,Exam coverage leak,rejected,rejected,True,The content discusses academic cheating rather than learning.,False,True
+45,What is cognitive dissonance?,approved,rejected,False,The content discusses psychological theory but is unrelated to learning or academic discussion.,True,False
+46,Valorant later?,rejected,rejected,True,The post discusses gaming content unrelated to learning or academic discussion.,False,True
+47,What is a catalyst?,approved,rejected,False,The content is academic but unrelated to chemistry subjects.,True,False
+48,LF study buddy for finals,rejected,rejected,True,"The post requests study buddy advice, not academic content.",False,True
+49,What is a derivative?,approved,rejected,False,The content is academic but unrelated to mathematics.,True,False
+50,Pa share naman notes,rejected,rejected,True,The content is about sharing notes rather than academic discussion.,False,True
+51,What is a binary tree?,approved,rejected,False,The content is academic but unrelated to computer science.,True,False
+52,LF group for project,rejected,rejected,True,"The post requests a study group for a project, not related to learning or academic content.",False,True
+53,What is Newton's second law?,approved,rejected,False,The content is academic but unrelated to physics.,True,False
+54,Kain tayo sa labas,rejected,rejected,True,The content is unrelated to learning or academic discussion.,False,True
+55,Difference between AI and Machine Learning,approved,rejected,False,The post discusses advanced AI concepts but is not related to learning or academic content.,True,False
+56,LF roommate near campus,rejected,rejected,True,The post discusses housing preferences rather than academic content.,False,True
+57,What causes inflation?,approved,approved,True,The content explains macroeconomic principles correctly.,True,True
+58,Buy 1 take 1 pens,rejected,rejected,True,The content is about buying items for sale rather than academic discussion.,False,True
+59,Causes of World War 1,approved,approved,True,The post explains historical causes accurately.,True,True
+60,Crush ko si prof,rejected,rejected,True,The content is personal gossip and not related to learning.,False,True
+61,What is recursion?,approved,rejected,False,The content is academic but unrelated to programming.,True,False
+62,Exam coverage leak,rejected,rejected,True,The content discusses academic cheating rather than learning.,False,True
+63,What is cognitive dissonance?,approved,rejected,False,The content discusses psychological theory but is unrelated to learning or academic discussion.,True,False
+64,Valorant later?,rejected,rejected,True,The post discusses gaming content unrelated to learning or academic discussion.,False,True
+65,What is a catalyst?,approved,rejected,False,The content is academic but unrelated to chemistry subjects.,True,False
+66,LF study buddy for finals,rejected,rejected,True,"The post requests study buddy advice, not academic content.",False,True
+67,What is a derivative?,approved,rejected,False,The content is academic but unrelated to mathematics.,True,False
+68,Pa share naman notes,rejected,rejected,True,The content is about sharing notes rather than academic discussion.,False,True
+69,What is a binary tree?,approved,rejected,False,The content is academic but unrelated to computer science.,True,False
+70,LF group for project,rejected,rejected,True,"The post requests a study group for a project, not related to learning or academic content.",False,True
+71,What is Newton's second law?,approved,rejected,False,The content is academic but unrelated to physics.,True,False
+72,Chain Rule confusion,approved,approved,True,The content accurately explains a calculus concept.,True,True
+73,Tambay sa cafeteria,rejected,rejected,True,The content is casual gossip and not related to learning or academic discussion.,False,True
+74,What is normalization?,approved,rejected,False,The content is academic but unrelated to database studies.,True,False
+75,Rush sale laptop,rejected,rejected,True,The post is about selling items rather than academic discussion.,False,True
+76,What is Newton's Second Law?,approved,rejected,False,The content is academic but unrelated to physics.,True,False
+77,Absent ako today,rejected,rejected,True,The content is about personal life and not academic discussion.,False,True
+78,Mean vs Median,approved,rejected,False,The content discusses statistical concepts rather than academic learning.,False,True
+79,Share nyo naman thesis,rejected,rejected,True,The post requests help with homework instead of discussing learning concepts.,False,True
+80,What is electronegativity?,approved,rejected,False,The content is academic but unrelated to chemistry subjects.,True,False
+81,Birthday ko today,rejected,rejected,True,The post discusses personal activities and not academic content.,False,True
+82,What is supervised learning?,approved,error,False,Failed to parse AI output,False,False
+83,Lost ID,rejected,rejected,True,The post discusses lost IDs rather than academic content.,False,True
+84,Supply and Demand,approved,approved,True,The content accurately explains a core economic concept.,True,True
+85,Selling lab gown,rejected,rejected,True,The post is about selling items rather than academic discussion.,False,True
+86,Cold War overview,approved,approved,True,The post discusses historical facts accurately.,True,True
+87,Traffic grabe,rejected,rejected,True,The content is a personal rant and not related to learning or academic discussion.,False,True
+88,Object Oriented Programming,approved,rejected,False,The content is academic but unrelated to programming subjects.,True,False
+89,May sagot ba sa assignment 3?,rejected,rejected,True,The content is about sharing answers rather than academic discussion.,False,True
+90,Nature vs Nurture,approved,error,False,Failed to parse AI output,False,False
+91,Integration by parts,approved,approved,True,The post discusses advanced calculus technique.,True,True
+92,May pasok ba bukas?,rejected,rejected,True,The post discusses holiday plans rather than academic content.,False,True
+93,TCP vs UDP,approved,rejected,False,The post is about computer networking rather than academic learning.,False,True
+94,Selling graphing calculator,rejected,rejected,True,The post discusses selling educational tools rather than academic content.,False,True
+95,What is entropy?,approved,rejected,False,The post discusses physics concept but does not align with the defined topic.,True,False
+96,Study break,rejected,rejected,True,The content is about personal activities and not academic discussion.,False,True
+97,What is hypothesis testing?,approved,approved,True,The post discusses statistics correctly.,True,True
+98,Answer key pls,rejected,rejected,True,"The post requests answers for an exam, not academic content.",False,True
+99,What is molarity?,approved,rejected,False,The content discusses chemistry concepts but is unrelated to academic discussion.,True,False
+100,Gym later,rejected,rejected,True,The post discusses personal activities unrelated to learning.,False,True
+101,What is reinforcement learning?,approved,approved,True,The post discusses advanced AI theory accurately.,True,True
+102,May extra ticket,rejected,rejected,True,The content is about entertainment and not academic discussion.,False,True
+103,GDP vs GNP,approved,approved,True,The post explains an economic concept correctly.,True,True
+104,Selling lab manual,rejected,rejected,True,The post discusses selling educational materials rather than academic discussion.,False,True
+105,French Revolution causes,approved,approved,True,The post explains historical causes accurately.,True,True
+106,Walang tulog,rejected,rejected,True,The content discusses personal habits and not academic discussion.,False,True
+107,Difference between array and linked list,approved,rejected,False,The post discusses computer science concepts unrelated to learning.,False,True
+108,Sagot sa lab activity,rejected,rejected,True,The content discusses answers rather than academic discussion.,False,True
+109,Maslow's hierarchy,approved,approved,True,The content is academic but not related to psychology.,True,True
+110,Inom later,rejected,rejected,True,The post discusses social activities unrelated to learning.,False,True
+111,What is a mole?,approved,approved,True,The post discusses a recognized scientific concept.,True,True
+112,LF study group,rejected,rejected,True,"The post is about a study group discussion, not academic content.",False,True
+113,What is a limit?,approved,approved,True,The post explains a mathematical concept correctly.,True,True
+114,Pa share notes sa class today,rejected,rejected,True,The content discusses sharing notes rather than academic discussion.,False,True
+115,What is a stack?,approved,approved,True,The post discusses a computer science topic.,True,True
+116,ML rank push,rejected,rejected,True,The content is about gaming and not academic discussion.,False,True
+117,Eigenvalues and Eigenvectors,approved,approved,True,The post explains a mathematical concept correctly.,True,True
+118,Tambay sa parking,rejected,rejected,True,The content is casual commentary and not related to learning or academic discussion.,False,True
+119,Big O notation basics,approved,approved,True,The content accurately discusses computer science concepts.,True,True
+120,Selling printer,rejected,rejected,True,The post discusses selling items rather than academic discussion.,False,True
+121,Difference between scalar and vector,approved,error,False,Failed to parse AI output,False,False
+122,Group study later,rejected,rejected,True,The content discusses social activities rather than academic discussion.,False,True
+123,Correlation vs Causation,approved,approved,True,The content discusses statistical analysis accurately.,True,True
+124,Pa copy ng code,rejected,rejected,True,The content asks for help on copying code rather than discussing learning or academic skills.,False,True
+125,Acid vs Base,approved,approved,True,The post explains a chemical concept correctly.,True,True
+126,Netflix reco,rejected,rejected,True,The post discusses entertainment content rather than academic discussion.,False,True
+127,Neural Networks basics,approved,approved,True,The post discusses advanced AI concepts accurately.,True,True
+128,Brownout today,rejected,rejected,True,The content is random announcement and not related to learning.,False,True
+129,Opportunity Cost,approved,rejected,False,The content discusses economic concepts but is unrelated to learning.,True,False
+130,Selling flash drive,rejected,rejected,True,"The post is about selling items, not academic content.",False,True
+131,Industrial Revolution impact,approved,approved,True,The post explains historical context accurately.,True,True
+132,Uwi na ako,rejected,rejected,True,The content is a casual rant and not related to learning or academic discussion.,False,True
+133,What is polymorphism?,approved,error,False,Failed to parse AI output,False,False
+134,Quiz answers pls,rejected,rejected,True,"The post asks for answers to a quiz, not academic content.",False,True
+135,Classical Conditioning,approved,approved,True,The content is academic but not related to psychology.,True,True
+136,Beach trip,rejected,rejected,True,The post discusses vacation plans rather than academic content.,False,True
+137,What is a catalyst?,approved,rejected,False,The content is academic but unrelated to chemistry subjects.,True,False
+138,LF group study,rejected,rejected,True,The post asks for study group information rather than academic discussion.,False,True
+139,What is a derivative?,approved,rejected,False,The content is academic but unrelated to mathematics.,True,False
+140,Pa share notes sa class today,rejected,rejected,True,The content discusses sharing notes rather than academic discussion.,False,True
+141,What is a stack?,approved,approved,True,The post discusses a computer science topic.,True,True
+142,ML rank push,rejected,rejected,True,The content is about gaming and not academic discussion.,False,True
+143,Eigenvalues and Eigenvectors,approved,approved,True,The post explains a mathematical concept correctly.,True,True
+144,Tambay sa parking,rejected,rejected,True,The content is casual commentary and not related to learning or academic discussion.,False,True
+145,Big O notation basics,approved,approved,True,The content accurately discusses computer science concepts.,True,True
+146,Selling printer,rejected,rejected,True,The post discusses selling items rather than academic discussion.,False,True
+147,Difference between scalar and vector,approved,error,False,Failed to parse AI output,False,False
+148,Group study later,rejected,rejected,True,The content discusses social activities rather than academic discussion.,False,True
+149,Correlation vs Causation,approved,approved,True,The content discusses statistical analysis accurately.,True,True
+150,Pa copy ng code,rejected,rejected,True,The content asks for help on copying code rather than discussing learning or academic skills.,False,True
+151,Acid vs Base,approved,approved,True,The post explains a chemical concept correctly.,True,True
+152,Netflix reco,rejected,rejected,True,The post discusses entertainment content rather than academic discussion.,False,True
+153,Neural Networks basics,approved,approved,True,The post discusses advanced AI concepts accurately.,True,True
+154,Brownout today,rejected,rejected,True,The content is random announcement and not related to learning.,False,True
+155,Opportunity Cost,approved,rejected,False,The content discusses economic concepts but is unrelated to learning.,True,False
+156,Selling flash drive,rejected,rejected,True,"The post is about selling items, not academic content.",False,True
+157,Industrial Revolution impact,approved,approved,True,The post explains historical context accurately.,True,True
+158,Uwi na ako,rejected,rejected,True,The content is a casual rant and not related to learning or academic discussion.,False,True
+159,What is polymorphism?,approved,error,False,Failed to parse AI output,False,False
+160,Quiz answers pls,rejected,rejected,True,"The post asks for answers to a quiz, not academic content.",False,True
+161,Classical Conditioning,approved,approved,True,The content is academic but not related to psychology.,True,True
+162,Beach trip,rejected,rejected,True,The post discusses vacation plans rather than academic content.,False,True
+163,What is a catalyst?,approved,rejected,False,The content is academic but unrelated to chemistry subjects.,True,False
+164,Taylor Series Expansion,approved,approved,True,The post discusses advanced mathematical concepts accurately.,True,True
+165,Libre snacks,rejected,rejected,True,The content is about food preferences rather than academic discussion.,False,True
+166,DFS vs BFS,approved,approved,True,The content is academic but unrelated to computer science.,True,True
+167,Selling tablet,rejected,rejected,True,The content is about selling items rather than academic discussion.,False,True
+168,Projectile Motion,approved,approved,True,The content accurately discusses physics concepts.,True,True
+169,Send lab answers,rejected,rejected,True,The content is about sending homework instead of discussing learning methods.,False,True
+170,Cellular Respiration,approved,error,False,Failed to parse AI output,False,False
+171,ML game later,rejected,rejected,True,The content is about gaming and not academic discussion.,False,True
+172,Balancing equations,approved,rejected,False,The post discusses chemistry concepts but is unrelated to academic discussion.,True,False
+173,Selling notebook bundle,rejected,rejected,True,"The post is about selling items, not academic content.",False,True
+174,What is gradient descent?,approved,approved,True,The post explains an advanced ML concept accurately.,True,True
+175,Lost wallet,rejected,rejected,True,The post discusses lost items rather than academic content.,False,True
+176,Confidence Intervals,approved,approved,True,The post explains a statistical concept accurately.,True,True
+177,Exam answers leak,rejected,rejected,True,The content discusses exam cheating rather than academic discussion.,False,True
+178,Renaissance period,approved,approved,True,The content is academic but unrelated to History.,True,True
+179,Chill sa park,rejected,rejected,True,The content is personal gossip and not related to learning.,False,True
+180,What is encapsulation?,approved,approved,True,The content discusses a recognized programming principle.,True,True
+181,Selling keyboard,rejected,rejected,True,The post discusses selling items rather than academic discussion.,False,True
+182,What is emotional intelligence?,approved,approved,True,The content is academic but unrelated to psychology.,True,True
+183,Inom tonight,rejected,rejected,True,The post discusses partying and not academic content.,False,True
+184,Partial Derivatives,approved,error,False,Failed to parse AI output,False,False
+185,Lunch tayo,rejected,rejected,True,The content is about food preferences rather than academic discussion.,False,True
+186,Dynamic Programming,approved,error,False,Failed to parse AI output,False,False
+187,Selling review books,rejected,rejected,True,The post is about selling books rather than academic discussion.,False,True
+188,Ohm's Law,approved,approved,True,The content accurately discusses a physics principle.,True,True
+189,Copy ng assignment,rejected,rejected,True,The content is about copying homework instead of discussing learning concepts.,False,True
+190,DNA Replication,approved,approved,True,The post explains a biological process correctly.,True,True
+191,Movie marathon,rejected,rejected,True,"The post discusses entertainment activities, not academic content.",False,True
+192,Periodic Trends,approved,rejected,False,The post is about a physics concept rather than chemistry.,False,False
+193,Selling mouse,rejected,rejected,True,The post is about selling products rather than academic discussion.,False,True
+194,Cognitive Dissonance,approved,approved,True,The content accurately discusses a recognized psychological concept.,True,True
+195,Study break plans,rejected,rejected,True,"The post discusses study breaks, not academic content.",False,True
+196,Overfitting vs Underfitting,approved,approved,True,The content is academic but unrelated to artificial intelligence.,True,True
+197,Library closed,rejected,rejected,True,The content is about a library announcement rather than academic discussion.,False,True
+198,ANOVA basics,approved,error,False,Failed to parse AI output,False,False
+199,Final exam leak,rejected,rejected,True,The post discusses a personal issue unrelated to learning or academic content.,False,True
+200,American Revolution,approved,approved,True,The post explains historical cause accurately.,True,True
+201,Antok na ako,rejected,rejected,True,The content is a casual rant and not related to learning or academic discussion.,False,True
+202,What is abstraction?,approved,approved,True,The content discusses advanced programming principles.,True,True
+203,Selling monitor,rejected,rejected,True,The post discusses selling items rather than academic discussion.,False,True
+204,Behaviorism theory,approved,error,False,Failed to parse AI output,False,False
+205,Basketball game,rejected,rejected,True,"The post discusses sports activities, not academic content.",False,True
+206,Complex Numbers Basics,approved,approved,True,The post discusses advanced mathematics content accurately.,True,True
+207,Campus meetup later,rejected,rejected,True,The post is about socializing and not academic content.,False,True
+208,Recursion Explained,approved,approved,True,The post discusses a computer science topic.,True,True
+209,Selling headphones,rejected,rejected,True,The post is about selling items rather than academic discussion.,False,True
+210,Newton's Laws,approved,error,False,Failed to parse AI output,False,False
+211,Help with assignment code,rejected,rejected,True,The post requests help for homework instead of discussing learning concepts.,False,True
+212,Enzyme Catalysis,approved,approved,True,The content accurately discusses enzyme activity.,True,True
+213,Movie night,rejected,rejected,True,"The post is about entertainment activities, not academic content.",False,True
+214,Chemical Bonds,approved,rejected,False,The content is academic but unrelated to chemistry.,True,False
+215,Selling textbook,rejected,rejected,True,The post is about selling textbooks rather than academic discussion.,False,True
+216,Supervised Learning,approved,approved,True,The post explains advanced machine learning correctly.,True,True
+217,Lost keys,rejected,rejected,True,The post discusses lost items and not academic content.,False,True
+218,Hypothesis Testing,approved,error,False,Failed to parse AI output,False,False
+219,Final project solutions,rejected,rejected,True,The post discusses answers rather than learning or academic content.,False,True
+220,World War II Causes,approved,approved,True,The content discusses historical facts correctly.,True,True
+221,Napagod na ako,rejected,rejected,True,The content is a casual rant and not related to learning or academic discussion.,False,True
+222,Inheritance in OOP,approved,approved,True,The post discusses advanced programming concepts correctly.,True,True
+223,Selling mousepad,rejected,rejected,True,The post is about selling products rather than academic discussion.,False,True
+224,Cognitive Dissonance,approved,approved,True,The content accurately addresses an academic topic.,True,True
+225,Football match tonight,rejected,rejected,True,"The post discusses sports activities, not academic content.",False,True
+226,Linear Algebra Eigenvalues,approved,approved,True,The content is academic but not related to learning or knowledge.,True,True
+227,Coffee sa lounge,rejected,rejected,True,The post discusses social activities and not academic content.,False,True
+228,Big O Notation,approved,approved,True,The post explains advanced CS terminology correctly.,True,True
+229,Selling chair,rejected,rejected,True,The post discusses selling furniture rather than academic content.,False,True
+230,Thermodynamics Laws,approved,approved,True,The post explains a physics concept correctly.,True,True
+231,Copy ng homework,rejected,rejected,True,The content asks for help rather than discussing learning concepts.,False,True
+232,Photosynthesis Process,approved,approved,True,The content accurately describes a biology concept.,True,True
+233,Board games night,rejected,rejected,True,"The post discusses entertainment activities, not academic content.",False,True
+234,Acid-Base Reactions,approved,approved,True,The post explains a chemical concept correctly.,True,True
+235,Selling backpack,rejected,rejected,True,"The post is about selling items, not academic content.",False,True
+236,Maslow's Hierarchy of Needs,approved,rejected,False,The content is academic but not related to psychology.,True,False
+237,Karaoke night,rejected,rejected,True,"The post discusses entertainment activities, not academic content.",False,True
+238,Integration by Parts,approved,approved,True,The content accurately explains a mathematical technique.,True,True
+239,Study group later,rejected,rejected,True,"The post is about a study group discussion, not academic content.",False,True
+240,Data Structures,approved,rejected,False,The content is academic but unrelated to CS subjects.,True,False
+241,Selling phone case,rejected,rejected,True,The post is about selling products rather than academic discussion.,False,True
+242,Quantum Mechanics Basics,approved,error,False,Failed to parse AI output,False,False
+243,Help with coding assignment,rejected,rejected,True,The post requests help rather than discussing learning or academic content.,False,True
+244,Cell Division Process,approved,error,False,Failed to parse AI output,False,False
+245,Game night,rejected,rejected,True,"The post discusses gaming activities, not academic content.",False,True
+246,Organic Chemistry Basics,approved,approved,True,The post explains a core concept in chemistry correctly.,True,True
+247,Selling laptop,rejected,rejected,True,The post discusses selling items rather than academic discussion.,False,True
+248,Freud's Psychoanalysis,approved,error,False,Failed to parse AI output,False,False
+249,Volleyball game,rejected,rejected,True,"The post discusses sports activities, not academic content.",False,True
+250,Probability Theory,approved,rejected,False,The content is academic but not related to learning.,True,False
+251,Study break plans,rejected,rejected,True,"The post discusses study breaks, not academic content.",False,True
+252,Overfitting vs Underfitting,approved,approved,True,The content is academic but unrelated to artificial intelligence.,True,True
+253,Library closed,rejected,rejected,True,The content is about a library announcement rather than academic discussion.,False,True
+254,ANOVA basics,approved,error,False,Failed to parse AI output,False,False
+255,Final exam leak,rejected,rejected,True,The post discusses a personal issue unrelated to learning or academic content.,False,True
+256,American Revolution,approved,approved,True,The post explains historical cause accurately.,True,True
+257,Reinforcement Learning Basics,approved,approved,True,The post explains advanced AI techniques correctly.,True,True
+258,Lost bag,rejected,rejected,True,The post discusses lost items rather than academic content.,False,True
+259,Regression Analysis,approved,error,False,Failed to parse AI output,False,False
+260,Final exam hacks,rejected,rejected,True,The post discusses study techniques rather than academic content.,False,True
+261,Industrial Revolution,approved,approved,True,The content is academic but unrelated to History.,True,True
+262,Napagod na,rejected,rejected,True,The content is a casual rant and not related to learning or academic discussion.,False,True
+263,Polymorphism in OOP,approved,rejected,False,The content is academic but unrelated to programming subjects.,True,False
+264,Selling desk lamp,rejected,rejected,True,"The post is about selling items, not academic content.",False,True
+265,Motivation Theories,approved,approved,True,The post explains a recognized psychological concept accurately.,True,True
+266,Ping pong game,rejected,rejected,True,"The post discusses sports activities, not academic content.",False,True
+267,Integration Techniques,approved,approved,True,The content accurately discusses mathematical concepts.,True,True
+268,Snack sa lounge,rejected,rejected,True,The post discusses social activities rather than academic content.,False,True
+269,Sorting Algorithms,approved,rejected,False,The content is academic but unrelated to CS.,True,False
+270,Selling keyboard,rejected,rejected,True,The post is about selling products rather than academic discussion.,False,True
+271,Electromagnetic Waves,approved,approved,True,The post explains a physics concept correctly.,True,True
+272,Assignment Solutions,rejected,rejected,True,The post requests homework solutions rather than academic discussion.,False,True
+273,Cell Division,approved,approved,True,The content is academic but unrelated to biology.,True,True
+274,Movie night,rejected,rejected,True,"The post discusses entertainment activities, not academic content.",False,True
+275,Oxidation-Reduction,approved,rejected,False,The post is about a chemistry topic rather than academic learning.,False,False
+276,Selling water bottle,rejected,rejected,True,"The post is about selling items, not academic content.",False,True
+277,Behaviorism Theory,approved,error,False,Failed to parse AI output,False,False
+278,Basketball game,rejected,rejected,True,"The post discusses sports activities, not academic content.",False,True
+279,Differential Equations,approved,rejected,False,The content is academic but unrelated to subjects.,True,False
+280,Free coffee,rejected,rejected,True,The post discusses social activities rather than academic content.,False,True
+281,Algorithm Complexity,approved,rejected,False,The content discusses computer science concepts unrelated to learning.,True,False
+282,Selling headphones,rejected,rejected,True,The post is about selling products rather than academic discussion.,False,True
+283,Relativity Theory,approved,approved,True,Physics content is discussed correctly.,True,True
+284,Exam answers request,rejected,rejected,True,The post requests exam answers rather than academic discussion.,False,True
+285,French Revolution Causes,approved,approved,True,The content discusses historical events correctly.,True,True
+286,Pagod na,rejected,rejected,True,The content is a casual rant and not related to learning or academic discussion.,False,True
+287,Encapsulation in OOP,approved,approved,True,The post explains a complex programming concept correctly.,True,True
+288,Selling desk chair,rejected,rejected,True,"The post is about selling furniture, not academic content.",False,True
+289,Memory Types,approved,error,False,Failed to parse AI output,False,False
+290,Volleyball game,rejected,rejected,True,"The post discusses sports activities, not academic content.",False,True
+291,Convolutional Neural Networks,approved,rejected,False,The content is academic but unrelated to artificial intelligence subjects.,True,False
+292,Lost wallet,rejected,rejected,True,The post discusses random lost items and not academic content.,False,True
+293,Chi-Square Test,approved,error,False,Failed to parse AI output,False,False
+294,Exam answers request,rejected,rejected,True,The post requests exam answers rather than academic discussion.,False,True
+295,French Revolution Causes,approved,approved,True,The content discusses historical events correctly.,True,True
+296,Pagod na,rejected,rejected,True,The content is a casual rant and not related to learning or academic discussion.,False,True
+297,Encapsulation in OOP,approved,approved,True,The post explains a complex programming concept correctly.,True,True
+298,Selling desk chair,rejected,rejected,True,"The post is about selling furniture, not academic content.",False,True
+299,Memory Types,approved,error,False,Failed to parse AI output,False,False
+300,Volleyball game,rejected,rejected,True,"The post discusses sports activities, not academic content.",False,True
+301,Differential Equations,approved,rejected,False,The content is academic but unrelated to subjects.,True,False
+302,Lunch sa lounge,rejected,rejected,True,The content is about social activities and not academic discussion.,False,True
+303,Hash Tables,approved,approved,True,The content is academic but unrelated to computer science.,True,True
+304,Selling textbooks,rejected,rejected,True,The post is about selling books rather than academic discussion.,False,True
+305,Optics,approved,error,False,Failed to parse AI output,False,False
+306,Share project code,rejected,rejected,True,The post requests sharing code rather than discussing learning or academic content.,False,True
+307,DNA Replication,approved,approved,True,The post discusses biology correctly.,True,True
+308,Movie marathon,rejected,rejected,True,"The post discusses entertainment activities, not academic content.",False,True
+309,Stoichiometry,approved,approved,True,The content accurately discusses a core chemical principle.,True,True
+310,Selling earphones,rejected,rejected,True,The post is about selling products rather than academic discussion.,False,True
+311,Cognitive Dissonance,approved,approved,True,The content accurately discusses a recognized psychological concept.,True,True
+312,Soccer game,rejected,rejected,True,"The post discusses sports activities, not academic content.",False,True
+313,Natural Language Processing,approved,error,False,Failed to parse AI output,False,False
+314,Lost umbrella,rejected,rejected,True,The post discusses lost items rather than academic discussion.,False,True
+315,ANOVA Test,approved,error,False,Failed to parse AI output,False,False
+316,Midterm answers,rejected,rejected,True,The post discusses exam preparation rather than academic content.,False,True
+317,Renaissance Era,approved,approved,True,The content aligns with the defined definitions.,True,True
+318,Pagod na naman,rejected,rejected,True,The content is a casual rant and not related to learning or academic discussion.,False,True
+319,Abstraction in OOP,approved,error,False,Failed to parse AI output,False,False
+320,Selling lamp,rejected,rejected,True,The post is about selling products rather than academic discussion.,False,True
+321,Personality Theories,approved,approved,True,The post explains a recognized area of psychology accurately.,True,True
+322,Basketball game,rejected,rejected,True,"The post discusses sports activities, not academic content.",False,True
+323,Social Contract,approved,error,False,Failed to parse AI output,False,False
+324,Dorm rules,rejected,rejected,True,The content discusses personal life and not academic discussion.,False,True
+325,Game Theory,approved,rejected,False,The post discusses advanced economic theory but is unrelated to learning or academic content.,True,False
+326,Service for hire,rejected,rejected,True,The post asks for help with homework rather than academic discussion.,False,True
+327,Carbon Cycle,approved,approved,True,The post explains a scientific concept correctly.,True,True
+328,Uniform for sale,rejected,rejected,True,"The post is about selling items, not academic content.",False,True
+329,Circle of Fifths,approved,error,False,Failed to parse AI output,False,False
+330,Ulan tips,rejected,rejected,True,The content discusses weather advice rather than academic discussion.,False,True
+331,Fluid Mechanics,approved,approved,True,The content is academic but unrelated to civil engineering.,True,True
+332,Cheating service,rejected,rejected,True,The post requests help rather than academic discussion.,False,True
+333,Climate Change Effects,approved,approved,True,The post explains a scientific concept related to environmental studies.,True,True
+334,Selling bike,rejected,rejected,True,The post discusses selling items rather than academic discussion.,False,True
+335,Existentialism,approved,error,False,Failed to parse AI output,False,False
+336,Dorm rules inquiry,rejected,rejected,True,The post discusses personal living arrangements rather than academic content.,False,True
+337,Social Contract,approved,error,False,Failed to parse AI output,False,False
+338,Dorm rules,rejected,rejected,True,The content discusses personal life and not academic discussion.,False,True
+339,Game Theory,approved,rejected,False,The post discusses advanced economic theory but is unrelated to learning or academic content.,True,False
+340,Service for hire,rejected,rejected,True,The post asks for help with homework rather than academic discussion.,False,True
+341,Carbon Cycle,approved,approved,True,The post explains a scientific concept correctly.,True,True
+342,Uniform for sale,rejected,rejected,True,"The post is about selling items, not academic content.",False,True
+343,Circle of Fifths,approved,error,False,Failed to parse AI output,False,False
+344,Ulan tips,rejected,rejected,True,The content discusses weather advice rather than academic discussion.,False,True
+345,Fluid Mechanics,approved,approved,True,The content is academic but unrelated to civil engineering.,True,True
+346,Pharmacology,approved,approved,True,The content accurately addresses a nursing-related topic.,True,True
+347,Software Cracks,rejected,rejected,True,The post discusses software piracy rather than academic content.,False,True
+348,Impressionism,approved,rejected,False,The post discusses art history content but is inconsistent with the definition of academic discussion.,True,False
+349,P-Value,approved,rejected,False,The content discusses statistical concepts but is unrelated to learning or academic discussion.,True,False
+350,Lost ID,rejected,rejected,True,The post discusses lost items rather than academic discussion.,False,True
+351,Ethnocentrism,approved,approved,True,The content discusses a recognized concept in anthropology.,True,True
+352,Plate Tectonics,approved,approved,True,The content accurately discusses geology concepts.,True,True
+353,Registration error,rejected,rejected,True,The post discusses registration errors rather than academic discussion.,False,True
+354,Titration,approved,rejected,False,The content discusses chemistry concepts but is unrelated to learning.,True,False
+355,4Ps of Marketing,approved,approved,True,The content accurately explains marketing principles.,True,True
+356,Commission,rejected,rejected,True,The post is about selling items rather than academic discussion.,False,True
+357,Brutalism,approved,approved,True,The content accurately describes a significant architectural movement.,True,True
+358,Locker Rental,rejected,rejected,True,"The post requests help with locker rentals, not academic content.",False,True
+359,Classical Conditioning,approved,rejected,False,The content is academic but unrelated to psychology.,True,False
+360,Thesis for Sale,rejected,rejected,True,The post is about selling a thesis rather than academic discussion.,False,True
+361,Double Jeopardy,approved,approved,True,The content accurately addresses a legal principle.,True,True
+362,Calculators,rejected,rejected,True,The post discusses selling items rather than academic discussion.,False,True
+363,Mitochondria,approved,rejected,False,The content is academic but unrelated to biology.,True,False
+364,Gym hours,rejected,rejected,True,The post discusses fitness activities rather than academic content.,False,True
+365,Gram Staining,approved,approved,True,The post explains a biological concept correctly.,True,True
+366,Metaphor vs Simile,approved,approved,True,The content accurately discusses literary terms.,True,True
+367,Exam Proxy,rejected,rejected,True,The post requests help with exams rather than academic discussion.,False,True
+368,French Revolution,approved,approved,True,The content is academic but unrelated to History.,True,True
+369,Trigonometry,approved,approved,True,The post explains a math concept correctly.,True,True
+370,Commute tips,rejected,rejected,True,The post discusses travel advice rather than academic discussion.,False,True
+371,Quantum Mechanics,approved,approved,True,The post explains advanced physics correctly.,True,True
+372,Feminism,approved,error,False,Failed to parse AI output,False,False
+373,Food trip,rejected,rejected,True,The post discusses food experiences and not academic content.,False,True
+374,Big O Notation,approved,rejected,False,The post discusses computer science concepts but is unrelated to learning.,True,False
+375,Time Value of Money,approved,approved,True,Financial concepts are discussed correctly.,True,True
+376,Netflix Sharing,rejected,rejected,True,The post discusses sharing content rather than academic discussion.,False,True
+377,Enzyme Kinetics,approved,error,False,Failed to parse AI output,False,False
+378,Study group,rejected,rejected,True,"The post is about a study group discussion, not academic content.",False,True
+379,Utilitarianism,approved,rejected,False,The post discusses philosophical concepts but is inconsistent with the defined topic.,True,False
+380,Assignment Help,rejected,rejected,True,The post requests assistance for homework rather than academic discussion.,False,True
+381,Nucleophilic Substitution,approved,approved,True,The content accurately explains chemical reaction types.,True,True
+382,Heisenberg Uncertainty,approved,error,False,Failed to parse AI output,False,False
+383,Fiscal Policy,approved,error,False,Failed to parse AI output,False,False
+384,Phonology vs Phonetics,approved,approved,True,The post explains a recognized academic discipline correctly.,True,True
+385,Structural Analysis,approved,approved,True,The post explains a technical concept related to civil engineering.,True,True
+386,Epistemology,approved,rejected,False,The post is about philosophy rather than academic learning.,False,True
+387,Random Forest,approved,approved,True,The content explains statistical machine learning correctly.,True,True
+388,CRISPR-Cas9,approved,error,False,Failed to parse AI output,False,False
+389,Meiji Restoration,approved,approved,True,The post explains historical event correctly.,True,True
+390,Complex Analysis,approved,rejected,False,The content is academic but not related to learning.,True,False
+391,Cognitive Dissonance,approved,approved,True,The post explains a relevant concept from psychology correctly.,True,True
+392,Intellectual Property,approved,rejected,False,The content is academic but unrelated to legal studies.,True,False
+393,Black Holes,approved,rejected,False,The content is academic but unrelated to astronomy subjects.,True,False
+394,Realism vs Idealism,approved,error,False,Failed to parse AI output,False,False
+395,Wastewater Treatment,approved,error,False,Failed to parse AI output,False,False
+396,Sustainable Design,approved,approved,True,The content is academic but unrelated to architecture.,True,True
+397,P vs NP,approved,rejected,False,The post discusses advanced computer science concepts unrelated to learning.,True,False
+398,Synaptic Plasticity,approved,approved,True,The content is related to learning sciences.,True,True
+399,Constructivism,approved,error,False,Failed to parse AI output,False,False
+400,Laplace Transform,approved,approved,True,The content accurately discusses a learned concept.,True,True
+401,Binary Search Trees,approved,approved,True,The content is academic but unrelated to computer science.,True,True
+402,Quantum Mechanics Basics,approved,approved,True,The post explains a physics concept correctly.,True,True
+403,Protein Synthesis,approved,approved,True,The content is academic but unrelated to biology.,True,True
+404,Periodic Trends,approved,rejected,False,The post is about a physics concept rather than chemistry.,False,False
+405,Confidence Intervals,approved,approved,True,The post explains a statistical concept correctly.,True,True
+406,Decision Trees,approved,approved,True,The content is academic but unrelated to artificial intelligence.,True,True
+407,Cold War Era,approved,approved,True,The content is academic but unrelated to History.,True,True
+408,Multithreading,approved,rejected,False,The content is academic but unrelated to programming subjects.,True,False
+409,Classical Conditioning,approved,approved,True,The content accurately explains a learned behavioral principle.,True,True
+410,Supply and Demand,approved,error,False,Failed to parse AI output,False,False
+411,Shakespearean Tragedies,approved,approved,True,The content accurately addresses an academic topic.,True,True
+412,Lost ID,rejected,rejected,True,The post discusses lost items rather than academic discussion.,False,True
+413,Ethnocentrism,approved,approved,True,The content discusses a recognized concept in anthropology.,True,True
+414,Plate Tectonics,approved,approved,True,The content accurately discusses geology concepts.,True,True
+415,Registration error,rejected,rejected,True,The post discusses registration errors rather than academic discussion.,False,True
+416,Titration,approved,rejected,False,The content discusses chemistry concepts but is unrelated to learning.,True,False
+417,4Ps of Marketing,approved,approved,True,The content accurately explains marketing principles.,True,True
+418,Commission,rejected,rejected,True,The post is about selling items rather than academic discussion.,False,True
+419,Brutalism,approved,approved,True,The content accurately describes a significant architectural movement.,True,True
+420,Locker Rental,rejected,rejected,True,"The post requests help with locker rentals, not academic content.",False,True
+421,Classical Conditioning,approved,rejected,False,The content is academic but unrelated to psychology.,True,False
+422,Thesis for Sale,rejected,rejected,True,The post is about selling a thesis rather than academic discussion.,False,True
+423,Double Jeopardy,approved,approved,True,The content accurately addresses a legal principle.,True,True
+424,Calculators,rejected,rejected,True,The post discusses selling items rather than academic discussion.,False,True
+425,Mitochondria,approved,rejected,False,The content is academic but unrelated to biology.,True,False
+426,Gym hours,rejected,rejected,True,The post discusses fitness activities rather than academic content.,False,True
+427,Gram Staining,approved,approved,True,The post explains a biological concept correctly.,True,True
+428,Metaphor vs Simile,approved,approved,True,The content accurately discusses literary terms.,True,True
+429,Exam Proxy,rejected,rejected,True,The post requests help with exams rather than academic discussion.,False,True
+430,French Revolution,approved,approved,True,The content is academic but unrelated to History.,True,True
+431,Trigonometry,approved,approved,True,The post explains a math concept correctly.,True,True
+432,Commute tips,rejected,rejected,True,The post discusses travel advice rather than academic discussion.,False,True
+433,Quantum Mechanics,approved,approved,True,The post explains advanced physics correctly.,True,True
+434,Feminism,approved,error,False,Failed to parse AI output,False,False
+435,Food trip,rejected,rejected,True,The post discusses food experiences and not academic content.,False,True
+436,Big O Notation,approved,rejected,False,The post discusses computer science concepts but is unrelated to learning.,True,False
+437,Time Value of Money,approved,approved,True,Financial concepts are discussed correctly.,True,True
+438,Netflix Sharing,rejected,rejected,True,The post discusses sharing content rather than academic discussion.,False,True
+439,Enzyme Kinetics,approved,error,False,Failed to parse AI output,False,False
+440,Study group,rejected,rejected,True,"The post is about a study group discussion, not academic content.",False,True
+441,Utilitarianism,approved,rejected,False,The post discusses philosophical concepts but is inconsistent with the defined topic.,True,False
+442,Assignment Help,rejected,rejected,True,The post requests assistance for homework rather than academic discussion.,False,True
+443,Nucleophilic Substitution,approved,approved,True,The content accurately explains chemical reaction types.,True,True
+444,Heisenberg Uncertainty,approved,error,False,Failed to parse AI output,False,False
+445,Fiscal Policy,approved,error,False,Failed to parse AI output,False,False
+446,Phonology vs Phonetics,approved,approved,True,The post explains a recognized academic discipline correctly.,True,True
+447,Structural Analysis,approved,approved,True,The post explains a technical concept related to civil engineering.,True,True
+448,Epistemology,approved,rejected,False,The post is about philosophy rather than academic learning.,False,True
+449,Random Forest,approved,approved,True,The content explains statistical machine learning correctly.,True,True
+450,CRISPR-Cas9,approved,error,False,Failed to parse AI output,False,False

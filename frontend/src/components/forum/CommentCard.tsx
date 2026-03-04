@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
-import { formatTimeAgo } from "@/lib/formatTime";
 import {
   Sparkles,
   ArrowUp,
@@ -11,6 +10,7 @@ import {
   CornerDownRight,
   X,
   Check,
+  MoreVertical,
 } from "lucide-react";
 import { BrutalTag } from "@/components/ui/BrutalTag";
 import { BrutalButton } from "@/components/ui/BrutalButton";
@@ -37,17 +37,19 @@ interface CommentCardProps {
   onDelete?: (commentId: string) => void;
   onReply?: (commentId: string, content: string) => void;
   className?: string;
+  isLast?: boolean;
 }
 
 export const CommentCard: React.FC<CommentCardProps> = ({
   comment,
-  currentUserId = "user1", // Mock current user
+  currentUserId = "user1",
   depth = 0,
   onVote,
   onEdit,
   onDelete,
   onReply,
   className,
+  isLast = false,
 }) => {
   const [isReplying, setIsReplying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -57,6 +59,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
   const [userVote, setUserVote] = useState<1 | -1 | null>(
     comment.userVote ?? null,
   );
+  const [showMenu, setShowMenu] = useState(false);
 
   const isAuthor = comment.authorId === currentUserId;
   const maxDepth = 3;
@@ -105,44 +108,60 @@ export const CommentCard: React.FC<CommentCardProps> = ({
   };
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div
+      className={cn(
+        "relative space-y-3.5 overflow-visible",
+        depth > 0 && "ml-10",
+        className,
+      )}
+    >
+      {/* Relationship lines (for replies) */}
+      {depth > 0 && (
+        <>
+          {/* Curve into this comment */}
+          <svg
+            className="absolute pointer-events-none"
+            style={{ left: -16, top: -12, width: 24, height: 38 }}
+            fill="none"
+          >
+            <path
+              d="M1 0 L1 22 Q1 34 13 34 L24 34"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              className="stroke-muted-foreground/40"
+            />
+          </svg>
+
+          {/* Vertical continuation line (if not last sibling) */}
+          {!isLast && (
+            <div
+              className="absolute"
+              style={{
+                left: -17,
+                top: -12,
+                bottom: -10,
+                borderLeftWidth: 3,
+                borderLeftStyle: "solid",
+                borderLeftColor: "rgba(120,120,120,0.50)", // <- change this
+              }}
+            />
+          )}
+        </>
+      )}
       <div
         className={cn(
-          "border-[3px] border-foreground rounded-lg bg-card shadow-brutal-sm",
+          "border-[3px] border-foreground rounded-lg bg-card shadow-brutal-sm group hover:shadow-brutal transition-all",
           comment.isAIVerified && "border-teal bg-teal/10",
           isAuthor && "bg-blue/10 border-blue",
-          depth > 0 && "ml-6 md:ml-10",
+          depth > 0 && "ml-2",
         )}
       >
-        <div className="flex">
-          {/* Vote Panel */}
-          <div className="flex flex-col items-center gap-1 p-3 border-r-[3px] border-foreground bg-muted/30">
-            <button
-              onClick={() => handleVote("up")}
-              className={cn(
-                "w-8 h-8 rounded-md border-2 border-foreground flex items-center justify-center transition-all hover:bg-teal/20",
-                userVote === 1 && "bg-teal text-foreground",
-              )}
-            >
-              <ArrowUp className="w-4 h-4" />
-            </button>
-            <span className="font-bold text-sm">{localVoteCount}</span>
-            <button
-              onClick={() => handleVote("down")}
-              className={cn(
-                "w-8 h-8 rounded-md border-2 border-foreground flex items-center justify-center transition-all hover:bg-destructive/20",
-                userVote === -1 && "bg-destructive text-destructive-foreground",
-              )}
-            >
-              <ArrowDown className="w-4 h-4" />
-            </button>
-          </div>
-
+        <div className="flex flex-col">
           {/* Content */}
-          <div className="flex-1 p-4">
-            <div className="flex items-start gap-3">
+          <div className="flex-1 p-3">
+            <div className="flex items-start gap-2">
               {/* Avatar */}
-              <div className="w-10 h-10 bg-muted rounded-full border-2 border-foreground overflow-hidden shrink-0">
+              <div className="w-8 h-8 bg-muted rounded-full border-2 border-foreground overflow-hidden shrink-0">
                 {comment.avatar ? (
                   <img
                     src={comment.avatar}
@@ -150,7 +169,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                  <div className="w-full h-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs">
                     {comment.author.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -159,14 +178,16 @@ export const CommentCard: React.FC<CommentCardProps> = ({
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold">{comment.author}</span>
-                  <span className="text-muted-foreground text-sm">
+                  <span className="font-semibold text-sm">
+                    {comment.author}
+                  </span>
+                  <span className="text-muted-foreground text-xs">
                     • {comment.timestamp}
                   </span>
                   {comment.isAIVerified && (
-                    <BrutalTag color="teal" className="text-xs">
-                      <Sparkles className="w-3 h-3 mr-1" />
-                      AI Verified
+                    <BrutalTag color="teal" className="text-xs py-0.5 px-1.5">
+                      <Sparkles className="w-2.5 h-2.5 mr-0.5" />
+                      AI
                     </BrutalTag>
                   )}
                 </div>
@@ -176,7 +197,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                     <textarea
                       value={editContent}
                       onChange={(e) => setEditContent(e.target.value)}
-                      className="w-full px-3 py-2 bg-background border-2 border-foreground rounded-lg font-medium resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-3 py-2 bg-background border-2 border-foreground rounded-lg font-medium resize-none focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                       rows={3}
                     />
                     <div className="flex gap-2">
@@ -185,7 +206,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                         variant="primary"
                         onClick={handleSubmitEdit}
                       >
-                        <Check className="w-4 h-4 mr-1" />
+                        <Check className="w-3 h-3 mr-1" />
                         Save
                       </BrutalButton>
                       <BrutalButton
@@ -193,45 +214,97 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                         variant="outline"
                         onClick={handleCancelEdit}
                       >
-                        <X className="w-4 h-4 mr-1" />
+                        <X className="w-3 h-3 mr-1" />
                         Cancel
                       </BrutalButton>
                     </div>
                   </div>
                 ) : (
-                  <p className="mt-2 text-foreground">{comment.content}</p>
+                  <p className="mt-1 text-foreground text-sm">
+                    {comment.content}
+                  </p>
                 )}
 
                 {/* Actions */}
                 {!isEditing && (
-                  <div className="flex items-center gap-3 mt-3">
-                    {depth < maxDepth && (
+                  <div className="flex items-center gap-3 mt-2">
+                    <div className="flex items-center gap-2">
+                      {/* Vote Buttons */}
                       <button
-                        onClick={() => setIsReplying(!isReplying)}
-                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground font-medium transition-colors"
+                        onClick={() => handleVote("up")}
+                        className={cn(
+                          "w-6 h-6 rounded-md border-2 border-foreground flex items-center justify-center transition-all hover:bg-teal/20",
+                          userVote === 1 && "bg-teal text-foreground",
+                        )}
+                        title="Upvote"
                       >
-                        <Reply className="w-4 h-4" />
-                        Reply
+                        <ArrowUp className="w-3 h-3" />
                       </button>
-                    )}
-                    {isAuthor && (
-                      <>
+                      <span className="font-bold text-xs min-w-6 text-center">
+                        {localVoteCount}
+                      </span>
+                      <button
+                        onClick={() => handleVote("down")}
+                        className={cn(
+                          "w-6 h-6 rounded-md border-2 border-foreground flex items-center justify-center transition-all hover:bg-destructive/20",
+                          userVote === -1 &&
+                            "bg-destructive text-destructive-foreground",
+                        )}
+                        title="Downvote"
+                      >
+                        <ArrowDown className="w-3 h-3" />
+                      </button>
+
+                      {/* Divider */}
+                      <div className="w-px h-4 bg-foreground/20" />
+
+                      {/* Reply - only show on hover */}
+                      {depth < maxDepth && (
                         <button
-                          onClick={() => setIsEditing(true)}
-                          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground font-medium transition-colors"
+                          onClick={() => setIsReplying(!isReplying)}
+                          className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors opacity-0 group-hover:opacity-100"
                         >
-                          <Edit2 className="w-4 h-4" />
-                          Edit
+                          <Reply className="w-3 h-3" />
+                          Reply
                         </button>
-                        <button
-                          onClick={() => onDelete?.(comment.id)}
-                          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-destructive font-medium transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete
-                        </button>
-                      </>
-                    )}
+                      )}
+
+                      {/* Menu */}
+                      {isAuthor && (
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowMenu(!showMenu)}
+                            className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors p-1 opacity-0 group-hover:opacity-100"
+                          >
+                            <MoreVertical className="w-3 h-3" />
+                          </button>
+                          {showMenu && (
+                            <div className="absolute right-0 mt-1 bg-card border-2 border-foreground rounded-lg shadow-brutal z-10 min-w-max">
+                              <button
+                                onClick={() => {
+                                  setIsEditing(true);
+                                  setShowMenu(false);
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/20 w-full text-left transition-colors border-b-2 border-foreground"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => {
+                                  onDelete?.(comment.id);
+                                  setShowMenu(false);
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 w-full text-left transition-colors"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -241,15 +314,15 @@ export const CommentCard: React.FC<CommentCardProps> = ({
 
         {/* Reply Input */}
         {isReplying && (
-          <div className="p-4 border-t-[3px] border-foreground bg-muted/20">
+          <div className="p-3 border-t-[3px] border-foreground bg-muted/20">
             <div className="flex items-start gap-2">
-              <CornerDownRight className="w-5 h-5 text-muted-foreground mt-2" />
+              <CornerDownRight className="w-4 h-4 text-muted-foreground mt-1 shrink-0" />
               <div className="flex-1 space-y-2">
                 <textarea
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
                   placeholder={`Reply to ${comment.author}...`}
-                  className="w-full px-3 py-2 bg-background border-2 border-foreground rounded-lg font-medium resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 bg-background border-2 border-foreground rounded-lg font-medium resize-none focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                   rows={2}
                 />
                 <div className="flex gap-2">
@@ -276,8 +349,8 @@ export const CommentCard: React.FC<CommentCardProps> = ({
 
       {/* Nested Replies */}
       {comment.replies && comment.replies.length > 0 && (
-        <div className="space-y-3">
-          {comment.replies.map((reply) => (
+        <div className="relative space-y-2 overflow-visible">
+          {comment.replies.map((reply, index) => (
             <CommentCard
               key={reply.id}
               comment={reply}
@@ -287,6 +360,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
               onEdit={onEdit}
               onDelete={onDelete}
               onReply={onReply}
+              isLast={index === comment.replies!.length - 1}
             />
           ))}
         </div>

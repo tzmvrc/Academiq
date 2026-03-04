@@ -45,7 +45,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
 
-  // Fetch all subjects on mount
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
@@ -59,18 +58,13 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
       }
     };
 
-    if (isOpen) {
-      fetchSubjects();
-    }
+    if (isOpen) fetchSubjects();
   }, [isOpen]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (!target.closest(".subject-dropdown")) {
-        setShowDropdown(false);
-      }
+      if (!target.closest(".subject-dropdown")) setShowDropdown(false);
     };
 
     if (showDropdown) {
@@ -80,7 +74,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
     }
   }, [showDropdown]);
 
-  // Filter subjects based on input
   const filteredSubjects = allSubjects.filter((s) =>
     s.name.toLowerCase().includes(subject.toLowerCase()),
   );
@@ -105,8 +98,9 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
     );
 
   const handleAddTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
+    const t = tagInput.trim();
+    if (t && !tags.includes(t)) {
+      setTags([...tags, t]);
       setTagInput("");
     }
   };
@@ -141,7 +135,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
   const handleSubmit = async () => {
     if (!title || !subject || !content) return;
 
-    // Ensure a subject has been selected (either existing or created)
     if (!selectedSubject && !canCreateNewSubject) {
       alert("Please select or create a subject");
       return;
@@ -166,7 +159,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
       onClose();
     } catch (err) {
       console.error("Submit error:", err);
-      // Error handling is done in parent component
     } finally {
       setIsSubmitting(false);
     }
@@ -183,12 +175,9 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-foreground/50" onClick={onClose} />
 
-      {/* Modal */}
       <div className="relative bg-card border-[4px] border-foreground rounded-xl shadow-brutal-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden">
-        {/* Header */}
         <div className="bg-primary p-4 flex items-center justify-between border-b-[4px] border-foreground">
           <h2 className="text-2xl font-bold text-primary-foreground">
             Create New Post
@@ -201,9 +190,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
           </button>
         </div>
 
-        {/* Form */}
         <div className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-180px)]">
-          {/* Subject */}
           <div className="relative subject-dropdown">
             <label className="block text-lg font-bold mb-2">Subject</label>
             <div className="relative">
@@ -220,7 +207,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
               />
             </div>
 
-            {/* Dropdown */}
             {showDropdown && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-card border-[3px] border-foreground rounded-lg shadow-brutal-lg z-10 max-h-48 overflow-y-auto">
                 {isLoadingSubjects ? (
@@ -246,7 +232,9 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                             try {
                               const res = await axiosInstance.post(
                                 "/subjects",
-                                { name: subject },
+                                {
+                                  name: subject,
+                                },
                               );
                               const newSubject = res.data.subject;
                               handleSelectSubject(newSubject);
@@ -288,7 +276,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
               </div>
             )}
 
-            {/* Selected Subject */}
             {selectedSubject && (
               <div className="mt-2 text-sm text-green-700 font-medium">
                 ✓ Selected: {selectedSubject.name}
@@ -296,7 +283,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
             )}
           </div>
 
-          {/* Title */}
           <div>
             <label className="block text-lg font-bold mb-2">Title</label>
             <BrutalInput
@@ -306,7 +292,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
             />
           </div>
 
-          {/* Content */}
           <div>
             <label className="block text-lg font-bold mb-2">Content</label>
             <textarea
@@ -318,7 +303,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
             />
           </div>
 
-          {/* Tags */}
           <div>
             <label className="block text-lg font-bold mb-2">Tags</label>
             <div className="flex gap-2">
@@ -337,6 +321,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                 <Plus className="w-5 h-5" />
               </BrutalButton>
             </div>
+
             {tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3">
                 {tags.map((tag) => (
@@ -354,7 +339,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
             )}
           </div>
 
-          {/* Attachments */}
           <div>
             <label className="block text-lg font-bold mb-2">Attachments</label>
             <label className="flex items-center justify-center gap-2 p-4 bg-background border-[3px] border-dashed border-foreground rounded-lg cursor-pointer hover:bg-muted transition-colors">
@@ -370,6 +354,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                 Click to upload documents, images, or files
               </span>
             </label>
+
             {attachments.length > 0 && (
               <div className="mt-3 space-y-2">
                 {attachments.map((file) => (
@@ -400,7 +385,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
           </div>
         </div>
 
-        {/* Footer */}
         <div className="p-4 border-t-[3px] border-foreground bg-muted flex justify-end gap-3">
           <BrutalButton
             variant="outline"
