@@ -164,6 +164,18 @@ export const FeedTab: React.FC = () => {
     axiosInstance.post(`/forums/${forumId}/save`).catch(console.error);
   };
 
+  const voteColors = ["yellow", "teal", "pink", "coral", "mint"] as const;
+
+const getRandomColorFromId = (id: string) => {
+  let hash = 0;
+
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  return voteColors[Math.abs(hash) % voteColors.length];
+};
+
   const handleCreateForum = async (postData: {
     title: string;
     subject: string;
@@ -282,13 +294,14 @@ export const FeedTab: React.FC = () => {
                   voteCount={voteCount}
                   documentUrl={forum.document_url || undefined}
                   isAIVerified={forum.is_ai_verified}
-                  voteColor={getVoteColor(voteCount)}
+                  voteColor={getRandomColorFromId(forum.id)}
                   avatar={forum.users?.profile_url || undefined}
                   isSaved={savedForums.has(forum.id)}
                   initialUserVote={userVotes[forum.id] ?? null}
                   onUpvote={handleUpvote}
                   onDownvote={handleDownvote}
                   onSave={handleSave}
+                  
                 />
               </div>
             );

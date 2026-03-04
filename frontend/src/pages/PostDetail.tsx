@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Sparkles,
   MessageCircle,
+  Send,
 } from "lucide-react";
 import { formatTimeAgo } from "@/lib/formatTime";
 import { BrutalTag } from "@/components/ui/BrutalTag";
@@ -79,12 +80,29 @@ export const PostDetail: React.FC = () => {
     Record<string, 1 | -1 | null>
   >({});
 
-  const [forum, setForum] = useState<Forum | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [forum, setForum] = useState<Forum | null>(() => {
+    // Initialize from cache if available
+    try {
+      const cached = localStorage.getItem(`forum_${postId}`);
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    // Only load if not cached
+    try {
+      const cached = localStorage.getItem(`forum_${postId}`);
+      return !cached;
+    } catch {
+      return true;
+    }
+  });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const [myVote, setMyVote] = useState<1 | -1 | null>(null);
   const [voting, setVoting] = useState(false);
+  const [postingComment, setPostingComment] = useState(false);
   const [voteCount, setVoteCount] = useState(0);
 
   const [isSaving, setIsSaving] = useState(false);
@@ -180,6 +198,8 @@ export const PostDetail: React.FC = () => {
         const f: Forum = res.data.forum;
 
         setForum(f);
+        // Cache the forum data
+        localStorage.setItem(`forum_${postId}`, JSON.stringify(f));
         setVoteCount(f.vote_count ?? 0);
 
         // Fetch user's vote if authenticated (optional endpoint - 401 is expected for non-authenticated users)
@@ -298,7 +318,7 @@ export const PostDetail: React.FC = () => {
   };
 
   const handleAddComment = async () => {
-    if (!newComment.trim() || !postId) return;
+    if (!newComment.trim() || !postId || postingComment) return;
 
     try {
       const res = await axiosInstance.post(`/forums/${postId}/comments`, {
@@ -572,172 +592,173 @@ export const PostDetail: React.FC = () => {
         onTabChange={handleTabChange}
       />
 
-      <main className="flex-1 p-6 md:p-8 overflow-auto">
-        <div
-          className={`${isCollapsed ? "max-w-7xl" : "max-w-6xl"} mx-auto space-y-6`}
-        >
-          {/* Back Button */}
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-medium transition-colors"
+      <main className="flex-1 overflow-auto flex flex-col">
+        <div className="flex-1 p-6 md:p-8 overflow-auto">
+          <div
+            className={`${isCollapsed ? "max-w-7xl" : "max-w-6xl"} mx-auto space-y-6`}
           >
-            <ArrowLeft className="w-5 h-5" />
-            Back to Feed
-          </button>
+            {/* Back Button */}
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-medium transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back to Feed
+            </button>
 
-          {/* Loading / Error */}
-          {loading && (
-            <BrutalCard className="p-6">
-              <p className="font-medium">Loading post…</p>
-            </BrutalCard>
-          )}
+            {/* Loading / Error */}
+            {loading && (
+              <BrutalCard className="p-6">
+                <p className="font-medium">Loading post…</p>
+              </BrutalCard>
+            )}
 
-          {!loading && errorMsg && (
-            <BrutalCard className="p-6">
-              <p className="font-bold text-destructive mb-2">
-                Could not load forum
-              </p>
-              <p className="text-muted-foreground">{errorMsg}</p>
-              <div className="mt-4">
-                <BrutalButton
-                  variant="primary"
-                  onClick={() => navigate("/dashboard")}
-                >
-                  Go back
-                </BrutalButton>
-              </div>
-            </BrutalCard>
-          )}
-
-          {/* Post Card */}
-          {!loading && !errorMsg && forum && (
-            <BrutalCard className="overflow-hidden">
-              <div className="flex">
-                {/* Main Content */}
-                <div className="flex-1 p-6">
-                  {/* Header with Tags and Actions */}
-                  <div className="flex items-start justify-between gap-3 mb-4">
-                    <div className="flex items-start gap-3">
-                      <BrutalTag color="violet">{subjectName}</BrutalTag>
-
-                      {(forum.is_ai_verified ?? false) && (
-                        <BrutalTag color="teal">
-                          <Sparkles className="w-3 h-3 mr-1" />
-                          AI Verified
-                        </BrutalTag>
-                      )}
-                    </div>
-
-                    {/* Forum Actions */}
-                    <div className="flex items-center gap-2">
-                      <BrutalButton
-                        variant="outline"
-                        size="sm"
-                        onClick={handleSaveForum}
-                        disabled={isSaving}
-                        className={`text-xs ${isForumSaved ? "bg-mint text-foreground" : ""}`}
-                      >
-                        {isSaving
-                          ? "..."
-                          : isForumSaved
-                            ? "✓ Saved"
-                            : "💾 Save"}
-                      </BrutalButton>
-
-                      {isAuthor && (
-                        <>
-                          <BrutalButton
-                            variant="outline"
-                            size="sm"
-                            onClick={handleUpdateForum}
-                            className="text-xs"
-                          >
-                            ✎ Edit
-                          </BrutalButton>
-                          <BrutalButton
-                            variant="outline"
-                            size="sm"
-                            onClick={handleDeleteForum}
-                            className="text-xs text-destructive"
-                          >
-                            🗑 Delete
-                          </BrutalButton>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Title */}
-                  <h1 className="text-3xl font-bold mb-3">{title}</h1>
-
-                  {/* Author */}
-                  <p className="text-muted-foreground mb-6">
-                    by{" "}
-                    <span className="font-semibold text-foreground">
-                      {authorName}
-                    </span>
-                  </p>
-
-                  {/* Content */}
-                  <div className="prose prose-lg max-w-none">
-                    {body.split("\n").map((paragraph, i) => (
-                      <p key={i} className="mb-4 text-foreground">
-                        {paragraph}
-                      </p>
-                    ))}
-                  </div>
-
-                  {forum.document_url && (
-                    <div
-                      onClick={() =>
-                        window.open(
-                          forum.document_url!,
-                          "_blank",
-                          "noopener,noreferrer",
-                        )
-                      }
-                      className="mt-8 cursor-pointer border-[3px] border-foreground rounded-lg p-5 bg-muted/30 hover:bg-muted/50 transition-all shadow-brutal-sm hover:translate-y-[-2px] hover:shadow-brutal"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 border-[3px] border-foreground rounded-lg flex items-center justify-center bg-background font-bold">
-                          📄
-                        </div>
-
-                        <div>
-                          <p className="font-bold text-lg">
-                            {getFileNameFromUrl(forum.document_url)}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Click to open document
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* AI Summary */}
-                  {forum.ai_summary && (
-                    <div className="mt-8 p-5 bg-blue/10 border-[3px] border-blue rounded-lg">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-8 h-8 bg-blue rounded-lg border-2 border-foreground flex items-center justify-center">
-                          <Sparkles className="w-4 h-4 text-foreground" />
-                        </div>
-                        <h3 className="font-bold text-lg">AI Summary</h3>
-                      </div>
-                      <p className="text-muted-foreground">
-                        {forum.ai_summary}
-                      </p>
-                    </div>
-                  )}
+            {!loading && errorMsg && (
+              <BrutalCard className="p-6">
+                <p className="font-bold text-destructive mb-2">
+                  Could not load forum
+                </p>
+                <p className="text-muted-foreground">{errorMsg}</p>
+                <div className="mt-4">
+                  <BrutalButton
+                    variant="primary"
+                    onClick={() => navigate("/dashboard")}
+                  >
+                    Go back
+                  </BrutalButton>
                 </div>
+              </BrutalCard>
+            )}
 
-                {/* Vote Panel */}
-                <div className="flex flex-col items-center justify-start gap-3 p-6 min-w-[100px] border-l-4 border-foreground bg-yellow">
-                  <button
-                    type="button"
-                    disabled={voting}
-                    onClick={handleUpvote}
-                    className={`
+            {/* Post Card */}
+            {!loading && !errorMsg && forum && (
+              <BrutalCard className="overflow-hidden">
+                <div className="flex">
+                  {/* Main Content */}
+                  <div className="flex-1 p-6">
+                    {/* Header with Tags and Actions */}
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      <div className="flex items-start gap-3">
+                        <BrutalTag color="violet">{subjectName}</BrutalTag>
+
+                        {(forum.is_ai_verified ?? false) && (
+                          <BrutalTag color="teal">
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            AI Verified
+                          </BrutalTag>
+                        )}
+                      </div>
+
+                      {/* Forum Actions */}
+                      <div className="flex items-center gap-2">
+                        <BrutalButton
+                          variant="outline"
+                          size="sm"
+                          onClick={handleSaveForum}
+                          disabled={isSaving}
+                          className={`text-xs ${isForumSaved ? "bg-mint text-foreground" : ""}`}
+                        >
+                          {isSaving
+                            ? "..."
+                            : isForumSaved
+                              ? "✓ Saved"
+                              : "💾 Save"}
+                        </BrutalButton>
+
+                        {isAuthor && (
+                          <>
+                            <BrutalButton
+                              variant="outline"
+                              size="sm"
+                              onClick={handleUpdateForum}
+                              className="text-xs"
+                            >
+                              ✎ Edit
+                            </BrutalButton>
+                            <BrutalButton
+                              variant="outline"
+                              size="sm"
+                              onClick={handleDeleteForum}
+                              className="text-xs text-destructive"
+                            >
+                              🗑 Delete
+                            </BrutalButton>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Title */}
+                    <h1 className="text-3xl font-bold mb-3">{title}</h1>
+
+                    {/* Author */}
+                    <p className="text-muted-foreground mb-6">
+                      by{" "}
+                      <span className="font-semibold text-foreground">
+                        {authorName}
+                      </span>
+                    </p>
+
+                    {/* Content */}
+                    <div className="prose prose-lg max-w-none">
+                      {body.split("\n").map((paragraph, i) => (
+                        <p key={i} className="mb-4 text-foreground">
+                          {paragraph}
+                        </p>
+                      ))}
+                    </div>
+
+                    {forum.document_url && (
+                      <div
+                        onClick={() =>
+                          window.open(
+                            forum.document_url!,
+                            "_blank",
+                            "noopener,noreferrer",
+                          )
+                        }
+                        className="mt-8 cursor-pointer border-[3px] border-foreground rounded-lg p-5 bg-muted/30 hover:bg-muted/50 transition-all shadow-brutal-sm hover:translate-y-[-2px] hover:shadow-brutal"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 border-[3px] border-foreground rounded-lg flex items-center justify-center bg-background font-bold">
+                            📄
+                          </div>
+
+                          <div>
+                            <p className="font-bold text-lg">
+                              {getFileNameFromUrl(forum.document_url)}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Click to open document
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* AI Summary */}
+                    {forum.ai_summary && (
+                      <div className="mt-8 p-5 bg-blue/10 border-[3px] border-blue rounded-lg">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 bg-blue rounded-lg border-2 border-foreground flex items-center justify-center">
+                            <Sparkles className="w-4 h-4 text-foreground" />
+                          </div>
+                          <h3 className="font-bold text-lg">AI Summary</h3>
+                        </div>
+                        <p className="text-muted-foreground">
+                          {forum.ai_summary}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Vote Panel */}
+                  <div className="flex flex-col items-center justify-start gap-3 p-6 min-w-[100px] border-l-4 border-foreground bg-yellow">
+                    <button
+                      type="button"
+                      disabled={voting}
+                      onClick={handleUpvote}
+                      className={`
                       w-12 h-12 bg-background border-[3px] border-foreground rounded-lg shadow-brutal-sm
                       flex items-center justify-center transition-all
                       hover:translate-y-[-2px] hover:shadow-brutal
@@ -745,19 +766,19 @@ export const PostDetail: React.FC = () => {
                       ${myVote === 1 ? "ring-2 ring-foreground bg-teal/20" : ""}
                       ${voting ? "opacity-60 cursor-not-allowed" : ""}
                     `}
-                  >
-                    <ArrowUp
-                      className={`w-6 h-6 ${myVote === 1 ? "text-foreground" : "text-teal"}`}
-                    />
-                  </button>
+                    >
+                      <ArrowUp
+                        className={`w-6 h-6 ${myVote === 1 ? "text-foreground" : "text-teal"}`}
+                      />
+                    </button>
 
-                  <span className="text-2xl font-bold">{voteCount}</span>
+                    <span className="text-2xl font-bold">{voteCount}</span>
 
-                  <button
-                    type="button"
-                    disabled={voting}
-                    onClick={handleDownvote}
-                    className={`
+                    <button
+                      type="button"
+                      disabled={voting}
+                      onClick={handleDownvote}
+                      className={`
                       w-12 h-12 bg-background border-[3px] border-foreground rounded-lg shadow-brutal-sm
                       flex items-center justify-center transition-all
                       hover:translate-y-[-2px] hover:shadow-brutal
@@ -765,62 +786,74 @@ export const PostDetail: React.FC = () => {
                       ${myVote === -1 ? "ring-2 ring-foreground bg-destructive/20" : ""}
                       ${voting ? "opacity-60 cursor-not-allowed" : ""}
                     `}
-                  >
-                    <ArrowDown
-                      className={`w-6 h-6 ${
-                        myVote === -1 ? "text-foreground" : "text-destructive"
-                      }`}
+                    >
+                      <ArrowDown
+                        className={`w-6 h-6 ${
+                          myVote === -1 ? "text-foreground" : "text-destructive"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+              </BrutalCard>
+            )}
+
+            {/* Comments Section */}
+            {!loading && !errorMsg && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="w-6 h-6" />
+                  <h2 className="text-2xl font-bold">
+                    {forum?.comments_count ?? countComments(comments)} Comments
+                  </h2>
+                </div>
+
+                {/* Comment input - minimal, at top (copied from OLD design) */}
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-primary rounded-full border-[2px] border-foreground flex items-center justify-center text-primary-foreground font-bold text-sm flex-shrink-0">
+                    {(me?.name?.[0] ?? "Y").toUpperCase()}
+                  </div>
+
+                  <div className="flex-1 flex items-center bg-muted/30 border-[2px] border-foreground rounded-lg overflow-hidden">
+                    <input
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Write a comment..."
+                      className="flex-1 px-4 py-2.5 bg-transparent font-medium focus:outline-none text-sm"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleAddComment();
+                      }}
                     />
-                  </button>
+
+                    <button
+                      onClick={handleAddComment}
+                      disabled={!newComment.trim()}
+                      className="px-3 py-2.5 text-muted-foreground hover:text-primary transition-colors disabled:opacity-30"
+                      aria-label="Post comment"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Comments List */}
+                <div className="space-y-3 pl-11 overflow-visible">
+                  {comments.map((comment, index) => (
+                    <CommentCard
+                      key={comment.id}
+                      comment={comment}
+                      currentUserId={me?.id ?? ""}
+                      onVote={handleVote}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onReply={handleReply}
+                      isLast={index === comments.length - 1}
+                    />
+                  ))}
                 </div>
               </div>
-            </BrutalCard>
-          )}
-
-          {/* Comments Section */}
-          {!loading && !errorMsg && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <MessageCircle className="w-6 h-6" />
-                <h2 className="text-2xl font-bold">
-                  {forum?.comments_count ?? countComments(comments)} Comments
-                </h2>
-              </div>
-
-              {/* Add Comment */}
-              <div className="flex gap-3">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Share your thoughts..."
-                  rows={3}
-                  className="flex-1 px-4 py-3 bg-background border-[3px] border-foreground rounded-lg font-medium shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                />
-                <BrutalButton
-                  variant="primary"
-                  onClick={handleAddComment}
-                  className="self-end"
-                >
-                  Post
-                </BrutalButton>
-              </div>
-
-              {/* Comments List */}
-              <div className="space-y-4">
-                {comments.map((comment) => (
-                  <CommentCard
-                    key={comment.id}
-                    comment={comment}
-                    currentUserId={me?.id ?? ""}
-                    onVote={handleVote}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onReply={handleReply}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </main>
     </div>
