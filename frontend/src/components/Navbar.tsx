@@ -1,8 +1,21 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Search, Bell, ChevronDown, Sparkles, Menu, X, Settings, LogOut, Sun, Moon, Monitor } from "lucide-react";
+import {
+  Search,
+  Bell,
+  ChevronDown,
+  Sparkles,
+  Menu,
+  X,
+  Settings,
+  LogOut,
+  Sun,
+  Moon,
+  Monitor,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
+import Icon from "@/components/ui/Icon.png";
 
 const navTabs = [
   { label: "Feed", path: "/feed" },
@@ -48,9 +61,14 @@ const Navbar = () => {
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
 
-  const filteredSuggestions = searchQuery.length > 0
-    ? searchSuggestions.filter(s => s.text.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 6)
-    : [];
+  const filteredSuggestions =
+    searchQuery.length > 0
+      ? searchSuggestions
+          .filter((s) =>
+            s.text.toLowerCase().includes(searchQuery.toLowerCase()),
+          )
+          .slice(0, 6)
+      : [];
 
   // Apply theme
   useEffect(() => {
@@ -61,21 +79,29 @@ const Navbar = () => {
     } else if (theme === "light") {
       root.classList.remove("dark");
     } else {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)",
+      ).matches;
       prefersDark ? root.classList.add("dark") : root.classList.remove("dark");
     }
   }, [theme]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(e.target as Node)
+      ) {
         setProfileOpen(false);
         setThemeOpen(false);
       }
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setSearchFocused(false);
       }
-      if (mobileSearchRef.current && !mobileSearchRef.current.contains(e.target as Node)) {
+      if (
+        mobileSearchRef.current &&
+        !mobileSearchRef.current.contains(e.target as Node)
+      ) {
         setMobileSearchOpen(false);
       }
     };
@@ -92,14 +118,20 @@ const Navbar = () => {
   const handleLogout = () => {
     setLogoutConfirm(false);
     setProfileOpen(false);
-    toast({ title: "Logged out", description: "You have been signed out successfully." });
+    toast({
+      title: "Logged out",
+      description: "You have been signed out successfully.",
+    });
     navigate("/");
   };
 
   const handleThemeChange = (mode: ThemeMode) => {
     setTheme(mode);
     setThemeOpen(false);
-    toast({ title: `Theme: ${mode.charAt(0).toUpperCase() + mode.slice(1)}`, description: `Switched to ${mode} mode.` });
+    toast({
+      title: `Theme: ${mode.charAt(0).toUpperCase() + mode.slice(1)}`,
+      description: `Switched to ${mode} mode.`,
+    });
   };
 
   const handleSearchSelect = (s: { type: string; text: string }) => {
@@ -145,10 +177,10 @@ const Navbar = () => {
         <div className="mx-auto flex h-14 sm:h-16 max-w-6xl items-center px-4 sm:px-6 gap-2">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-primary">
-              <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-foreground" />
-            </div>
-            <span className="text-lg sm:text-xl font-heading font-bold text-foreground tracking-tight">Academiq</span>
+            <img src={Icon} alt="Academiq Logo" className="h-6 w-6 sm:h-8 sm:w-8" />
+            <span className="text-lg sm:text-xl font-heading font-bold text-foreground tracking-tight">
+              Academiq
+            </span>
           </Link>
 
           {/* Center Tabs - hidden on mobile */}
@@ -160,7 +192,9 @@ const Navbar = () => {
                   key={tab.path}
                   to={tab.path}
                   className={`relative px-3 lg:px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                    isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                    isActive
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {tab.label}
@@ -169,7 +203,11 @@ const Navbar = () => {
                       layoutId="activeTab"
                       className="absolute inset-0 rounded-md bg-secondary"
                       style={{ zIndex: -1 }}
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                      transition={{
+                        type: "spring",
+                        bounce: 0.2,
+                        duration: 0.5,
+                      }}
                     />
                   )}
                 </Link>
@@ -180,7 +218,10 @@ const Navbar = () => {
           {/* Right side */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
             {/* Desktop search */}
-            <div ref={searchRef} className={`relative hidden sm:block transition-all duration-300 ${searchFocused ? "w-64 lg:w-72" : "w-40 lg:w-48"}`}>
+            <div
+              ref={searchRef}
+              className={`relative hidden sm:block transition-all duration-300 ${searchFocused ? "w-64 lg:w-72" : "w-40 lg:w-48"}`}
+            >
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
@@ -227,9 +268,13 @@ const Navbar = () => {
                 className="flex items-center gap-1.5 sm:gap-2 rounded-lg p-1 sm:p-1.5 hover:bg-secondary transition-colors"
               >
                 <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-[10px] sm:text-xs font-semibold text-primary">AK</span>
+                  <span className="text-[10px] sm:text-xs font-semibold text-primary">
+                    AK
+                  </span>
                 </div>
-                <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground hidden sm:block transition-transform ${profileOpen ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  className={`h-3.5 w-3.5 text-muted-foreground hidden sm:block transition-transform ${profileOpen ? "rotate-180" : ""}`}
+                />
               </button>
 
               <AnimatePresence>
@@ -247,7 +292,9 @@ const Navbar = () => {
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
                     >
                       <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-[10px] font-semibold text-primary">AK</span>
+                        <span className="text-[10px] font-semibold text-primary">
+                          AK
+                        </span>
                       </div>
                       Profile
                     </Link>
@@ -263,7 +310,9 @@ const Navbar = () => {
                           <ThemeIcon className="h-4 w-4 text-muted-foreground" />
                           Theme
                         </span>
-                        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${themeOpen ? "rotate-180" : ""}`} />
+                        <ChevronDown
+                          className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${themeOpen ? "rotate-180" : ""}`}
+                        />
                       </button>
                       <AnimatePresence>
                         {themeOpen && (
@@ -273,11 +322,23 @@ const Navbar = () => {
                             exit={{ height: 0, opacity: 0 }}
                             className="overflow-hidden"
                           >
-                            {([
-                              { mode: "light" as ThemeMode, icon: Sun, label: "Light" },
-                              { mode: "dark" as ThemeMode, icon: Moon, label: "Dark" },
-                              { mode: "system" as ThemeMode, icon: Monitor, label: "System" },
-                            ]).map((opt) => (
+                            {[
+                              {
+                                mode: "light" as ThemeMode,
+                                icon: Sun,
+                                label: "Light",
+                              },
+                              {
+                                mode: "dark" as ThemeMode,
+                                icon: Moon,
+                                label: "Dark",
+                              },
+                              {
+                                mode: "system" as ThemeMode,
+                                icon: Monitor,
+                                label: "System",
+                              },
+                            ].map((opt) => (
                               <button
                                 key={opt.mode}
                                 onClick={() => handleThemeChange(opt.mode)}
@@ -306,7 +367,10 @@ const Navbar = () => {
                       Settings
                     </Link>
                     <button
-                      onClick={() => { setProfileOpen(false); setLogoutConfirm(true); }}
+                      onClick={() => {
+                        setProfileOpen(false);
+                        setLogoutConfirm(true);
+                      }}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/5 transition-colors"
                     >
                       <LogOut className="h-4 w-4" />
@@ -322,7 +386,11 @@ const Navbar = () => {
               className="md:hidden p-1.5 sm:p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </button>
           </div>
         </div>
@@ -377,7 +445,9 @@ const Navbar = () => {
                       to={tab.path}
                       onClick={() => setMobileMenuOpen(false)}
                       className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                        isActive ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                        isActive
+                          ? "bg-secondary text-foreground"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                       }`}
                     >
                       {tab.label}
@@ -407,8 +477,12 @@ const Navbar = () => {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl"
             >
-              <h3 className="text-lg font-heading font-semibold text-foreground mb-2">Sign out?</h3>
-              <p className="text-sm text-muted-foreground mb-6">Are you sure you want to log out of Academiq?</p>
+              <h3 className="text-lg font-heading font-semibold text-foreground mb-2">
+                Sign out?
+              </h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Are you sure you want to log out of Academiq?
+              </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setLogoutConfirm(false)}

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Medal, Award, TrendingUp } from "lucide-react";
+import { LeaderboardRowSkeleton } from "@/components/SkeletonLoaders";
 
 interface LeaderboardEntry {
   rank: number;
@@ -69,7 +70,13 @@ const RankIcon = ({ rank }: { rank: number }) => {
 
 const Leaderboards = () => {
   const [activeCategory, setActiveCategory] = useState<Category>("global");
+  const [isLoading, setIsLoading] = useState(true);
   const leaders = dataMap[activeCategory];
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 600);
+    return () => clearTimeout(timer);
+  }, [activeCategory]);
 
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-6 py-6 sm:py-8">
@@ -97,37 +104,45 @@ const Leaderboards = () => {
       </div>
 
       <div className="space-y-2 sm:space-y-3">
-        {leaders.map((leader, i) => (
-          <motion.div
-            key={`${activeCategory}-${i}`}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.05, duration: 0.4 }}
-            className={`flex items-center gap-3 sm:gap-4 rounded-xl border border-border bg-card p-3 sm:p-4 transition-all hover:shadow-md hover:border-primary/10 ${
-              leader.rank <= 3 ? "border-accent/20" : ""
-            }`}
-          >
-            <div className="flex items-center justify-center w-6 sm:w-8 shrink-0">
-              <RankIcon rank={leader.rank} />
-            </div>
+        {isLoading ? (
+          <>
+            {[...Array(5)].map((_, i) => (
+              <LeaderboardRowSkeleton key={i} index={i} />
+            ))}
+          </>
+        ) : (
+          leaders.map((leader, i) => (
+            <motion.div
+              key={`${activeCategory}-${i}`}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.05, duration: 0.4 }}
+              className={`flex items-center gap-3 sm:gap-4 rounded-xl border border-border bg-card p-3 sm:p-4 transition-all hover:shadow-md hover:border-primary/10 ${
+                leader.rank <= 3 ? "border-accent/20" : ""
+              }`}
+            >
+              <div className="flex items-center justify-center w-6 sm:w-8 shrink-0">
+                <RankIcon rank={leader.rank} />
+              </div>
 
-            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <span className="text-xs sm:text-sm font-semibold text-primary">
-                {leader.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
-              </span>
-            </div>
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <span className="text-xs sm:text-sm font-semibold text-primary">
+                  {leader.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                </span>
+              </div>
 
-            <div className="flex-1 min-w-0">
-              <p className="font-heading font-semibold text-foreground text-sm truncate">{leader.name}</p>
-              <p className="text-xs text-muted-foreground truncate">{leader.field}{leader.university ? ` · ${leader.university}` : ""}</p>
-            </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-heading font-semibold text-foreground text-sm truncate">{leader.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{leader.field}{leader.university ? ` · ${leader.university}` : ""}</p>
+              </div>
 
-            <div className="text-right shrink-0">
-              <p className="font-semibold text-foreground text-sm">{leader.score.toLocaleString()}</p>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">{activeCategory === "schools" || activeCategory === "country" ? "Total" : "Rep"}</p>
-            </div>
-          </motion.div>
-        ))}
+              <div className="text-right shrink-0">
+                <p className="font-semibold text-foreground text-sm">{leader.score.toLocaleString()}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">{activeCategory === "schools" || activeCategory === "country" ? "Total" : "Rep"}</p>
+              </div>
+            </motion.div>
+          ))
+        )}
       </div>
     </div>
   );

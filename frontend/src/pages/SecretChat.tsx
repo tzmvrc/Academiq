@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Hash, MessageSquare, Users, ChevronRight, Lock } from "lucide-react";
+import { Send, Hash, MessageSquare, Users, ChevronRight, Lock, Plus, Search, X } from "lucide-react";
 
 const bootLines = [
   "> Initializing secure connection...",
@@ -26,6 +26,17 @@ const dmUsers = [
   { name: "Dr. Anika Patel", initials: "AP", lastMsg: "The proof is in section 4.2.", online: true },
 ];
 
+const allUsers = [
+  { name: "Dr. Emily Zhang", initials: "EZ", field: "State Space Models", online: true },
+  { name: "Lina Kovacs", initials: "LK", field: "NLP & Transformers", online: true },
+  { name: "Prof. Michael Torres", initials: "MT", field: "Computer Vision", online: false },
+  { name: "Dr. Anika Patel", initials: "AP", field: "Quantum Computing", online: true },
+  { name: "Dr. Marcus Webb", initials: "MW", field: "Reinforcement Learning", online: false },
+  { name: "Sarah Kim", initials: "SK", field: "Computational Biology", online: true },
+  { name: "Prof. James Liu", initials: "JL", field: "Cryptography", online: true },
+  { name: "Dr. Fatima Al-Rashid", initials: "FA", field: "Robotics", online: false },
+];
+
 const SecretChat = () => {
   const [booted, setBooted] = useState(false);
   const [visibleLines, setVisibleLines] = useState<number>(0);
@@ -34,7 +45,30 @@ const SecretChat = () => {
   const [messageInput, setMessageInput] = useState("");
   const [messages, setMessages] = useState(globalMessages);
   const [dmMessages, setDmMessages] = useState<Record<string, typeof globalMessages>>({});
+  const [showUserSearch, setShowUserSearch] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const filteredUsers = useMemo(() => {
+    if (!userSearchQuery.trim()) return allUsers;
+    const q = userSearchQuery.toLowerCase();
+    return allUsers.filter(
+      (u) => u.name.toLowerCase().includes(q) || u.field.toLowerCase().includes(q)
+    );
+  }, [userSearchQuery]);
+
+  const startNewDM = (userName: string) => {
+    setActiveDM(userName);
+    setShowUserSearch(false);
+    setUserSearchQuery("");
+  };
+
+  useEffect(() => {
+    if (showUserSearch) {
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    }
+  }, [showUserSearch]);
 
   // Boot sequence
   useEffect(() => {
@@ -174,30 +208,86 @@ const SecretChat = () => {
                   <Hash className="h-3.5 w-3.5 text-accent" />
                   general
                 </div>
+              ) : showUserSearch ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 px-2">
+                    <div className="flex-1 flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-3 py-1.5">
+                      <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <input
+                        ref={searchInputRef}
+                        type="text"
+                        value={userSearchQuery}
+                        onChange={(e) => setUserSearchQuery(e.target.value)}
+                        placeholder="Search by name or field..."
+                        className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+                      />
+                    </div>
+                    <button
+                      onClick={() => { setShowUserSearch(false); setUserSearchQuery(""); }}
+                      className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="space-y-1">
+                    {filteredUsers.map((user) => (
+                      <button
+                        key={user.name}
+                        onClick={() => startNewDM(user.name)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
+                      >
+                        <div className="relative shrink-0">
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-[10px] font-semibold text-primary">{user.initials}</span>
+                          </div>
+                          {user.online && (
+                            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-success border-2 border-card" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium truncate">{user.name}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{user.field}</p>
+                        </div>
+                      </button>
+                    ))}
+                    {filteredUsers.length === 0 && (
+                      <p className="text-[10px] text-muted-foreground text-center py-4">No users found</p>
+                    )}
+                  </div>
+                </div>
               ) : (
-                dmUsers.map((user) => (
+                <>
                   <button
-                    key={user.name}
-                    onClick={() => setActiveDM(user.name)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
-                      activeDM === user.name ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-                    }`}
+                    onClick={() => setShowUserSearch(true)}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-accent hover:bg-accent/10 transition-colors mb-1"
                   >
-                    <div className="relative shrink-0">
-                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-[10px] font-semibold text-primary">{user.initials}</span>
-                      </div>
-                      {user.online && (
-                        <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-success border-2 border-card" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium truncate">{user.name}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">{user.lastMsg}</p>
-                    </div>
-                    <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+                    <Plus className="h-3.5 w-3.5" />
+                    New Message
                   </button>
-                ))
+                  {dmUsers.map((user) => (
+                    <button
+                      key={user.name}
+                      onClick={() => setActiveDM(user.name)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                        activeDM === user.name ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                      }`}
+                    >
+                      <div className="relative shrink-0">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-[10px] font-semibold text-primary">{user.initials}</span>
+                        </div>
+                        {user.online && (
+                          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-success border-2 border-card" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium truncate">{user.name}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{user.lastMsg}</p>
+                      </div>
+                      <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+                    </button>
+                  ))}
+                </>
               )}
             </div>
           </div>

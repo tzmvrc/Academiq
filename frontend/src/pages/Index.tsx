@@ -1,28 +1,168 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { UserPlus, Check, X, ArrowRight } from "lucide-react";
+import {
+  UserPlus,
+  Check,
+  X,
+  ArrowRight,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import FeaturedSection from "@/components/FeaturedSection";
 import DiscussionCard from "@/components/DiscussionCard";
 import AISuggestionPanel from "@/components/AISuggestionPanel";
+import CreatePostModal from "@/components/CreatePostModal";
 import { toast } from "@/hooks/use-toast";
+import { DiscussionCardSkeleton } from "@/components/SkeletonLoaders";
 
 const discussions = [
-  { title: "Attention Is All You Need — Revisited in 2026", author: "Dr. Emily Zhang", authorInitials: "EZ", field: "NLP · Stanford University", preview: "Three years after the transformer revolution, we examine what has changed, what remains, and what new architectures are challenging the paradigm.", aiSummary: "Compares original transformer architecture with modern alternatives including Mamba, RWKV, and hybrid approaches across standard benchmarks.", upvotes: 284, comments: 47, tag: "Deep Learning" },
-  { title: "Bayesian Methods for Small-Sample Clinical Trials", author: "Prof. Michael Torres", authorInitials: "MT", field: "Biostatistics · Johns Hopkins", preview: "How Bayesian adaptive designs are revolutionizing rare disease clinical trials, enabling faster and more ethical drug development.", aiSummary: "Discusses adaptive Bayesian trial designs that allow dynamic sample size adjustments while maintaining statistical rigor.", upvotes: 156, comments: 32, tag: "Medicine" },
-  { title: "Formal Verification of Smart Contracts Using Coq", author: "Lina Kovacs", authorInitials: "LK", field: "PL Theory · ETH Zürich", preview: "An exploration of using dependent types and proof assistants to verify correctness properties of Solidity smart contracts.", aiSummary: "Presents a framework for translating Solidity to Coq specifications, enabling formal proofs of contract invariants.", upvotes: 128, comments: 21, tag: "Computer Science" },
-  { title: "The Political Economy of Carbon Pricing Mechanisms", author: "Dr. Ricardo Almeida", authorInitials: "RA", field: "Environmental Economics · LSE", preview: "Comparing cap-and-trade vs carbon tax approaches across different economic contexts and their effectiveness in reducing emissions.", aiSummary: "Analyzes empirical data from EU ETS, California's system, and Canada's carbon tax to evaluate policy effectiveness.", upvotes: 97, comments: 54, tag: "Economics" },
-  { title: "Modern Approaches to Structural Engineering Optimization", author: "Dr. Wei Chen", authorInitials: "WC", field: "Civil Engineering · MIT", preview: "Applying topology optimization and generative design to create more efficient and sustainable structural systems.", aiSummary: "Reviews computational methods for structural optimization including SIMP, level-set, and AI-driven generative approaches.", upvotes: 73, comments: 18, tag: "Engineering" },
-  { title: "Game Theory Applications in Business Strategy", author: "Prof. Anna Mueller", authorInitials: "AM", field: "Strategy · Wharton", preview: "How game-theoretic models help predict competitive dynamics and inform strategic decision-making in modern markets.", aiSummary: "Covers Nash equilibrium applications in pricing, market entry, and competitive positioning across industries.", upvotes: 112, comments: 29, tag: "Business" },
+  {
+    title: "Attention Is All You Need — Revisited in 2026",
+    author: "Dr. Emily Zhang",
+    authorInitials: "EZ",
+    field: "NLP · Stanford University",
+    preview:
+      "Three years after the transformer revolution, we examine what has changed, what remains, and what new architectures are challenging the paradigm.",
+    aiSummary:
+      "Compares original transformer architecture with modern alternatives including Mamba, RWKV, and hybrid approaches across standard benchmarks.",
+    upvotes: 284,
+    comments: 47,
+    tag: "Deep Learning",
+    isOwn: false,
+  },
+  {
+    title: "Bayesian Methods for Small-Sample Clinical Trials",
+    author: "Prof. Michael Torres",
+    authorInitials: "MT",
+    field: "Biostatistics · Johns Hopkins",
+    preview:
+      "How Bayesian adaptive designs are revolutionizing rare disease clinical trials, enabling faster and more ethical drug development.",
+    aiSummary:
+      "Discusses adaptive Bayesian trial designs that allow dynamic sample size adjustments while maintaining statistical rigor.",
+    upvotes: 156,
+    comments: 32,
+    tag: "Medicine",
+    isOwn: false,
+  },
+  {
+    title: "Formal Verification of Smart Contracts Using Coq",
+    author: "Lina Kovacs",
+    authorInitials: "LK",
+    field: "PL Theory · ETH Zürich",
+    preview:
+      "An exploration of using dependent types and proof assistants to verify correctness properties of Solidity smart contracts.",
+    aiSummary:
+      "Presents a framework for translating Solidity to Coq specifications, enabling formal proofs of contract invariants.",
+    upvotes: 128,
+    comments: 21,
+    tag: "Computer Science",
+    isOwn: false,
+  },
+  {
+    title: "The Political Economy of Carbon Pricing Mechanisms",
+    author: "Dr. Ricardo Almeida",
+    authorInitials: "RA",
+    field: "Environmental Economics · LSE",
+    preview:
+      "Comparing cap-and-trade vs carbon tax approaches across different economic contexts and their effectiveness in reducing emissions.",
+    aiSummary:
+      "Analyzes empirical data from EU ETS, California's system, and Canada's carbon tax to evaluate policy effectiveness.",
+    upvotes: 97,
+    comments: 54,
+    tag: "Economics",
+    isOwn: false,
+  },
+  {
+    title: "Modern Approaches to Structural Engineering Optimization",
+    author: "Dr. Wei Chen",
+    authorInitials: "WC",
+    field: "Civil Engineering · MIT",
+    preview:
+      "Applying topology optimization and generative design to create more efficient and sustainable structural systems.",
+    aiSummary:
+      "Reviews computational methods for structural optimization including SIMP, level-set, and AI-driven generative approaches.",
+    upvotes: 73,
+    comments: 18,
+    tag: "Engineering",
+    isOwn: false,
+  },
+  {
+    title: "Game Theory Applications in Business Strategy",
+    author: "Prof. Anna Mueller",
+    authorInitials: "AM",
+    field: "Strategy · Wharton",
+    preview:
+      "How game-theoretic models help predict competitive dynamics and inform strategic decision-making in modern markets.",
+    aiSummary:
+      "Covers Nash equilibrium applications in pricing, market entry, and competitive positioning across industries.",
+    upvotes: 112,
+    comments: 29,
+    tag: "Business",
+    isOwn: false,
+  },
 ];
 
+// Sample post by the current user (demo author POV)
+const myPost = {
+  title: "Quantum Circuit Optimization via Graph-Theoretic Methods",
+  author: "You (Demo User)",
+  authorInitials: "AK",
+  field: "Quantum Computing · Your University",
+  preview:
+    "Exploring how graph decomposition techniques can reduce circuit depth and gate count in near-term quantum algorithms.",
+  aiSummary:
+    "Proposes a graph-coloring-based approach to optimize quantum circuits, achieving 30% reduction in two-qubit gate counts on NISQ devices.",
+  upvotes: 45,
+  comments: 12,
+  tag: "Computer Science",
+  isOwn: true,
+};
+
 const suggestedPeople = [
-  { name: "Dr. Sarah Chen", initials: "SC", university: "MIT", field: "Machine Learning", reputation: 4820 },
-  { name: "Prof. James Rivera", initials: "JR", university: "Harvard", field: "Bioethics", reputation: 3950 },
-  { name: "Dr. Anika Patel", initials: "AP", university: "Caltech", field: "Quantum Computing", reputation: 3640 },
-  { name: "Dr. Emily Zhang", initials: "EZ", university: "Stanford", field: "NLP", reputation: 4150 },
-  { name: "Prof. Yuki Tanaka", initials: "YT", university: "U of Tokyo", field: "Robotics", reputation: 3080 },
-  { name: "Lina Kovacs", initials: "LK", university: "ETH Zürich", field: "PL Theory", reputation: 2870 },
+  {
+    name: "Dr. Sarah Chen",
+    initials: "SC",
+    university: "MIT",
+    field: "Machine Learning",
+    reputation: 4820,
+  },
+  {
+    name: "Prof. James Rivera",
+    initials: "JR",
+    university: "Harvard",
+    field: "Bioethics",
+    reputation: 3950,
+  },
+  {
+    name: "Dr. Anika Patel",
+    initials: "AP",
+    university: "Caltech",
+    field: "Quantum Computing",
+    reputation: 3640,
+  },
+  {
+    name: "Dr. Emily Zhang",
+    initials: "EZ",
+    university: "Stanford",
+    field: "NLP",
+    reputation: 4150,
+  },
+  {
+    name: "Prof. Yuki Tanaka",
+    initials: "YT",
+    university: "U of Tokyo",
+    field: "Robotics",
+    reputation: 3080,
+  },
+  {
+    name: "Lina Kovacs",
+    initials: "LK",
+    university: "ETH Zürich",
+    field: "PL Theory",
+    reputation: 2870,
+  },
 ];
 
 const suggestedTopics = [
@@ -39,13 +179,23 @@ const Index = () => {
   const topicFilter = searchParams.get("topic");
   const [followedPeople, setFollowedPeople] = useState<Set<string>>(new Set());
   const [followedTopics, setFollowedTopics] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [userPosts, setUserPosts] = useState([myPost]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 600);
+    return () => clearTimeout(timer);
+  }, [topicFilter]);
 
   const toggleFollowPerson = (name: string) => {
     setFollowedPeople((prev) => {
       const next = new Set(prev);
       const isFollowing = next.has(name);
       isFollowing ? next.delete(name) : next.add(name);
-      toast({ title: isFollowing ? `Unfollowed ${name}` : `Following ${name}` });
+      toast({
+        title: isFollowing ? `Unfollowed ${name}` : `Following ${name}`,
+      });
       return next;
     });
   };
@@ -60,41 +210,117 @@ const Index = () => {
       const next = new Set(prev);
       const isFollowing = next.has(name);
       isFollowing ? next.delete(name) : next.add(name);
-      toast({ title: isFollowing ? `Unfollowed ${name}` : `Following ${name}` });
+      toast({
+        title: isFollowing ? `Unfollowed ${name}` : `Following ${name}`,
+      });
       return next;
     });
   };
 
-  const filteredDiscussions = topicFilter
-    ? discussions.filter(d => d.tag.toLowerCase().includes(topicFilter.toLowerCase()))
-    : discussions;
+  const handleCreatePost = (data: {
+    title: string;
+    content: string;
+    category: string;
+    fileName?: string;
+  }) => {
+    const newPost = {
+      title: data.title,
+      author: "You (Demo User)",
+      authorInitials: "AK",
+      field: `${data.category} · Your University`,
+      preview:
+        data.content.substring(0, 150) +
+        (data.content.length > 150 ? "..." : ""),
+      aiSummary: "AI-generated summary will appear here after processing.",
+      upvotes: 0,
+      comments: 0,
+      tag: data.category,
+      isOwn: true,
+    };
+    setUserPosts([newPost, ...userPosts]);
+  };
 
-  // Interleave "People You May Know" after every 2 posts
+  const allDiscussions = [...userPosts, ...discussions];
+  const filteredDiscussions = topicFilter
+    ? allDiscussions.filter((d) =>
+        d.tag.toLowerCase().includes(topicFilter.toLowerCase()),
+      )
+    : allDiscussions;
+
   const feedItems: { type: "post" | "people"; index: number }[] = [];
   filteredDiscussions.forEach((_, i) => {
     feedItems.push({ type: "post", index: i });
-    if (i === 1) {
-      feedItems.push({ type: "people", index: 0 });
-    }
+    if (i === 2) feedItems.push({ type: "people", index: 0 });
   });
+
+  const peopleScrollRef = useRef<HTMLDivElement>(null);
+  const topicsScrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = useCallback(
+    (ref: React.RefObject<HTMLDivElement>, direction: "left" | "right") => {
+      if (ref.current) {
+        ref.current.scrollBy({
+          left: direction === "left" ? -200 : 200,
+          behavior: "smooth",
+        });
+      }
+    },
+    [],
+  );
+
+  const ScrollButtons = ({
+    scrollRef,
+  }: {
+    scrollRef: React.RefObject<HTMLDivElement>;
+  }) => (
+    <div className="flex gap-1">
+      <button
+        onClick={() => scroll(scrollRef, "left")}
+        className="rounded-full border border-border bg-background p-1 hover:bg-secondary transition-colors"
+      >
+        <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+      </button>
+      <button
+        onClick={() => scroll(scrollRef, "right")}
+        className="rounded-full border border-border bg-background p-1 hover:bg-secondary transition-colors"
+      >
+        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+      </button>
+    </div>
+  );
 
   const PeopleSection = () => (
     <div className="rounded-xl border border-border bg-card p-4 sm:p-5 my-2">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-heading font-semibold text-foreground">People You May Know</h3>
+        <h3 className="text-sm font-heading font-semibold text-foreground">
+          People You May Know
+        </h3>
+        <ScrollButtons scrollRef={peopleScrollRef} />
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+      <div
+        ref={peopleScrollRef}
+        className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth"
+        style={{ scrollbarWidth: "thin" }}
+      >
         {suggestedPeople.map((person, i) => (
           <div
             key={i}
             className="shrink-0 w-40 sm:w-44 rounded-xl border border-border bg-background p-3 sm:p-4 text-center hover:shadow-sm hover:border-primary/10 transition-all snap-start"
           >
             <div className="mx-auto mb-2.5 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-xs font-semibold text-primary">{person.initials}</span>
+              <span className="text-xs font-semibold text-primary">
+                {person.initials}
+              </span>
             </div>
-            <p className="text-xs font-medium text-foreground truncate">{person.name}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{person.university}</p>
-            <p className="text-[10px] text-accent font-medium mt-0.5">{person.field}</p>
+            <p className="text-xs font-medium text-foreground truncate">
+              {person.name}
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {person.university}
+            </p>
+            <p className="text-[10px] text-accent font-medium mt-0.5">
+              {person.field}
+            </p>
             <button
               onClick={() => toggleFollowPerson(person.name)}
               className={`mt-3 w-full flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-colors ${
@@ -103,11 +329,18 @@ const Index = () => {
                   : "bg-primary text-primary-foreground hover:bg-primary/90"
               }`}
             >
-              {followedPeople.has(person.name) ? <><Check className="h-3 w-3" /> Following</> : <><UserPlus className="h-3 w-3" /> Follow</>}
+              {followedPeople.has(person.name) ? (
+                <>
+                  <Check className="h-3 w-3" /> Following
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-3 w-3" /> Follow
+                </>
+              )}
             </button>
           </div>
         ))}
-        {/* See More card */}
         <button
           onClick={() => navigate("/peers")}
           className="shrink-0 w-40 sm:w-44 rounded-xl border border-dashed border-border bg-background p-3 sm:p-4 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-secondary/30 transition-all snap-start"
@@ -125,7 +358,6 @@ const Index = () => {
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8">
       {!topicFilter && <FeaturedSection />}
 
-      {/* Topic filter banner */}
       {topicFilter && (
         <div className="flex items-center gap-3 mb-6 flex-wrap">
           <h2 className="text-lg sm:text-xl font-heading font-bold text-foreground">
@@ -140,11 +372,20 @@ const Index = () => {
         </div>
       )}
 
-      {/* Topics You May Like */}
       {!topicFilter && (
         <section className="mb-8 sm:mb-10">
-          <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground mb-4">Topics You May Like</h2>
-          <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground mb-4">
+            Topics You May Like
+          </h2>
+          <div className="flex items-center justify-between mb-2">
+            <div />
+            <ScrollButtons scrollRef={topicsScrollRef} />
+          </div>
+          <div
+            ref={topicsScrollRef}
+            className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scroll-smooth"
+            style={{ scrollbarWidth: "thin" }}
+          >
             {suggestedTopics.map((topic, i) => (
               <motion.button
                 key={topic.name}
@@ -159,8 +400,12 @@ const Index = () => {
                 }`}
               >
                 {topic.name}
-                <span className="text-xs text-muted-foreground">{topic.followers}</span>
-                {followedTopics.has(topic.name) && <Check className="h-3.5 w-3.5" />}
+                <span className="text-xs text-muted-foreground">
+                  {topic.followers}
+                </span>
+                {followedTopics.has(topic.name) && (
+                  <Check className="h-3.5 w-3.5" />
+                )}
                 <span
                   role="button"
                   onClick={(e) => toggleFollowTopic(topic.name, e)}
@@ -175,39 +420,66 @@ const Index = () => {
       )}
 
       <div className="grid gap-6 lg:gap-8 lg:grid-cols-[1fr_280px]">
-        {/* Discussion Feed with interleaved people */}
         <div className="space-y-4 min-w-0">
-          <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground mb-2">
-            {topicFilter ? "" : "Latest Discussions"}
-          </h2>
-          {feedItems.map((item, idx) => {
-            if (item.type === "people") {
-              return <PeopleSection key="people-section" />;
-            }
-            const d = filteredDiscussions[item.index];
-            return (
-              <Link to="/post/1" key={idx} className="block">
-                <DiscussionCard {...d} index={item.index} />
-              </Link>
-            );
-          })}
-          {filteredDiscussions.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No discussions found for "{topicFilter}".</p>
-              <button onClick={() => setSearchParams({})} className="text-primary hover:underline text-sm mt-2">
-                View all discussions
-              </button>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground">
+              {topicFilter ? "" : "Latest Discussions"}
+            </h2>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              <Plus className="h-4 w-4" /> New Post
+            </button>
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <DiscussionCardSkeleton key={i} index={i} />
+              ))}
             </div>
+          ) : (
+            <>
+              {feedItems.map((item, idx) => {
+                if (item.type === "people")
+                  return <PeopleSection key="people-section" />;
+                const d = filteredDiscussions[item.index];
+                return (
+                  <Link to="/post/1" key={idx} className="block">
+                    <DiscussionCard {...d} index={item.index} />
+                  </Link>
+                );
+              })}
+              {filteredDiscussions.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">
+                    No discussions found for "{topicFilter}".
+                  </p>
+                  <button
+                    onClick={() => setSearchParams({})}
+                    className="text-primary hover:underline text-sm mt-2"
+                  >
+                    View all discussions
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        {/* Sidebar suggestions */}
         <div className="hidden lg:block">
           <div className="sticky top-24">
             <AISuggestionPanel />
           </div>
         </div>
       </div>
+
+      <CreatePostModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreatePost}
+      />
     </div>
   );
 };

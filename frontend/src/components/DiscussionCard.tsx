@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ArrowBigUp, ArrowBigDown, MessageCircle, Bookmark, BookmarkCheck, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import AIBadge from "../components/AIBadge";
+import AIBadge from "./AIBadge";
 
 interface DiscussionCardProps {
   title: string;
@@ -34,7 +34,8 @@ const DiscussionCard = ({
   const [downvoted, setDownvoted] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const voteScore = upvotes + (upvoted ? 1 : 0) - (downvoted ? 1 : 0);
+  const upvoteCount = upvotes + (upvoted ? 1 : 0);
+  const downvoteCount = (downvoted ? 1 : 0);
 
   return (
     <motion.article
@@ -88,8 +89,8 @@ const DiscussionCard = ({
           }`}
         >
           <ArrowBigUp className={`h-4 w-4 ${upvoted ? "fill-primary" : ""}`} />
+          <span className="text-xs font-semibold">{upvoteCount}</span>
         </button>
-        <span className="text-xs font-semibold text-foreground min-w-[1.5rem] text-center">{voteScore}</span>
         <button
           onClick={(e) => { e.preventDefault(); setDownvoted(!downvoted); if (upvoted) setUpvoted(false); }}
           className={`flex items-center gap-1 rounded-md px-1.5 sm:px-2 py-1.5 transition-colors ${
@@ -97,6 +98,7 @@ const DiscussionCard = ({
           }`}
         >
           <ArrowBigDown className={`h-4 w-4 ${downvoted ? "fill-destructive" : ""}`} />
+          <span className="text-xs font-semibold">{downvoteCount}</span>
         </button>
         <button className="flex items-center gap-1 rounded-md px-1.5 sm:px-2 py-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors ml-1">
           <MessageCircle className="h-4 w-4" />
