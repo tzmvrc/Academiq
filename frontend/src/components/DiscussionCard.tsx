@@ -1,41 +1,125 @@
 import { useState } from "react";
-import { ArrowBigUp, ArrowBigDown, MessageCircle, Bookmark, BookmarkCheck, Sparkles } from "lucide-react";
+import {
+  ArrowBigUp,
+  ArrowBigDown,
+  MessageCircle,
+  Bookmark,
+  BookmarkCheck,
+  Sparkles,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import AIBadge from "./AIBadge";
 
 interface DiscussionCardProps {
+  id?: string;
   title: string;
   author: string;
   authorInitials: string;
+  authorProfileUrl?: string;
   field: string;
   preview: string;
   aiSummary: string;
   upvotes: number;
+  downvotes: number;
   comments: number;
+  userVoteState?: 1 | -1 | null;
   isVerified?: boolean;
+  isAiVerified?: boolean;
   tag: string;
   index?: number;
+  onVote?: (voteType: 1 | -1) => Promise<void>;
+  onUnvote?: () => Promise<void>;
+  onSave?: () => Promise<void>;
 }
 
 const DiscussionCard = ({
+  id,
   title,
   author,
   authorInitials,
+  authorProfileUrl,
   field,
   preview,
   aiSummary,
-  upvotes,
+  upvotes, downvotes,
   comments,
+  userVoteState,
   isVerified = true,
+  isAiVerified,
   tag,
   index = 0,
+  onVote,
+  onUnvote,
+  onSave,
 }: DiscussionCardProps) => {
-  const [upvoted, setUpvoted] = useState(false);
-  const [downvoted, setDownvoted] = useState(false);
+  const [upvoted, setUpvoted] = useState<boolean>(userVoteState === 1);
+  const [downvoted, setDownvoted] = useState<boolean>(userVoteState === -1);
   const [saved, setSaved] = useState(false);
+  const [isVoting, setIsVoting] = useState(false);
 
-  const upvoteCount = upvotes + (upvoted ? 1 : 0);
-  const downvoteCount = (downvoted ? 1 : 0);
+  // Use the upvotes value from server directly (it already includes user's vote)
+  const upvoteCount = upvotes;
+  // For downvotes, we don't have a separate count from server, so show 0 for now
+  // This would need backend changes to track downvotes separately if needed
+  const downvoteCount = downvotes;
+
+  const handleUpvote = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isVoting || !onVote || !onUnvote) return;
+
+    setIsVoting(true);
+    try {
+      if (upvoted) {
+        // Remove upvote
+        await onUnvote();
+        setUpvoted(false);
+      } else {
+        // Add upvote
+        await onVote(1);
+        setUpvoted(true);
+        if (downvoted) setDownvoted(false);
+      }
+    } catch (error) {
+      console.error("Error voting:", error);
+    } finally {
+      setIsVoting(false);
+    }
+  };
+
+  const handleDownvote = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isVoting || !onVote || !onUnvote) return;
+
+    setIsVoting(true);
+    try {
+      if (downvoted) {
+        // Remove downvote
+        await onUnvote();
+        setDownvoted(false);
+      } else {
+        // Add downvote
+        await onVote(-1);
+        setDownvoted(true);
+        if (upvoted) setUpvoted(false);
+      }
+    } catch (error) {
+      console.error("Error voting:", error);
+    } finally {
+      setIsVoting(false);
+    }
+  };
+
+  const handleSave = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!onSave) return;
+
+    try {
+      await onSave();
+      setSaved(!saved);
+    } catch (error) {
+      console.error("Error saving:", error);
+    }
+  };
 
   return (
     <motion.article
@@ -46,15 +130,27 @@ const DiscussionCard = ({
     >
       {/* Author row */}
       <div className="flex items-center gap-2 sm:gap-3 mb-3">
-        <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-          <span className="text-[10px] sm:text-xs font-semibold text-primary">{authorInitials}</span>
+        <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+          {authorProfileUrl ? (
+            <img
+              src={authorProfileUrl}
+              alt={author}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span className="text-[10px] sm:text-xs font-semibold text-primary">
+              {authorInitials}
+            </span>
+          )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-foreground truncate">{author}</p>
+          <p className="text-sm font-medium text-foreground truncate">
+            {author}
+          </p>
           <p className="text-xs text-muted-foreground truncate">{field}</p>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {isVerified && <AIBadge variant="verified" />}
+          {isVerified && isAiVerified && <AIBadge variant="verified" />}
           <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-medium whitespace-nowrap">
             {tag}
           </span>
@@ -77,27 +173,40 @@ const DiscussionCard = ({
           <Sparkles className="h-3 w-3 text-ai" />
           <span className="text-xs font-medium text-ai">AI Summary</span>
         </div>
-        <p className="text-xs text-muted-foreground leading-relaxed">{aiSummary}</p>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {aiSummary}
+        </p>
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-0.5 sm:gap-1" onClick={(e) => e.preventDefault()}>
+      <div
+        className="flex items-center gap-0.5 sm:gap-1"
+        onClick={(e) => e.preventDefault()}
+      >
         <button
-          onClick={(e) => { e.preventDefault(); setUpvoted(!upvoted); if (downvoted) setDownvoted(false); }}
-          className={`flex items-center gap-1 rounded-md px-1.5 sm:px-2 py-1.5 transition-colors ${
-            upvoted ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+          onClick={handleUpvote}
+          disabled={isVoting}
+          className={`flex items-center gap-1 rounded-md px-1.5 sm:px-2 py-1.5 transition-colors disabled:opacity-50 ${
+            upvoted
+              ? "text-primary bg-primary/10"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary"
           }`}
         >
           <ArrowBigUp className={`h-4 w-4 ${upvoted ? "fill-primary" : ""}`} />
           <span className="text-xs font-semibold">{upvoteCount}</span>
         </button>
         <button
-          onClick={(e) => { e.preventDefault(); setDownvoted(!downvoted); if (upvoted) setUpvoted(false); }}
-          className={`flex items-center gap-1 rounded-md px-1.5 sm:px-2 py-1.5 transition-colors ${
-            downvoted ? "text-destructive bg-destructive/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+          onClick={handleDownvote}
+          disabled={isVoting}
+          className={`flex items-center gap-1 rounded-md px-1.5 sm:px-2 py-1.5 transition-colors disabled:opacity-50 ${
+            downvoted
+              ? "text-destructive bg-destructive/10"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary"
           }`}
         >
-          <ArrowBigDown className={`h-4 w-4 ${downvoted ? "fill-destructive" : ""}`} />
+          <ArrowBigDown
+            className={`h-4 w-4 ${downvoted ? "fill-destructive" : ""}`}
+          />
           <span className="text-xs font-semibold">{downvoteCount}</span>
         </button>
         <button className="flex items-center gap-1 rounded-md px-1.5 sm:px-2 py-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors ml-1">
@@ -105,12 +214,18 @@ const DiscussionCard = ({
           <span className="text-xs font-medium">{comments}</span>
         </button>
         <button
-          onClick={(e) => { e.preventDefault(); setSaved(!saved); }}
+          onClick={handleSave}
           className={`ml-auto rounded-md p-1.5 transition-colors ${
-            saved ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            saved
+              ? "text-primary bg-primary/10"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary"
           }`}
         >
-          {saved ? <BookmarkCheck className="h-4 w-4 fill-primary" /> : <Bookmark className="h-4 w-4" />}
+          {saved ? (
+            <BookmarkCheck className="h-4 w-4 fill-primary" />
+          ) : (
+            <Bookmark className="h-4 w-4" />
+          )}
         </button>
       </div>
     </motion.article>

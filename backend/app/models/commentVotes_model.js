@@ -5,7 +5,6 @@ const TABLE = "comment_votes";
 export const CommentVoteModel = {
   async setVote(commentId, userId, voteType) {
     try {
-      // First check if vote exists
       const { data: existing, error: checkError } = await supabase
         .from(TABLE)
         .select("id")
@@ -19,16 +18,15 @@ export const CommentVoteModel = {
       }
 
       if (existing) {
-        // Update existing vote
         const result = await supabase
           .from(TABLE)
           .update({ vote_type: voteType })
           .eq("id", existing.id)
           .select()
           .single();
+
         return result;
       } else {
-        // Insert new vote
         const result = await supabase
           .from(TABLE)
           .insert({
@@ -38,6 +36,7 @@ export const CommentVoteModel = {
           })
           .select()
           .single();
+
         return result;
       }
     } catch (err) {
@@ -64,15 +63,15 @@ export const CommentVoteModel = {
   },
 
   async getVoteCount(commentId) {
-    const { data: upvotes, error: upError } = await supabase
+    const { count: upvotes, error: upError } = await supabase
       .from(TABLE)
-      .select("id", { count: "exact" })
+      .select("*", { count: "exact", head: true })
       .eq("comment_id", commentId)
       .eq("vote_type", 1);
 
-    const { data: downvotes, error: downError } = await supabase
+    const { count: downvotes, error: downError } = await supabase
       .from(TABLE)
-      .select("id", { count: "exact" })
+      .select("*", { count: "exact", head: true })
       .eq("comment_id", commentId)
       .eq("vote_type", -1);
 
@@ -80,7 +79,11 @@ export const CommentVoteModel = {
       return { error: upError || downError };
     }
 
-    const count = (upvotes?.length || 0) - (downvotes?.length || 0);
-    return { data: count };
+    return {
+      data: {
+        upvotes: upvotes || 0,
+        downvotes: downvotes || 0,
+      },
+    };
   },
 };

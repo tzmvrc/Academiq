@@ -7,7 +7,7 @@ export const ForumSavesModel = {
   async isSaved(forumId, userId) {
     return supabase
       .from(TABLE)
-      .select("id")
+      .select("*")
       .eq("forum_id", forumId)
       .eq("user_id", userId)
       .maybeSingle();
@@ -55,16 +55,15 @@ export const ForumSavesModel = {
       .from(TABLE)
       .select(
         `
-        id,
         forum_id,
         created_at,
         forums (
           id, user_id, subject_id,
           title, content,
           document_url, is_ai_verified,
-          comments_count, vote_count,
+          comments_count, upvotes_count, downvotes_count,
           created_at,
-          users ( id, name, profile_url ),
+          users!forums_user_id_fkey ( id, name, profile_url ),
           subjects ( id, name )
         )
       `,

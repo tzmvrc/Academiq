@@ -7,9 +7,6 @@ const router = express.Router();
 // Public - get all subjects
 router.get("/", SubjectsController.getAllSubjects);
 
-// Public - get subjects under a topic
-router.get("/:topicId", SubjectsController.getSubjectsByTopic);
-
 // Protected - create subject
 router.post("/", authMiddleware, SubjectsController.createSubject);
 

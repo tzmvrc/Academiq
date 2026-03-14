@@ -1,5 +1,6 @@
 import { OAuth2Client } from "google-auth-library";
 import { UserModel } from "../../models/user_model.js";
+import { SchoolModel } from "../../models/schools_model.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { OtpModel } from "../../models/otp_model.js";
@@ -86,28 +87,45 @@ export const AuthController = {
           message: "Google login requires a valid school email.",
         });
       }
-      const schoolName = response.data[0].name;
+      const schoolInfo = response.data[0];
+      const schoolName = schoolInfo.name;
+      const schoolDomain = rootDomain;
+
+      // Check if school exists in database, if not create it
+      let school = await SchoolModel.findByEmailDomain(schoolDomain);
+      if (!school) {
+        school = await SchoolModel.create({
+          school_name: schoolName,
+          email_domain: schoolDomain,
+        });
+      }
 
       // STEP 5 — Fetch or create user
-      let user = await UserModel.findByEmail(email);
+      // Check by google_id first (existing Google user)
+      let user = await UserModel.findByGoogleId(google_id);
 
       if (user) {
-        // Existing user
-        if (!user.google_id) {
-          // Manual account → link Google
-          await UserModel.updateGoogleId(user.id, google_id);
-          user.google_id = google_id;
-        }
+        // Existing Google user → just log them in
       } else {
-        // New user → create Google account
-        user = await UserModel.create({
-          email,
-          google_id,
-          name,
-          profile_url: picture,
-          school: schoolName,
-          onboarding_completed: false, // mark as new
-        });
+        // Check if user exists by email
+        user = await UserModel.findByEmail(email);
+        if (user) {
+          // Existing manual account → link Google
+          if (!user.google_id) {
+            await UserModel.updateGoogleId(user.id, google_id);
+            user.google_id = google_id;
+          }
+        } else {
+          // New user → create Google account
+          user = await UserModel.create({
+            email,
+            google_id,
+            name,
+            profile_url: picture,
+            school_id: school.id,
+            onboarding_completed: false, // mark as new
+          });
+        }
       }
 
       // STEP 6 — Update last login
@@ -289,10 +307,11 @@ export const AuthController = {
       const otpHash = await bcrypt.hash(otp, 10);
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-      await OtpModel.upsert({
+      await OtpModel.create({
         email,
         otp_hash: otpHash,
         expires_at: expiresAt,
+        purpose: "signup",
       });
 
       // Send OTP
@@ -400,7 +419,7 @@ export const AuthController = {
       const rootDomain =
         domainParts.length > 2 ? domainParts.slice(-3).join(".") : domainPart;
 
-      // STEP 4 — Validate school
+      // STEP 4 — Validate school and get school_id
       const response = await axios.get(
         `http://universities.hipolabs.com/search?domain=${rootDomain}`,
       );
@@ -411,7 +430,18 @@ export const AuthController = {
             "The provided email domain is not recognized as a valid school.",
         });
       }
-      const schoolName = response.data[0].name;
+      const schoolInfo = response.data[0];
+      const schoolName = schoolInfo.name;
+      const schoolDomain = rootDomain;
+
+      // Check if school exists in database, if not create it
+      let school = await SchoolModel.findByEmailDomain(schoolDomain);
+      if (!school) {
+        school = await SchoolModel.create({
+          school_name: schoolName,
+          email_domain: schoolDomain,
+        });
+      }
 
       // STEP 5 — Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -421,7 +451,7 @@ export const AuthController = {
         email,
         password: hashedPassword,
         name,
-        school: schoolName,
+        school_id: school.id,
         onboarding_completed: false, // new user must do onboarding
       });
 

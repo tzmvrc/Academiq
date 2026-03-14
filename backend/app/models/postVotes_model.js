@@ -1,11 +1,9 @@
-// models/postVotes_model.js
 import { supabase } from "../database/supabase.js";
 const TABLE = "post_votes";
 
 export const PostVoteModel = {
   async setVote(forumId, userId, voteType) {
     try {
-      // First check if vote exists
       const { data: existing, error: checkError } = await supabase
         .from(TABLE)
         .select("id")
@@ -19,16 +17,15 @@ export const PostVoteModel = {
       }
 
       if (existing) {
-        // Update existing vote
         const result = await supabase
           .from(TABLE)
           .update({ vote_type: voteType })
           .eq("id", existing.id)
           .select()
           .single();
+
         return result;
       } else {
-        // Insert new vote
         const result = await supabase
           .from(TABLE)
           .insert({
@@ -38,6 +35,7 @@ export const PostVoteModel = {
           })
           .select()
           .single();
+
         return result;
       }
     } catch (err) {
@@ -61,5 +59,30 @@ export const PostVoteModel = {
       .eq("forum_id", forumId)
       .eq("user_id", userId)
       .maybeSingle();
+  },
+
+  async getVoteCount(forumId) {
+    const { count: upvotes, error: upError } = await supabase
+      .from(TABLE)
+      .select("*", { count: "exact", head: true })
+      .eq("forum_id", forumId)
+      .eq("vote_type", 1);
+
+    const { count: downvotes, error: downError } = await supabase
+      .from(TABLE)
+      .select("*", { count: "exact", head: true })
+      .eq("forum_id", forumId)
+      .eq("vote_type", -1);
+
+    if (upError || downError) {
+      return { error: upError || downError };
+    }
+
+    return {
+      data: {
+        upvotes: upvotes || 0,
+        downvotes: downvotes || 0,
+      },
+    };
   },
 };

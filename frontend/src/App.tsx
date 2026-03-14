@@ -1,11 +1,23 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
+import axiosInstance from "@/integration/axiosInstance";
+
 import Navbar from "@/components/Navbar";
+import ProtectedRoute from "@/components/protectRoute/protectedRoute";
+import PublicRoute from "@/components/protectRoute/publicRoute";
+
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -23,34 +35,162 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const Layout = () => {
+const AppRoutes = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
   const noNavbarRoutes = [
     "/",
     "/login",
     "/signup",
     "/onboarding",
-    "/secret-chat",
+    "/acad-chat",
   ];
+
   const showNavbar = !noNavbarRoutes.includes(location.pathname);
+
+  useEffect(() => {
+    const restoreSession = async () => {
+      const token = localStorage.getItem("userToken");
+      if (!token) return;
+
+      try {
+        const res = await axiosInstance.get("/auth/me");
+        localStorage.setItem("user", JSON.stringify(res.data));
+      } catch (error) {
+        localStorage.removeItem("userToken");
+        localStorage.removeItem("user");
+        navigate("/");
+      }
+    };
+
+    restoreSession();
+  }, [navigate]);
 
   return (
     <>
       {showNavbar && <Navbar />}
+
       <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/feed" element={<Index />} />
-        <Route path="/peers" element={<Peers />} />
-        <Route path="/leaderboards" element={<Leaderboards />} />
-        <Route path="/interests" element={<Interests />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/post/:id" element={<PostDetails />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/secret-chat" element={<SecretChat />} />
+        {/* Public Routes */}
+        <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <Landing />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/signup"
+          element={
+            <PublicRoute>
+              <Signup />
+            </PublicRoute>
+          }
+        />
+
+        {/* Protected Routes */}
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute>
+              <Onboarding />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/feed"
+          element={
+            <ProtectedRoute>
+              <Index />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/peers"
+          element={
+            <ProtectedRoute>
+              <Peers />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/leaderboards"
+          element={
+            <ProtectedRoute>
+              <Leaderboards />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/interests"
+          element={
+            <ProtectedRoute>
+              <Interests />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/post/:id"
+          element={
+            <ProtectedRoute>
+              <PostDetails />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/acad-chat"
+          element={
+            <ProtectedRoute>
+              <SecretChat />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
@@ -71,7 +211,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Layout />
+            <AppRoutes />
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>

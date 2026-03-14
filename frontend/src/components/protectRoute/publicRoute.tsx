@@ -10,7 +10,7 @@ const PublicRoute: React.FC<Props> = ({ children }) => {
 
   // already logged in → send to dashboard
   if (token) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/feed" replace />;
   }
 
   return <>{children}</>;

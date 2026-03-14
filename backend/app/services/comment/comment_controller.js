@@ -1,5 +1,4 @@
 import { CommentModel } from "../../models/comment_model.js";
-import { CommentVoteModel } from "../../models/commentVotes_model.js";
 
 export const CommentsController = {
   // GET /api/forums/:id/comments
@@ -10,20 +9,8 @@ export const CommentsController = {
       const { data, error } = await CommentModel.findByForumId(forumId);
       if (error) throw error;
 
-      // Fetch vote count for each comment
-      const commentsWithVotes = await Promise.all(
-        data.map(async (comment) => {
-          const { data: voteCount } = await CommentVoteModel.getVoteCount(
-            comment.id,
-          );
-          return {
-            ...comment,
-            vote_count: voteCount || 0,
-          };
-        }),
-      );
-
-      res.json({ comments: commentsWithVotes });
+      // Comments now include upvotes_count and downvotes_count from the database
+      res.json({ comments: data });
     } catch (err) {
       console.error("Get Forum Comments Error:", err);
       res.status(500).json({ error: "Failed to fetch forum comments" });
@@ -38,10 +25,7 @@ export const CommentsController = {
       const { data, error } = await CommentModel.findById(id);
       if (error) throw error;
 
-      // Fetch vote count
-      const { data: voteCount } = await CommentVoteModel.getVoteCount(id);
-
-      res.json({ comment: { ...data, vote_count: voteCount || 0 } });
+      res.json({ comment: data });
     } catch (err) {
       console.error("Get Comment Error:", err);
       res.status(404).json({ error: "Comment not found" });
@@ -93,14 +77,7 @@ export const CommentsController = {
       );
       if (fetchErr) throw fetchErr;
 
-      // Fetch vote count (should be 0 for new comment)
-      const { data: voteCount } = await CommentVoteModel.getVoteCount(
-        created.id,
-      );
-
-      res.status(201).json({
-        comment: { ...comment, vote_count: voteCount || 0 },
-      });
+      res.status(201).json({ comment });
     } catch (err) {
       console.error("Create Comment Error:", err);
       res.status(500).json({ error: "Failed to create comment" });

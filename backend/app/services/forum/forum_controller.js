@@ -1,7 +1,7 @@
 import { ForumModel } from "../../models/forum_model.js";
 import { ForumTopicModel } from "../../models/forumTopics_model.js";
 import { SubjectModel } from "../../models/subject_model.js";
-import { PostVoteModel } from "../../models/postVotes_model.js";
+import { VotesModel } from "../../models/votes_model.js";
 import { supabase } from "../../database/supabase.js";
 
 export const ForumsController = {
@@ -158,9 +158,10 @@ export const ForumsController = {
         return res.status(400).json({ error: "voteType must be 1 or -1" });
       }
 
-      const { data: voteRow, error } = await PostVoteModel.setVote(
-        forumId,
+      const { data: voteRow, error } = await VotesModel.setVote(
         userId,
+        "forum",
+        forumId,
         voteTypeNum,
       );
       if (error) throw error;
@@ -170,7 +171,10 @@ export const ForumsController = {
 
       res.json({
         voteType: voteRow.vote_type,
-        voteCount: forum.vote_count,
+        voteCount: {
+          upvotes: forum.upvotes_count,
+          downvotes: forum.downvotes_count,
+        },
       });
     } catch (err) {
       console.error("Vote Forum Error:", err);
@@ -186,7 +190,7 @@ export const ForumsController = {
 
       const forumId = req.params.id;
 
-      const { error } = await PostVoteModel.removeVote(forumId, userId);
+      const { error } = await VotesModel.removeVote(userId, "forum", forumId);
       if (error) throw error;
 
       const { data: forum, error: fErr } = await ForumModel.findById(forumId);
@@ -194,7 +198,10 @@ export const ForumsController = {
 
       res.json({
         voteType: null,
-        voteCount: forum.vote_count,
+        voteCount: {
+          upvotes: forum.upvotes_count,
+          downvotes: forum.downvotes_count,
+        },
       });
     } catch (err) {
       console.error("Unvote Forum Error:", err);
@@ -209,7 +216,11 @@ export const ForumsController = {
       if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
       const forumId = req.params.id;
-      const { data, error } = await PostVoteModel.getUserVote(forumId, userId);
+      const { data, error } = await VotesModel.getUserVote(
+        userId,
+        "forum",
+        forumId,
+      );
       if (error) throw error;
 
       res.json({ voteType: data?.vote_type ?? null });

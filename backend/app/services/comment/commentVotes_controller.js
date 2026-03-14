@@ -1,5 +1,4 @@
-import { CommentVoteModel } from "../../models/commentVotes_model.js";
-import { CommentModel } from "../../models/comment_model.js";
+import { VotesModel } from "../../models/votes_model.js";
 
 export const CommentVotesController = {
   // POST /api/comments/:id/vote
@@ -15,26 +14,29 @@ export const CommentVotesController = {
         return res.status(400).json({ error: "voteType must be 1 or -1" });
       }
 
-      const { data: voteRow, error } = await CommentVoteModel.setVote(
-        commentId,
+      const { data: voteRow, error } = await VotesModel.setVote(
         userId,
+        "comment",
+        commentId,
         voteTypeNum,
       );
 
       if (error) {
-        console.error("CommentVoteModel.setVote error:", error);
+        console.error("VotesModel.setVote error:", error);
         return res
           .status(500)
           .json({ error: "Failed to save vote", details: error.message });
       }
 
       // Fetch updated vote count
-      const { data: voteCount } =
-        await CommentVoteModel.getVoteCount(commentId);
+      const { data: voteCount } = await VotesModel.getVoteCount(
+        "comment",
+        commentId,
+      );
 
       res.json({
         voteType: voteRow.vote_type,
-        voteCount: voteCount || 0,
+        voteCount: voteCount || { upvotes: 0, downvotes: 0 },
         message: "Vote saved",
       });
     } catch (err) {
@@ -53,16 +55,22 @@ export const CommentVotesController = {
 
       const commentId = req.params.id;
 
-      const { error } = await CommentVoteModel.removeVote(commentId, userId);
+      const { error } = await VotesModel.removeVote(
+        userId,
+        "comment",
+        commentId,
+      );
       if (error) throw error;
 
       // Fetch updated vote count
-      const { data: voteCount } =
-        await CommentVoteModel.getVoteCount(commentId);
+      const { data: voteCount } = await VotesModel.getVoteCount(
+        "comment",
+        commentId,
+      );
 
       res.json({
         voteType: null,
-        voteCount: voteCount || 0,
+        voteCount: voteCount || { upvotes: 0, downvotes: 0 },
         message: "Vote removed",
       });
     } catch (err) {
@@ -78,9 +86,10 @@ export const CommentVotesController = {
       if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
       const commentId = req.params.id;
-      const { data, error } = await CommentVoteModel.getUserVote(
-        commentId,
+      const { data, error } = await VotesModel.getUserVote(
         userId,
+        "comment",
+        commentId,
       );
       if (error) throw error;
 

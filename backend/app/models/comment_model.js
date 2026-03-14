@@ -17,8 +17,9 @@ export const CommentModel = {
         id, user_id, forum_id, parent_comment_id,
         content,
         is_ai_verified,
+        upvotes_count, downvotes_count,
         created_at, updated_at,
-        users ( id, name, profile_url )
+        users!comments_user_id_fkey ( id, name, profile_url )
       `,
       )
       .eq("id", id)
@@ -34,8 +35,9 @@ export const CommentModel = {
         id, user_id, forum_id, parent_comment_id,
         content,
         is_ai_verified,
+        upvotes_count, downvotes_count,
         created_at, updated_at,
-        users ( id, name, profile_url )
+        users!comments_user_id_fkey ( id, name, profile_url )
       `,
       )
       .eq("forum_id", forumId)

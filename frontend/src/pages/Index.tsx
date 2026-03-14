@@ -16,109 +16,10 @@ import AISuggestionPanel from "@/components/AISuggestionPanel";
 import CreatePostModal from "@/components/CreatePostModal";
 import { toast } from "@/hooks/use-toast";
 import { DiscussionCardSkeleton } from "@/components/SkeletonLoaders";
-
-const discussions = [
-  {
-    title: "Attention Is All You Need — Revisited in 2026",
-    author: "Dr. Emily Zhang",
-    authorInitials: "EZ",
-    field: "NLP · Stanford University",
-    preview:
-      "Three years after the transformer revolution, we examine what has changed, what remains, and what new architectures are challenging the paradigm.",
-    aiSummary:
-      "Compares original transformer architecture with modern alternatives including Mamba, RWKV, and hybrid approaches across standard benchmarks.",
-    upvotes: 284,
-    comments: 47,
-    tag: "Deep Learning",
-    isOwn: false,
-  },
-  {
-    title: "Bayesian Methods for Small-Sample Clinical Trials",
-    author: "Prof. Michael Torres",
-    authorInitials: "MT",
-    field: "Biostatistics · Johns Hopkins",
-    preview:
-      "How Bayesian adaptive designs are revolutionizing rare disease clinical trials, enabling faster and more ethical drug development.",
-    aiSummary:
-      "Discusses adaptive Bayesian trial designs that allow dynamic sample size adjustments while maintaining statistical rigor.",
-    upvotes: 156,
-    comments: 32,
-    tag: "Medicine",
-    isOwn: false,
-  },
-  {
-    title: "Formal Verification of Smart Contracts Using Coq",
-    author: "Lina Kovacs",
-    authorInitials: "LK",
-    field: "PL Theory · ETH Zürich",
-    preview:
-      "An exploration of using dependent types and proof assistants to verify correctness properties of Solidity smart contracts.",
-    aiSummary:
-      "Presents a framework for translating Solidity to Coq specifications, enabling formal proofs of contract invariants.",
-    upvotes: 128,
-    comments: 21,
-    tag: "Computer Science",
-    isOwn: false,
-  },
-  {
-    title: "The Political Economy of Carbon Pricing Mechanisms",
-    author: "Dr. Ricardo Almeida",
-    authorInitials: "RA",
-    field: "Environmental Economics · LSE",
-    preview:
-      "Comparing cap-and-trade vs carbon tax approaches across different economic contexts and their effectiveness in reducing emissions.",
-    aiSummary:
-      "Analyzes empirical data from EU ETS, California's system, and Canada's carbon tax to evaluate policy effectiveness.",
-    upvotes: 97,
-    comments: 54,
-    tag: "Economics",
-    isOwn: false,
-  },
-  {
-    title: "Modern Approaches to Structural Engineering Optimization",
-    author: "Dr. Wei Chen",
-    authorInitials: "WC",
-    field: "Civil Engineering · MIT",
-    preview:
-      "Applying topology optimization and generative design to create more efficient and sustainable structural systems.",
-    aiSummary:
-      "Reviews computational methods for structural optimization including SIMP, level-set, and AI-driven generative approaches.",
-    upvotes: 73,
-    comments: 18,
-    tag: "Engineering",
-    isOwn: false,
-  },
-  {
-    title: "Game Theory Applications in Business Strategy",
-    author: "Prof. Anna Mueller",
-    authorInitials: "AM",
-    field: "Strategy · Wharton",
-    preview:
-      "How game-theoretic models help predict competitive dynamics and inform strategic decision-making in modern markets.",
-    aiSummary:
-      "Covers Nash equilibrium applications in pricing, market entry, and competitive positioning across industries.",
-    upvotes: 112,
-    comments: 29,
-    tag: "Business",
-    isOwn: false,
-  },
-];
-
-// Sample post by the current user (demo author POV)
-const myPost = {
-  title: "Quantum Circuit Optimization via Graph-Theoretic Methods",
-  author: "You (Demo User)",
-  authorInitials: "AK",
-  field: "Quantum Computing · Your University",
-  preview:
-    "Exploring how graph decomposition techniques can reduce circuit depth and gate count in near-term quantum algorithms.",
-  aiSummary:
-    "Proposes a graph-coloring-based approach to optimize quantum circuits, achieving 30% reduction in two-qubit gate counts on NISQ devices.",
-  upvotes: 45,
-  comments: 12,
-  tag: "Computer Science",
-  isOwn: true,
-};
+import {
+  forumService,
+  type DiscussionCardProps,
+} from "@/integration/forum_service";
 
 const suggestedPeople = [
   {
@@ -181,12 +82,34 @@ const Index = () => {
   const [followedTopics, setFollowedTopics] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [userPosts, setUserPosts] = useState([myPost]);
+  const [forums, setForums] = useState<DiscussionCardProps[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
+  // Fetch forums from API on component mount
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 600);
-    return () => clearTimeout(timer);
-  }, [topicFilter]);
+    const loadForums = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const fetchedForums = await forumService.getAllForums();
+        setForums(fetchedForums);
+      } catch (err) {
+        console.error("Error loading forums:", err);
+        setError("Failed to load forums. Showing sample data.");
+        // Fallback to dummy data
+        setForums(FALLBACK_DISCUSSIONS);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadForums();
+  }, []);
+
+  // Handle new posts created
+  const handleNewPost = (newPost: DiscussionCardProps) => {
+    setForums([newPost, ...forums]);
+  };
 
   const toggleFollowPerson = (name: string) => {
     setFollowedPeople((prev) => {
@@ -217,30 +140,112 @@ const Index = () => {
     });
   };
 
-  const handleCreatePost = (data: {
+  const handleCreatePost = async (data: {
     title: string;
     content: string;
     category: string;
     fileName?: string;
   }) => {
-    const newPost = {
-      title: data.title,
-      author: "You (Demo User)",
-      authorInitials: "AK",
-      field: `${data.category} · Your University`,
-      preview:
-        data.content.substring(0, 150) +
-        (data.content.length > 150 ? "..." : ""),
-      aiSummary: "AI-generated summary will appear here after processing.",
-      upvotes: 0,
-      comments: 0,
-      tag: data.category,
-      isOwn: true,
-    };
-    setUserPosts([newPost, ...userPosts]);
+    try {
+      setIsLoading(true);
+      const newForum = await forumService.createForum({
+        title: data.title,
+        content: data.content,
+        subject: data.category,
+      });
+      handleNewPost(newForum);
+      toast({
+        title: "Post created successfully",
+        description: "Your forum discussion has been published.",
+      });
+    } catch (err) {
+      console.error("Error creating post:", err);
+      toast({
+        title: "Error creating post",
+        description:
+          "Failed to create your forum discussion. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const allDiscussions = [...userPosts, ...discussions];
+  const handleVoteForum = async (forumId: string, voteType: 1 | -1) => {
+    try {
+      const result = await forumService.voteForum(forumId, voteType);
+      // Update both the vote state and the vote counts from the server response
+      setForums((prevForums) =>
+        prevForums.map((forum) =>
+          forum.id === forumId
+            ? {
+                ...forum,
+                userVoteState: voteType,
+                upvotes: result.voteCount.upvotes,
+                downvotes: result.voteCount.downvotes,
+              }
+            : forum,
+        ),
+      );
+      toast({
+        title: voteType === 1 ? "Upvoted!" : "Downvoted!",
+      });
+    } catch (err) {
+      console.error("Error voting:", err);
+      toast({
+        title: "Error voting",
+        description: "Failed to vote on this forum.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUnvoteForum = async (forumId: string) => {
+    try {
+      const result = await forumService.unvoteForum(forumId);
+      // Update both the vote state and the vote count from the server response
+      setForums((prevForums) =>
+        prevForums.map((forum) =>
+          forum.id === forumId
+            ? {
+                ...forum,
+                userVoteState: null,
+                upvotes: result.voteCount.upvotes,
+                downvotes: result.voteCount.downvotes,
+              }
+            : forum,
+        ),
+      );
+      toast({
+        title: "Vote removed",
+      });
+    } catch (err) {
+      console.error("Error removing vote:", err);
+      toast({
+        title: "Error removing vote",
+        description: "Failed to remove your vote.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveForum = async (forumId: string) => {
+    try {
+      await forumService.toggleSaveForum(forumId);
+      toast({
+        title: "Forum saved",
+      });
+    } catch (err) {
+      console.error("Error saving forum:", err);
+      toast({
+        title: "Error saving forum",
+        description: "Failed to save this forum.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const allDiscussions = forums;
   const filteredDiscussions = topicFilter
     ? allDiscussions.filter((d) =>
         d.tag.toLowerCase().includes(topicFilter.toLowerCase()),
@@ -433,6 +438,12 @@ const Index = () => {
             </button>
           </div>
 
+          {error && (
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
+              {error}
+            </div>
+          )}
+
           {isLoading ? (
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
@@ -447,7 +458,13 @@ const Index = () => {
                 const d = filteredDiscussions[item.index];
                 return (
                   <Link to="/post/1" key={idx} className="block">
-                    <DiscussionCard {...d} index={item.index} />
+                    <DiscussionCard
+                      {...d}
+                      index={item.index}
+                      onVote={(voteType) => handleVoteForum(d.id!, voteType)}
+                      onUnvote={() => handleUnvoteForum(d.id!)}
+                      onSave={() => handleSaveForum(d.id!)}
+                    />
                   </Link>
                 );
               })}

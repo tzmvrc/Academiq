@@ -10,15 +10,17 @@ export const ForumModel = {
   async findById(id) {
     return supabase
       .from(TABLE)
-      .select(`
+      .select(
+        `
         id, user_id, subject_id,
         title, content,
         document_url, ai_summary, is_ai_verified,
-        comments_count, vote_count,
+        comments_count, upvotes_count, downvotes_count,
         created_at, updated_at,
-        users ( id, name, profile_url ),
+        users!forums_user_id_fkey ( id, name, profile_url ),
         subjects ( id, name )
-      `)
+      `,
+      )
       .eq("id", id)
       .single();
   },
@@ -26,30 +28,34 @@ export const ForumModel = {
   async findAll() {
     return supabase
       .from(TABLE)
-      .select(`
+      .select(
+        `
         id, user_id, subject_id,
         title, content,
         document_url, is_ai_verified,
-        comments_count, vote_count,
+        comments_count, upvotes_count, downvotes_count,
         created_at,
-        users ( id, name, profile_url ),
+        users!forums_user_id_fkey ( id, name, profile_url ),
         subjects ( id, name )
-      `)
+      `,
+      )
       .order("created_at", { ascending: false });
   },
 
   async findByUserId(userId) {
     return supabase
       .from(TABLE)
-      .select(`
+      .select(
+        `
         id, user_id, subject_id,
         title, content,
         document_url, is_ai_verified,
-        comments_count, vote_count,
+        comments_count, upvotes_count, downvotes_count,
         created_at,
-        users ( id, name, profile_url ),
+        users!forums_user_id_fkey ( id, name, profile_url ),
         subjects ( id, name )
-      `)
+      `,
+      )
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
   },
@@ -60,5 +66,5 @@ export const ForumModel = {
 
   async delete(id) {
     return supabase.from(TABLE).delete().eq("id", id);
-  }
+  },
 };
