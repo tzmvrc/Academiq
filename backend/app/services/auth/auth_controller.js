@@ -50,18 +50,20 @@ export const AuthController = {
   async googleLogin(req, res) {
     try {
       const { code } = req.body;
-      if (!code)
-        return res.status(400).json({ error: "Authorization code required" });
 
-      // STEP 1 — Exchange code for tokens
+      if (!code) {
+        return res.status(400).json({ error: "Authorization code required" });
+      }
+
       const { tokens } = await client.getToken(code);
       const idToken = tokens.id_token;
-      if (!idToken)
-        return res
-          .status(400)
-          .json({ error: "No ID token returned from Google" });
 
-      // STEP 2 — Verify ID token
+      if (!idToken) {
+        return res.status(400).json({
+          error: "No ID token returned from Google",
+        });
+      }
+
       const ticket = await client.verifyIdToken({
         idToken,
         audience: GOOGLE_CLIENT_ID,
@@ -70,76 +72,69 @@ export const AuthController = {
       const payload = ticket.getPayload();
       const { sub: google_id, email, name, picture } = payload;
 
-      // STEP 3 — Extract root domain for school validation
+      // Extract domain
       const domainParts = email.split("@")[1].split(".");
       const rootDomain =
         domainParts.length > 2
           ? domainParts.slice(-3).join(".")
           : domainParts.join(".");
 
-      // STEP 4 — Validate school
+      // Validate school
       const response = await axios.get(
         `http://universities.hipolabs.com/search?domain=${rootDomain}`,
       );
+
       if (!response.data || response.data.length === 0) {
         return res.status(400).json({
           title: "Invalid School Email",
           message: "Google login requires a valid school email.",
         });
       }
-      const schoolInfo = response.data[0];
-      const schoolName = schoolInfo.name;
-      const schoolDomain = rootDomain;
 
-      // Check if school exists in database, if not create it
-      let school = await SchoolModel.findByEmailDomain(schoolDomain);
+      const schoolInfo = response.data[0];
+
+      let school = await SchoolModel.findByEmailDomain(rootDomain);
+
       if (!school) {
         school = await SchoolModel.create({
-          school_name: schoolName,
-          email_domain: schoolDomain,
+          school_name: schoolInfo.name,
+          email_domain: rootDomain,
         });
       }
 
-      // STEP 5 — Fetch or create user
-      // Check by google_id first (existing Google user)
+      // FIND USER
       let user = await UserModel.findByGoogleId(google_id);
 
-      if (user) {
-        // Existing Google user → just log them in
-      } else {
-        // Check if user exists by email
+      if (!user) {
         user = await UserModel.findByEmail(email);
+
         if (user) {
-          // Existing manual account → link Google
           if (!user.google_id) {
             await UserModel.updateGoogleId(user.id, google_id);
-            user.google_id = google_id;
           }
+
+          user = await UserModel.findById(user.id);
         } else {
-          // New user → create Google account
           user = await UserModel.create({
             email,
             google_id,
             name,
             profile_url: picture,
             school_id: school.id,
-            onboarding_completed: false, // mark as new
+            onboarding_completed: false,
           });
         }
       }
 
-      // STEP 6 — Update last login
       await UserModel.updateLastLogin(user.id);
 
-      // STEP 7 — Generate JWT token
       const token = generateToken(user.id);
 
-      // STEP 8 — Send response including onboardingRequired
       res.json({
         message: "Google login successful",
         user,
         token,
-        onboardingRequired: !user.onboarding_completed, // frontend can redirect
+        onboardingRequired: !user.onboarding_completed,
       });
     } catch (err) {
       console.error("Google Login Error:", err);

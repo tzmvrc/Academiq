@@ -116,14 +116,26 @@ const Navbar = () => {
     setMobileSearchOpen(false);
   }, [location.pathname]);
 
-  const handleLogout = () => {
-    setLogoutConfirm(false);
-    setProfileOpen(false);
-    toast({
-      title: "Logged out",
-      description: "You have been signed out successfully.",
-    });
-    navigate("/");
+  // const handleLogout = () => {
+  //   setLogoutConfirm(false);
+  //   setProfileOpen(false);
+  //   toast({
+  //     title: "Logged out",
+  //     description: "You have been signed out successfully.",
+  //   });
+  //   navigate("/");
+  // };
+
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post("/auth/logout");
+    } catch (err) {
+      console.error("Logout API failed:", err);
+      // even if API fails, still clear local session
+    } finally {
+      clearAuth()
+      setProfileOpen(false);
+    }
   };
 
   const handleThemeChange = (mode: ThemeMode) => {
@@ -178,7 +190,11 @@ const Navbar = () => {
         <div className="mx-auto flex h-14 sm:h-16 max-w-6xl items-center px-4 sm:px-6 gap-2">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <img src={Icon} alt="Academiq Logo" className="h-6 w-6 sm:h-8 sm:w-8" />
+            <img
+              src={Icon}
+              alt="Academiq Logo"
+              className="h-6 w-6 sm:h-8 sm:w-8"
+            />
             <span className="text-lg sm:text-xl font-heading font-bold text-foreground tracking-tight">
               Academiq
             </span>
@@ -487,13 +503,13 @@ const Navbar = () => {
               <div className="flex gap-3">
                 <button
                   onClick={() => setLogoutConfirm(false)}
-                  className="flex-1 rounded-lg border border-border py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+                  className="flex-1 cursor-pointer rounded-lg border border-border py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="flex-1 rounded-lg bg-destructive py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors"
+                  className="flex-1 cursor-pointer rounded-lg bg-destructive py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors"
                 >
                   Logout
                 </button>

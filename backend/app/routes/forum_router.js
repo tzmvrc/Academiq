@@ -3,8 +3,14 @@ import { ForumsController } from "../services/forum/forum_controller.js";
 import { ForumSavesController } from "../services/forum/forumSaves_controller.js";
 import { CommentsController } from "../services/comment/comment_controller.js";
 import { authMiddleware } from "../middlewares/auth_middleware.js";
+import { OnboardingController } from "../services/forum/Onboarding_controller.js";
 
 const router = express.Router();
+
+// Get all available topics
+router.get("/topics", authMiddleware, OnboardingController.getTopics);
+router.get("/my-topics", authMiddleware, OnboardingController.getMyTopics);
+router.post("/my-topics", authMiddleware, OnboardingController.saveTopics);
 
 /* -----------------------
    Forums (Public)

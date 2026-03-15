@@ -13,19 +13,30 @@ export const UserModel = {
     school_id = null,
     bio = null,
     role = "user",
+    onboarding_completed = false,
   }) {
     const { data, error } = await supabase
       .from(TABLE)
       .insert([
-        { email, password, google_id, name, profile_url, school_id, bio, role },
+        {
+          email,
+          password,
+          google_id,
+          name,
+          profile_url,
+          school_id,
+          bio,
+          role,
+          onboarding_completed,
+        },
       ])
-      .select();
+      .select()
+      .single();
 
     if (error) throw error;
-    return data[0];
+    return data;
   },
 
-  // Find user by email (manual login)
   async findByEmail(email) {
     const { data, error } = await supabase
       .from(TABLE)
@@ -37,7 +48,6 @@ export const UserModel = {
     return data;
   },
 
-  // Find user by Google ID
   async findByGoogleId(google_id) {
     const { data, error } = await supabase
       .from(TABLE)
@@ -49,7 +59,6 @@ export const UserModel = {
     return data;
   },
 
-  // Find user by ID
   async findById(id) {
     const { data, error } = await supabase
       .from(TABLE)
@@ -61,25 +70,11 @@ export const UserModel = {
     return data;
   },
 
-  // Update last login timestamp
   async updateLastLogin(userId) {
     const { data, error } = await supabase
       .from(TABLE)
       .update({ last_login: new Date() })
       .eq("id", userId)
-      .select();
-
-    if (error) throw error;
-    return data[0];
-  },
-
-  // Link Google account to existing manual user
-  async updateGoogleId(userId, googleId) {
-    const { data, error } = await supabase
-      .from(TABLE)
-      .update({ google_id: googleId })
-      .eq("id", userId)
-      .is("google_id", null) // extra safety: only link if not already linked
       .select()
       .single();
 
@@ -87,19 +82,31 @@ export const UserModel = {
     return data;
   },
 
-  // Update onboarding status
-  async updateOnboardingStatus(userId, status) {
+  async updateGoogleId(userId, googleId) {
     const { data, error } = await supabase
       .from(TABLE)
-      .update({ onboarding_completed: status })
+      .update({ google_id: googleId })
       .eq("id", userId)
-      .select();
+      .is("google_id", null)
+      .select()
+      .single();
 
     if (error) throw error;
     return data;
   },
 
-  // Update user profile
+  async updateOnboardingStatus(userId, status) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update({ onboarding_completed: status })
+      .eq("id", userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
   async updateProfile(userId, updates) {
     const { data, error } = await supabase
       .from(TABLE)
@@ -112,7 +119,6 @@ export const UserModel = {
     return data;
   },
 
-  // Update user points
   async updatePoints(userId, points) {
     const { data, error } = await supabase
       .from(TABLE)
@@ -125,7 +131,6 @@ export const UserModel = {
     return data;
   },
 
-  // Deactivate user
   async deactivate(userId) {
     const { data, error } = await supabase
       .from(TABLE)
