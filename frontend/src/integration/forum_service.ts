@@ -69,8 +69,7 @@ const transformForumToDiscussion = (
     preview:
       forum.content.substring(0, 150) +
       (forum.content.length > 150 ? "..." : ""),
-    aiSummary:
-      forum.ai_summary || "AI summary not yet available for this post.",
+    aiSummary: forum.ai_summary?.trim() ?? "",
     upvotes: forum.upvotes_count || 0,
     downvotes: forum.downvotes_count || 0,
     comments: forum.comments_count || 0,

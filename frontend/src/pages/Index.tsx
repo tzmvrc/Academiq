@@ -96,8 +96,6 @@ const Index = () => {
       } catch (err) {
         console.error("Error loading forums:", err);
         setError("Failed to load forums. Showing sample data.");
-        // Fallback to dummy data
-        setForums(FALLBACK_DISCUSSIONS);
       } finally {
         setIsLoading(false);
       }
@@ -453,11 +451,19 @@ const Index = () => {
           ) : (
             <>
               {feedItems.map((item, idx) => {
-                if (item.type === "people")
+                if (item.type === "people") {
                   return <PeopleSection key="people-section" />;
+                }
+
                 const d = filteredDiscussions[item.index];
+                if (!d) return null;
+
                 return (
-                  <Link to="/post/1" key={idx} className="block">
+                  <Link
+                    to={`/post/${d.id}`}
+                    key={d.id ?? idx}
+                    className="block"
+                  >
                     <DiscussionCard
                       {...d}
                       index={item.index}

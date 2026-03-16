@@ -18,7 +18,7 @@ interface DiscussionCardProps {
   authorProfileUrl?: string;
   field: string;
   preview: string;
-  aiSummary: string;
+  aiSummary?: string;
   upvotes: number;
   downvotes: number;
   comments: number;
@@ -41,7 +41,8 @@ const DiscussionCard = ({
   field,
   preview,
   aiSummary,
-  upvotes, downvotes,
+  upvotes,
+  downvotes,
   comments,
   userVoteState,
   isVerified = true,
@@ -168,15 +169,17 @@ const DiscussionCard = ({
       </p>
 
       {/* AI Summary */}
-      <div className="rounded-lg bg-ai-subtle/50 border border-ai/10 p-2.5 sm:p-3 mb-4">
-        <div className="flex items-center gap-1.5 mb-1">
-          <Sparkles className="h-3 w-3 text-ai" />
-          <span className="text-xs font-medium text-ai">AI Summary</span>
+      {aiSummary?.trim()?.length > 0 && (
+        <div className="rounded-lg bg-ai-subtle/50 border border-ai/10 p-2.5 sm:p-3 mb-4">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Sparkles className="h-3 w-3 text-ai" />
+            <span className="text-xs font-medium text-ai">AI Summary</span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+            {aiSummary}
+          </p>
         </div>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          {aiSummary}
-        </p>
-      </div>
+      )}
 
       {/* Actions */}
       <div

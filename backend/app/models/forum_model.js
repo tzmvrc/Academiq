@@ -32,7 +32,7 @@ export const ForumModel = {
         `
         id, user_id, subject_id,
         title, content,
-        document_url, is_ai_verified,
+        document_url, is_ai_verified, ai_summary,
         comments_count, upvotes_count, downvotes_count,
         created_at,
         users!forums_user_id_fkey ( id, name, profile_url ),
@@ -49,7 +49,7 @@ export const ForumModel = {
         `
         id, user_id, subject_id,
         title, content,
-        document_url, is_ai_verified,
+        document_url, is_ai_verified, ai_summary,
         comments_count, upvotes_count, downvotes_count,
         created_at,
         users!forums_user_id_fkey ( id, name, profile_url ),
