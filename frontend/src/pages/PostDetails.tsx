@@ -1,132 +1,256 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft, ArrowBigUp, ArrowBigDown, MessageCircle, Bookmark, BookmarkCheck,
-  Sparkles, FileText, Image, File, Reply, Calendar, ChevronDown, ChevronUp,
-  MoreHorizontal, Pencil, Trash2
+  ArrowLeft,
+  ArrowBigUp,
+  ArrowBigDown,
+  MessageCircle,
+  Bookmark,
+  BookmarkCheck,
+  Sparkles,
+  FileText,
+  Image,
+  File,
+  Reply,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
 } from "lucide-react";
+import axiosInstance from "@/integration/axiosInstance";
 import AIBadge from "@/components/AIBadge";
 import { PostDetailsSkeleton } from "@/components/SkeletonLoaders";
 import CreatePostModal from "@/components/CreatePostModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { toast } from "@/hooks/use-toast";
 
-// Simulated current user
-const CURRENT_USER = { name: "You (Demo User)", initials: "AK" };
-
 interface Comment {
   id: string;
+  user_id?: string;
   author: string;
   initials: string;
   timestamp: string;
   text: string;
   upvotes: number;
+  downvotes: number;
+  myVote: 1 | -1 | null;
   isVerified?: boolean;
   isAuthor?: boolean;
   replies?: Comment[];
 }
 
-const initialPostData = {
-  title: "Attention Is All You Need — Revisited in 2026",
-  author: CURRENT_USER.name,
-  authorInitials: CURRENT_USER.initials,
-  university: "Stanford University",
-  field: "NLP · Deep Learning",
-  date: "March 2, 2026",
-  content: `Three years after the transformer revolution, it's time to take stock of what has changed, what remains, and what new architectures are challenging the dominant paradigm.
+interface BackendForum {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  document_url?: string | null;
+  ai_summary?: string | null;
+  is_ai_verified?: boolean;
+  comments_count?: number;
+  upvotes_count?: number;
+  downvotes_count?: number;
+  created_at: string;
+  users?: {
+    id?: string;
+    name?: string;
+    profile_url?: string | null;
+  } | null;
+  subjects?: {
+    id?: string;
+    name?: string;
+  } | null;
+}
 
-The original "Attention Is All You Need" paper fundamentally changed the landscape of machine learning. Self-attention mechanisms replaced recurrence entirely, enabling unprecedented parallelization and scaling. But the field hasn't stood still.
+interface BackendComment {
+  id: string;
+  forum_id: string;
+  user_id: string;
+  parent_comment_id?: string | null;
+  content: string;
+  created_at: string;
+  upvotes_count?: number;
+  downvotes_count?: number;
+  users?: {
+    id?: string;
+    name?: string;
+    profile_url?: string | null;
+  } | null;
+}
 
-## The Challengers
-
-**State Space Models (SSMs)** like Mamba have demonstrated competitive performance on long-sequence tasks while maintaining linear complexity. Their ability to handle sequences of 100K+ tokens without the quadratic cost of attention is compelling.
-
-**RWKV** offers another alternative, combining the training parallelism of transformers with the inference efficiency of RNNs. Its "linear attention" mechanism is particularly interesting for edge deployment.
-
-## What Remains
-
-Despite these challengers, transformers continue to dominate in several areas:
-
-- **Few-shot learning**: The attention mechanism's ability to dynamically route information remains unmatched.
-- **Multimodal reasoning**: Vision transformers and their variants power the best multimodal models.
-- **Scale**: The largest and most capable models are still transformer-based.
-
-## Looking Forward
-
-The future likely isn't "transformers vs. alternatives" but rather hybrid architectures that combine the strengths of multiple approaches. Early work on Mamba-Transformer hybrids shows promising results.`,
-  aiSummary: "Compares original transformer architecture with modern alternatives including Mamba, RWKV, and hybrid approaches across standard benchmarks. Finds that while challengers offer efficiency gains, transformers maintain advantages in few-shot learning and multimodal tasks.",
-  upvotes: 284,
-  comments: 47,
-  tag: "Deep Learning",
-  fileName: "transformer_analysis.pdf",
+const getInitials = (name?: string | null) => {
+  if (!name) return "UN";
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 };
 
-const initialComments: Comment[] = [
-  {
-    id: "1",
-    author: "Prof. Michael Torres",
-    initials: "MT",
-    timestamp: "2 hours ago",
-    text: "Excellent analysis. I'd add that in biostatistics, we're seeing SSMs outperform transformers on sequential patient data due to their ability to model temporal dependencies without position embeddings.",
-    upvotes: 42,
-    isVerified: true,
-    replies: [
-      {
-        id: "1-1",
-        author: CURRENT_USER.name,
-        initials: CURRENT_USER.initials,
-        timestamp: "1 hour ago",
-        text: "Great point! The temporal modeling advantage is especially relevant for clinical trial data. Have you tried the Mamba-2 architecture for this use case?",
-        upvotes: 18,
-        isAuthor: true,
-        replies: [
-          {
-            id: "1-1-1",
-            author: "Prof. Michael Torres",
-            initials: "MT",
-            timestamp: "45 min ago",
-            text: "We're running experiments with Mamba-2 now. Preliminary results show a 15% improvement in prediction accuracy for adverse event detection.",
-            upvotes: 12,
-            isVerified: true,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "2",
-    author: "Lina Kovacs",
-    initials: "LK",
-    timestamp: "3 hours ago",
-    text: "From a formal verification perspective, the simpler recurrence in SSMs makes them much more amenable to correctness proofs. The attention mechanism's dynamic routing is notoriously difficult to verify.",
-    upvotes: 31,
-    isVerified: true,
-  },
-  {
-    id: "3",
-    author: CURRENT_USER.name,
-    initials: CURRENT_USER.initials,
-    timestamp: "5 hours ago",
-    text: "I've been exploring attention-like mechanisms on quantum circuits. The quadratic complexity is actually less problematic there due to quantum parallelism.",
-    upvotes: 24,
-    isAuthor: true,
-  },
-];
+
+const getCurrentUser = () => {
+  try {
+    const rawUser = localStorage.getItem("user");
+    if (rawUser) {
+      const parsed = JSON.parse(rawUser);
+      return {
+        id: parsed?.id || parsed?.user_id || null,
+        name: parsed?.name || "You",
+        initials: getInitials(parsed?.name || "You"),
+      };
+    }
+
+    const id =
+      localStorage.getItem("userId") ||
+      localStorage.getItem("user_id") ||
+      localStorage.getItem("id");
+
+    return {
+      id: id || null,
+      name: "You",
+      initials: "YO",
+    };
+  } catch {
+    return {
+      id: null,
+      name: "You",
+      initials: "YO",
+    };
+  }
+};
+
+const CURRENT_USER = getCurrentUser();
+
+const buildCommentTree = (
+  comments: (BackendComment & { myVote?: 1 | -1 | null })[],
+  currentUserId: string | null,
+): Comment[] => {
+  const map = new Map<string, Comment>();
+
+  comments.forEach((comment) => {
+    map.set(comment.id, {
+      id: comment.id,
+      user_id: comment.user_id,
+      author: comment.users?.name || "Unknown User",
+      initials: getInitials(comment.users?.name),
+      timestamp: formatElapsedTime(comment.created_at),
+      text: comment.content,
+      upvotes: comment.upvotes_count || 0,
+      downvotes: comment.downvotes_count || 0,
+      myVote: comment.myVote ?? null,
+      isVerified: false,
+      isAuthor: currentUserId ? comment.user_id === currentUserId : false,
+      replies: [],
+    });
+  });
+
+  const roots: Comment[] = [];
+
+  comments.forEach((comment) => {
+    const node = map.get(comment.id)!;
+    const parentId = comment.parent_comment_id;
+
+    if (parentId && map.has(parentId)) {
+      map.get(parentId)!.replies!.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  return roots;
+};
+
+const countCommentsRecursive = (list: Comment[]): number =>
+  list.reduce((total, item) => {
+    return total + 1 + countCommentsRecursive(item.replies || []);
+  }, 0);
+
+const updateCommentInTree = (
+  list: Comment[],
+  commentId: string,
+  updater: (comment: Comment) => Comment,
+): Comment[] =>
+  list.map((comment) => {
+    if (comment.id === commentId) {
+      return updater(comment);
+    }
+
+    return {
+      ...comment,
+      replies: comment.replies
+        ? updateCommentInTree(comment.replies, commentId, updater)
+        : [],
+    };
+  });
+
+const formatElapsedTime = (dateString?: string) => {
+  if (!dateString) return "";
+
+  const date = new Date(dateString);
+  const now = new Date();
+
+  const diffMs = now.getTime() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  const isSameDay =
+    date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
+    date.getFullYear() === now.getFullYear();
+
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+
+  const isYesterday =
+    date.getDate() === yesterday.getDate() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getFullYear() === yesterday.getFullYear();
+
+  // Today → show elapsed
+  if (isSameDay) {
+    if (diffMinutes < 1) return "Just now";
+    if (diffMinutes < 60) return `${diffMinutes} min ago`;
+    return `${diffHours} hr${diffHours > 1 ? "s" : ""} ago`;
+  }
+
+  // Yesterday
+  if (isYesterday) {
+    return "Yesterday";
+  }
+
+  // Older → fallback date
+  return date.toLocaleDateString();
+};
+
+const deleteCommentFromTree = (list: Comment[], commentId: string): Comment[] =>
+  list
+    .filter((comment) => comment.id !== commentId)
+    .map((comment) => ({
+      ...comment,
+      replies: comment.replies
+        ? deleteCommentFromTree(comment.replies, commentId)
+        : [],
+    }));
 
 const CommentComponent = ({
   comment,
   depth = 0,
   onEdit,
   onDelete,
+  onVote,
 }: {
   comment: Comment;
   depth?: number;
   onEdit: (id: string, text: string) => void;
   onDelete: (id: string) => void;
+  onVote: (id: string, voteType: 1 | -1) => void;
 }) => {
   const [showReplies, setShowReplies] = useState(true);
-  const [upvoted, setUpvoted] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(comment.text);
@@ -139,26 +263,35 @@ const CommentComponent = ({
     }
     onEdit(comment.id, editText.trim());
     setEditing(false);
-    toast({ title: "Comment updated!" });
   };
 
   return (
-    <div className={`${depth > 0 ? "ml-4 sm:ml-6 pl-3 sm:pl-4 border-l-2 border-border" : ""}`}>
+    <div
+      className={`${depth > 0 ? "ml-4 sm:ml-6 pl-3 sm:pl-4 border-l-2 border-border" : ""}`}
+    >
       <div className="py-3 sm:py-4">
         <div className="flex items-start gap-2 sm:gap-3">
           <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-            <span className="text-[10px] sm:text-xs font-semibold text-primary">{comment.initials}</span>
+            <span className="text-[10px] sm:text-xs font-semibold text-primary">
+              {comment.initials}
+            </span>
           </div>
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-              <span className="text-sm font-medium text-foreground">{comment.author}</span>
+              <span className="text-sm font-medium text-foreground">
+                {comment.author}
+              </span>
               {comment.isAuthor && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">You</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                  You
+                </span>
               )}
-              <span className="text-xs text-muted-foreground">{comment.timestamp}</span>
+              <span className="text-xs text-muted-foreground">
+                {comment.timestamp}
+              </span>
               {comment.isVerified && <AIBadge variant="comment" />}
 
-              {/* Author-only menu */}
               {comment.isAuthor && (
                 <div className="relative ml-auto">
                   <button
@@ -167,16 +300,23 @@ const CommentComponent = ({
                   >
                     <MoreHorizontal className="h-4 w-4" />
                   </button>
+
                   {showMenu && (
                     <div className="absolute right-0 top-full mt-1 z-10 w-36 rounded-lg border border-border bg-card shadow-lg py-1">
                       <button
-                        onClick={() => { setEditing(true); setShowMenu(false); }}
+                        onClick={() => {
+                          setEditing(true);
+                          setShowMenu(false);
+                        }}
                         className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
                       >
                         <Pencil className="h-3.5 w-3.5" /> Edit
                       </button>
                       <button
-                        onClick={() => { setShowDeleteConfirm(true); setShowMenu(false); }}
+                        onClick={() => {
+                          setShowDeleteConfirm(true);
+                          setShowMenu(false);
+                        }}
                         className="flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
                       >
                         <Trash2 className="h-3.5 w-3.5" /> Delete
@@ -196,31 +336,58 @@ const CommentComponent = ({
                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                 />
                 <div className="flex gap-2 mt-2">
-                  <button onClick={handleSaveEdit} className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors">
+                  <button
+                    onClick={handleSaveEdit}
+                    className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                  >
                     Save
                   </button>
-                  <button onClick={() => { setEditing(false); setEditText(comment.text); }} className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors">
+                  <button
+                    onClick={() => {
+                      setEditing(false);
+                      setEditText(comment.text);
+                    }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors"
+                  >
                     Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-foreground/90 mt-1.5 leading-relaxed">{comment.text}</p>
+              <p className="text-sm text-foreground/90 mt-1.5 leading-relaxed">
+                {comment.text}
+              </p>
             )}
 
-            <div className="flex items-center gap-2 sm:gap-3 mt-2">
+            <div className="flex items-center gap-2 sm:gap-3 mt-2 flex-wrap">
               <button
-                onClick={() => setUpvoted(!upvoted)}
+                onClick={() => onVote(comment.id, 1)}
                 className={`flex items-center gap-1 text-xs transition-colors ${
-                  upvoted ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"
+                  comment.myVote === 1
+                    ? "text-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <ArrowBigUp className={`h-4 w-4 ${upvoted ? "fill-primary" : ""}`} />
-                {comment.upvotes + (upvoted ? 1 : 0)}
+                <ArrowBigUp
+                  className={`h-4 w-4 ${comment.myVote === 1 ? "fill-primary" : ""}`}
+                />
+                {comment.upvotes}
               </button>
-              <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowBigDown className="h-4 w-4" />
+
+              <button
+                onClick={() => onVote(comment.id, -1)}
+                className={`flex items-center gap-1 text-xs transition-colors ${
+                  comment.myVote === -1
+                    ? "text-destructive font-medium"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <ArrowBigDown
+                  className={`h-4 w-4 ${comment.myVote === -1 ? "fill-destructive" : ""}`}
+                />
+                {comment.downvotes}
               </button>
+
               <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
                 <Reply className="h-3.5 w-3.5" /> Reply
               </button>
@@ -235,12 +402,25 @@ const CommentComponent = ({
             onClick={() => setShowReplies(!showReplies)}
             className="flex items-center gap-1 text-xs text-primary font-medium ml-9 sm:ml-11 mb-1 hover:underline"
           >
-            {showReplies ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-            {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
+            {showReplies ? (
+              <ChevronUp className="h-3 w-3" />
+            ) : (
+              <ChevronDown className="h-3 w-3" />
+            )}
+            {comment.replies.length}{" "}
+            {comment.replies.length === 1 ? "reply" : "replies"}
           </button>
+
           {showReplies &&
             comment.replies.map((reply) => (
-              <CommentComponent key={reply.id} comment={reply} depth={depth + 1} onEdit={onEdit} onDelete={onDelete} />
+              <CommentComponent
+                key={reply.id}
+                comment={reply}
+                depth={depth + 1}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onVote={onVote}
+              />
             ))}
         </>
       )}
@@ -258,8 +438,10 @@ const CommentComponent = ({
 
 const PostDetails = () => {
   const navigate = useNavigate();
-  const [postData, setPostData] = useState(initialPostData);
-  const [comments, setComments] = useState(initialComments);
+  const { id } = useParams();
+
+  const [postData, setPostData] = useState<any>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [saved, setSaved] = useState(false);
   const [upvoted, setUpvoted] = useState(false);
   const [downvoted, setDownvoted] = useState(false);
@@ -270,80 +452,425 @@ const PostDetails = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const isPostAuthor = postData.author === CURRENT_USER.name;
+  const fetchPostDetails = async () => {
+    if (!id) return;
+
+    try {
+      setIsLoading(true);
+
+      const requests: Promise<any>[] = [
+        axiosInstance.get(`/forums/${id}`),
+        axiosInstance.get(`/forums/${id}/comments`),
+      ];
+
+      if (CURRENT_USER.id) {
+        requests.push(
+          axiosInstance
+            .get(`/forums/${id}/save`)
+            .catch(() => ({ data: { saved: false } })),
+        );
+        requests.push(
+          axiosInstance
+            .get(`/forums/${id}/my-vote`)
+            .catch(() => ({ data: { voteType: null } })),
+        );
+      }
+
+      const [forumRes, commentsRes, saveRes, voteRes] =
+        await Promise.all(requests);
+
+      const forum: BackendForum = forumRes.data?.forum;
+
+      const rawComments: BackendComment[] = commentsRes.data?.comments || [];
+
+      const commentsWithVoteState = await Promise.all(
+        rawComments.map(async (comment) => {
+          if (!CURRENT_USER.id) {
+            return { ...comment, myVote: null as 1 | -1 | null };
+          }
+
+          try {
+            const res = await axiosInstance.get(
+              `/comments/${comment.id}/my-vote`,
+            );
+            return {
+              ...comment,
+              myVote: (res.data?.voteType ?? null) as 1 | -1 | null,
+            };
+          } catch {
+            return { ...comment, myVote: null as 1 | -1 | null };
+          }
+        }),
+      );
+
+      const mappedPost = {
+        id: forum.id,
+        user_id: forum.user_id,
+        title: forum.title,
+        author: forum.users?.name || "Unknown User",
+        authorInitials: getInitials(forum.users?.name),
+        university: forum.subjects?.name || "General",
+        field: "",
+        date: new Date(forum.created_at).toLocaleDateString(),
+        content: forum.content,
+        aiSummary: forum.ai_summary || "",
+        upvotes: forum.upvotes_count || 0,
+        downvotes: forum.downvotes_count || 0,
+        comments: forum.comments_count || 0,
+        tag: forum.subjects?.name || "General",
+        fileName: forum.document_url || "",
+        isAiVerified: forum.is_ai_verified || false,
+      };
+
+      setPostData(mappedPost);
+      setComments(buildCommentTree(commentsWithVoteState, CURRENT_USER.id));
+
+      if (saveRes?.data) {
+        setSaved(!!saveRes.data.saved);
+      }
+
+      if (voteRes?.data?.voteType === 1) {
+        setUpvoted(true);
+        setDownvoted(false);
+      } else if (voteRes?.data?.voteType === -1) {
+        setDownvoted(true);
+        setUpvoted(false);
+      } else {
+        setUpvoted(false);
+        setDownvoted(false);
+      }
+    } catch (err: any) {
+      console.error("Fetch post detail error:", err);
+      toast({
+        title: err?.response?.data?.error || "Failed to load post details",
+        variant: "destructive",
+      });
+      navigate("/feed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const formatElapsedTime = (dateString?: string) => {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+    const now = new Date();
+
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+    const isSameDay =
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear();
+
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+
+    const isYesterday =
+      date.getDate() === yesterday.getDate() &&
+      date.getMonth() === yesterday.getMonth() &&
+      date.getFullYear() === yesterday.getFullYear();
+
+    // Today → show elapsed
+    if (isSameDay) {
+      if (diffMinutes < 1) return "Just now";
+      if (diffMinutes < 60) return `${diffMinutes} min ago`;
+      return `${diffHours} hr${diffHours > 1 ? "s" : ""} ago`;
+    }
+
+    // Yesterday
+    if (isYesterday) {
+      return "Yesterday";
+    }
+
+    // Older → fallback date
+    return date.toLocaleDateString();
+  };
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 600);
-    return () => clearTimeout(timer);
-  }, []);
+    fetchPostDetails();
+  }, [id]);
 
-  const handleAddComment = () => {
+  const isPostAuthor = postData?.user_id === CURRENT_USER.id;
+
+  const handleAddComment = async () => {
     if (!newComment.trim()) {
       toast({ title: "Comment cannot be empty", variant: "destructive" });
       return;
     }
-    const comment: Comment = {
-      id: `new-${Date.now()}`,
-      author: CURRENT_USER.name,
-      initials: CURRENT_USER.initials,
-      timestamp: "Just now",
-      text: newComment.trim(),
-      upvotes: 0,
-      isAuthor: true,
-    };
-    setComments([comment, ...comments]);
-    setNewComment("");
-    toast({ title: "Comment posted!" });
+
+    try {
+      const res = await axiosInstance.post(`/forums/${id}/comments`, {
+        content: newComment.trim(),
+      });
+
+      const created = res.data?.comment;
+
+      const mappedComment: Comment = {
+        id: created.id,
+        user_id: created.user_id,
+        author: created.users?.name || CURRENT_USER.name,
+        initials: getInitials(created.users?.name || CURRENT_USER.name),
+        timestamp: formatElapsedTime(created.created_at),
+        text: created.content,
+        upvotes: created.upvotes_count || 0,
+        downvotes: created.downvotes_count || 0,
+        myVote: null,
+        isAuthor: true,
+        replies: [],
+      };
+
+      setComments((prev) => [mappedComment, ...prev]);
+      setNewComment("");
+      setPostData((prev: any) => ({
+        ...prev,
+        comments: (prev?.comments || 0) + 1,
+      }));
+
+      toast({ title: "Comment posted!" });
+    } catch (err: any) {
+      console.error("Create comment error:", err);
+      toast({
+        title: err?.response?.data?.error || "Failed to post comment",
+        variant: "destructive",
+      });
+    }
   };
 
-  const editCommentRecursive = (list: Comment[], id: string, text: string): Comment[] =>
-    list.map((c) => ({
-      ...c,
-      text: c.id === id ? text : c.text,
-      replies: c.replies ? editCommentRecursive(c.replies, id, text) : undefined,
-    }));
+  const getFileNameFromUrl = (url?: string | null) => {
+    if (!url) return "Attachment";
 
-  const deleteCommentRecursive = (list: Comment[], id: string): Comment[] =>
-    list.filter((c) => c.id !== id).map((c) => ({
-      ...c,
-      replies: c.replies ? deleteCommentRecursive(c.replies, id) : undefined,
-    }));
-
-  const handleEditComment = (id: string, text: string) => {
-    setComments(editCommentRecursive(comments, id, text));
+    try {
+      const cleanUrl = url.split("?")[0];
+      const fileName = cleanUrl.substring(cleanUrl.lastIndexOf("/") + 1);
+      return decodeURIComponent(fileName) || "Attachment";
+    } catch {
+      return "Attachment";
+    }
   };
 
-  const handleDeleteComment = (id: string) => {
-    setComments(deleteCommentRecursive(comments, id));
-    toast({ title: "Comment deleted." });
+  const handleEditComment = async (commentId: string, text: string) => {
+    try {
+      const res = await axiosInstance.put(`/comments/${commentId}`, {
+        content: text,
+      });
+
+      const updated = res.data?.comment;
+
+      setComments((prev) =>
+        updateCommentInTree(prev, commentId, (comment) => ({
+          ...comment,
+          text: updated?.content || text,
+        })),
+      );
+
+      toast({ title: "Comment updated!" });
+    } catch (err: any) {
+      console.error("Update comment error:", err);
+      toast({
+        title: err?.response?.data?.error || "Failed to update comment",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleEditPost = (data: { title: string; content: string; category: string; fileName?: string }) => {
-    setPostData({ ...postData, title: data.title, content: data.content, tag: data.category, fileName: data.fileName || "" });
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      await axiosInstance.delete(`/comments/${commentId}`);
+
+      setComments((prev) => deleteCommentFromTree(prev, commentId));
+      setPostData((prev: any) => ({
+        ...prev,
+        comments: Math.max((prev?.comments || 1) - 1, 0),
+      }));
+
+      toast({ title: "Comment deleted." });
+    } catch (err: any) {
+      console.error("Delete comment error:", err);
+      toast({
+        title: err?.response?.data?.error || "Failed to delete comment",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeletePost = () => {
-    toast({ title: "Post deleted.", description: "Redirecting to feed..." });
-    setTimeout(() => navigate("/feed"), 500);
+  const handleVoteComment = async (commentId: string, voteType: 1 | -1) => {
+    const targetComment = (() => {
+      const findInTree = (list: Comment[]): Comment | null => {
+        for (const comment of list) {
+          if (comment.id === commentId) return comment;
+          const found = findInTree(comment.replies || []);
+          if (found) return found;
+        }
+        return null;
+      };
+      return findInTree(comments);
+    })();
+
+    if (!targetComment) return;
+
+    try {
+      if (targetComment.myVote === voteType) {
+        const res = await axiosInstance.delete(`/comments/${commentId}/vote`);
+        const counts = res.data?.voteCount || { upvotes: 0, downvotes: 0 };
+
+        setComments((prev) =>
+          updateCommentInTree(prev, commentId, (comment) => ({
+            ...comment,
+            myVote: null,
+            upvotes: counts.upvotes,
+            downvotes: counts.downvotes,
+          })),
+        );
+      } else {
+        const res = await axiosInstance.post(`/comments/${commentId}/vote`, {
+          voteType,
+        });
+        const counts = res.data?.voteCount || { upvotes: 0, downvotes: 0 };
+
+        setComments((prev) =>
+          updateCommentInTree(prev, commentId, (comment) => ({
+            ...comment,
+            myVote: voteType,
+            upvotes: counts.upvotes,
+            downvotes: counts.downvotes,
+          })),
+        );
+      }
+    } catch (err: any) {
+      console.error("Vote comment error:", err);
+      toast({
+        title: err?.response?.data?.error || "Failed to update comment vote",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditPost = async (data: {
+    title: string;
+    content: string;
+    category: string;
+    fileName?: string;
+  }) => {
+    try {
+      await axiosInstance.put(`/forums/${id}`, {
+        title: data.title,
+        content: data.content,
+        category: data.category,
+        document_url: data.fileName || null,
+      });
+
+      setPostData({
+        ...postData,
+        title: data.title,
+        content: data.content,
+        tag: data.category,
+        fileName: data.fileName || "",
+      });
+
+      setShowEditModal(false);
+      toast({ title: "Post updated!" });
+    } catch (err: any) {
+      console.error("Update post error:", err);
+      toast({
+        title: err?.response?.data?.error || "Failed to update post",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeletePost = async () => {
+    try {
+      await axiosInstance.delete(`/forums/${id}`);
+      toast({ title: "Post deleted.", description: "Redirecting to feed..." });
+      setTimeout(() => navigate("/feed"), 500);
+    } catch (err: any) {
+      console.error("Delete post error:", err);
+      toast({
+        title: err?.response?.data?.error || "Failed to delete post",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleVotePost = async (type: 1 | -1) => {
+    try {
+      if ((type === 1 && upvoted) || (type === -1 && downvoted)) {
+        const res = await axiosInstance.delete(`/forums/${id}/vote`);
+        const counts = res.data?.voteCount || { upvotes: 0, downvotes: 0 };
+
+        setUpvoted(false);
+        setDownvoted(false);
+        setPostData((prev: any) => ({
+          ...prev,
+          upvotes: counts.upvotes,
+          downvotes: counts.downvotes,
+        }));
+        return;
+      }
+
+      const res = await axiosInstance.post(`/forums/${id}/vote`, {
+        voteType: type,
+      });
+
+      const counts = res.data?.voteCount || { upvotes: 0, downvotes: 0 };
+
+      setUpvoted(type === 1);
+      setDownvoted(type === -1);
+      setPostData((prev: any) => ({
+        ...prev,
+        upvotes: counts.upvotes,
+        downvotes: counts.downvotes,
+      }));
+    } catch (err: any) {
+      console.error("Vote error:", err);
+      toast({
+        title: err?.response?.data?.error || "Failed to update vote",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleSave = async () => {
+    try {
+      const res = await axiosInstance.post(`/forums/${id}/save`);
+      setSaved(!!res.data?.saved);
+    } catch (err: any) {
+      console.error("Save error:", err);
+      toast({
+        title: err?.response?.data?.error || "Failed to update save status",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) return <PostDetailsSkeleton />;
+  if (!postData) return null;
 
-  const voteScore = postData.upvotes + (upvoted ? 1 : 0) - (downvoted ? 1 : 0);
+  const totalComments = postData.comments || countCommentsRecursive(comments);
 
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 sm:py-8">
-      <Link to="/feed" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6">
+      <Link
+        to="/feed"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+      >
         <ArrowLeft className="h-4 w-4" /> Back to Feed
       </Link>
 
-      <motion.article initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
-        {/* Header */}
+      <motion.article
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
         <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <span className="text-xs px-2.5 py-0.5 rounded-full bg-accent/10 text-accent font-medium">{postData.tag}</span>
-          <AIBadge variant="verified" />
+          <span className="text-xs px-2.5 py-0.5 rounded-full bg-accent/10 text-accent font-medium">
+            {postData.tag}
+          </span>
+          {postData.isAiVerified && <AIBadge variant="verified" />}
 
-          {/* Author-only post controls */}
           {isPostAuthor && (
             <div className="relative ml-auto">
               <button
@@ -355,13 +882,19 @@ const PostDetails = () => {
               {showPostMenu && (
                 <div className="absolute right-0 top-full mt-1 z-10 w-40 rounded-lg border border-border bg-card shadow-lg py-1">
                   <button
-                    onClick={() => { setShowEditModal(true); setShowPostMenu(false); }}
+                    onClick={() => {
+                      setShowEditModal(true);
+                      setShowPostMenu(false);
+                    }}
                     className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
                   >
                     <Pencil className="h-3.5 w-3.5" /> Edit Post
                   </button>
                   <button
-                    onClick={() => { setShowDeleteModal(true); setShowPostMenu(false); }}
+                    onClick={() => {
+                      setShowDeleteModal(true);
+                      setShowPostMenu(false);
+                    }}
                     className="flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
                   >
                     <Trash2 className="h-3.5 w-3.5" /> Delete Post
@@ -372,109 +905,188 @@ const PostDetails = () => {
           )}
         </div>
 
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-foreground leading-tight mb-4">{postData.title}</h1>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-foreground leading-tight mb-4">
+          {postData.title}
+        </h1>
 
         <div className="flex items-start sm:items-center gap-3 mb-6 flex-col sm:flex-row">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-xs sm:text-sm font-semibold text-primary">{postData.authorInitials}</span>
+              <span className="text-xs sm:text-sm font-semibold text-primary">
+                {postData.authorInitials}
+              </span>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-foreground">{postData.author}</p>
+                <p className="text-sm font-medium text-foreground">
+                  {postData.author}
+                </p>
                 {isPostAuthor && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">Author</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                    Author
+                  </span>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">{postData.university} · {postData.field}</p>
+              <p className="text-xs text-muted-foreground">
+                {postData.university}
+                {postData.field ? ` · ${postData.field}` : ""}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground sm:ml-auto">
-            <Calendar className="h-3.5 w-3.5" /> {postData.date}
+            <Calendar className="h-3.5 w-3.5" />{" "}
+            {formatElapsedTime(postData.created_at || postData.date)}
           </div>
         </div>
 
-        {/* AI Summary */}
         <button
           onClick={() => setShowAiSummary(!showAiSummary)}
-          className="w-full rounded-lg bg-ai-subtle border border-ai/10 p-3 mb-6 text-left hover:border-ai/20 transition-colors"
+          className="w-full rounded-lg bg-ai-subtle border cursor-pointer border-ai/10 p-3 mb-6 text-left hover:border-ai/20 transition-colors"
         >
           <div className="flex items-center gap-1.5">
             <Sparkles className="h-3.5 w-3.5 text-ai" />
             <span className="text-sm font-medium text-ai">AI Summary</span>
-            <ChevronDown className={`h-3.5 w-3.5 text-ai ml-auto transition-transform ${showAiSummary ? "rotate-180" : ""}`} />
+            <ChevronDown
+              className={`h-3.5 w-3.5 text-ai ml-auto transition-transform ${showAiSummary ? "rotate-180" : ""}`}
+            />
           </div>
           {showAiSummary && (
-            <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="text-sm text-muted-foreground mt-2 leading-relaxed">
-              {postData.aiSummary}
+            <motion.p
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="text-sm text-muted-foreground mt-2 leading-relaxed"
+            >
+              {postData.aiSummary || "No AI summary available."}
             </motion.p>
           )}
         </button>
 
-        {/* Content */}
         <div className="prose prose-sm max-w-none mb-8">
-          {postData.content.split("\n\n").map((paragraph, i) => {
-            if (paragraph.startsWith("## ")) return <h2 key={i} className="text-base sm:text-lg font-heading font-semibold text-foreground mt-6 mb-3">{paragraph.replace("## ", "")}</h2>;
-            if (paragraph.startsWith("- ")) return (
-              <ul key={i} className="space-y-1 mb-4">
-                {paragraph.split("\n").map((item, j) => (
-                  <li key={j} className="text-sm text-foreground/90 leading-relaxed ml-4 list-disc">{item.replace("- ", "")}</li>
-                ))}
-              </ul>
-            );
-            return <p key={i} className="text-sm text-foreground/90 leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />;
-          })}
+          {postData.content
+            .split("\n\n")
+            .map((paragraph: string, i: number) => {
+              if (paragraph.startsWith("## "))
+                return (
+                  <h2
+                    key={i}
+                    className="text-base sm:text-lg font-heading font-semibold text-foreground mt-6 mb-3"
+                  >
+                    {paragraph.replace("## ", "")}
+                  </h2>
+                );
+              if (paragraph.startsWith("- "))
+                return (
+                  <ul key={i} className="space-y-1 mb-4">
+                    {paragraph.split("\n").map((item: string, j: number) => (
+                      <li
+                        key={j}
+                        className="text-sm text-foreground/90 leading-relaxed ml-4 list-disc"
+                      >
+                        {item.replace("- ", "")}
+                      </li>
+                    ))}
+                  </ul>
+                );
+              return (
+                <p
+                  key={i}
+                  className="text-sm text-foreground/90 leading-relaxed mb-4"
+                  dangerouslySetInnerHTML={{
+                    __html: paragraph.replace(
+                      /\*\*(.*?)\*\*/g,
+                      "<strong>$1</strong>",
+                    ),
+                  }}
+                />
+              );
+            })}
         </div>
 
-        {/* Attachments */}
-        <div className="mb-8">
-          <h3 className="text-sm font-semibold text-foreground mb-3">Attachments</h3>
-          <div className="flex gap-2 sm:gap-3 flex-wrap">
-            {postData.fileName && (
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 sm:px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:border-primary/10 transition-colors cursor-pointer">
-                <FileText className="h-4 w-4 text-destructive shrink-0" />
-                <span className="truncate">{postData.fileName}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 sm:px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:border-primary/10 transition-colors cursor-pointer">
-              <Image className="h-4 w-4 text-accent shrink-0" />
-              <span className="truncate">benchmark_results.png</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 sm:px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:border-primary/10 transition-colors cursor-pointer">
-              <File className="h-4 w-4 text-primary shrink-0" />
-              <span className="truncate">experiment_data.csv</span>
+        {postData.fileName && (
+          <div className="mb-8">
+            <h3 className="text-sm font-semibold text-foreground mb-3">
+              Attachment
+            </h3>
+            <div className="flex gap-2 sm:gap-3 flex-wrap">
+              <a
+                href={postData.fileName}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 sm:px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:border-primary/20 hover:text-foreground transition-colors cursor-pointer"
+              >
+                <FileText className="h-4 w-4 text-primary shrink-0" />
+                <span className="truncate">
+                  {getFileNameFromUrl(postData.fileName)}
+                </span>
+              </a>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Actions bar */}
         <div className="flex items-center gap-1.5 sm:gap-2 border-t border-b border-border py-3 mb-8 overflow-x-auto">
-          <button onClick={() => { setUpvoted(!upvoted); if (downvoted) setDownvoted(false); }} className={`flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-3 py-2 text-sm transition-colors shrink-0 ${upvoted ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
-            <ArrowBigUp className={`h-5 w-5 ${upvoted ? "fill-primary" : ""}`} />
+          <button
+            onClick={() => handleVotePost(1)}
+            className={`flex items-center gap-1 sm:gap-1.5 cursor-pointer rounded-lg px-2 sm:px-3 py-2 text-sm transition-colors shrink-0 ${
+              upvoted
+                ? "bg-primary/10 text-primary font-medium"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            }`}
+          >
+            <ArrowBigUp
+              className={`h-5 w-5 ${upvoted ? "fill-primary" : ""}`}
+            />
+            <span>{postData.upvotes || 0}</span>
           </button>
-          <span className="text-sm font-semibold text-foreground min-w-[2rem] text-center">{voteScore}</span>
-          <button onClick={() => { setDownvoted(!downvoted); if (upvoted) setUpvoted(false); }} className={`flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-3 py-2 text-sm transition-colors shrink-0 ${downvoted ? "bg-destructive/10 text-destructive font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
-            <ArrowBigDown className={`h-5 w-5 ${downvoted ? "fill-destructive" : ""}`} />
+
+          <button
+            onClick={() => handleVotePost(-1)}
+            className={`flex items-center gap-1 sm:gap-1.5 cursor-pointer rounded-lg px-2 sm:px-3 py-2 text-sm transition-colors shrink-0 ${
+              downvoted
+                ? "bg-destructive/10 text-destructive font-medium"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            }`}
+          >
+            <ArrowBigDown
+              className={`h-5 w-5 ${downvoted ? "fill-destructive" : ""}`}
+            />
+            <span>{postData.downvotes || 0}</span>
           </button>
+
           <div className="w-px h-6 bg-border mx-1" />
+
           <button className="flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0">
-            <MessageCircle className="h-4 w-4" /> <span className="hidden sm:inline">{comments.length}</span>
+            <MessageCircle className="h-4 w-4" />
+            <span className="hidden sm:inline">{totalComments}</span>
           </button>
-          <button onClick={() => setSaved(!saved)} className={`ml-auto flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-3 py-2 text-sm transition-colors shrink-0 ${saved ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
-            {saved ? <BookmarkCheck className="h-4 w-4 fill-primary" /> : <Bookmark className="h-4 w-4" />}
+
+          <button
+            onClick={handleToggleSave}
+            className={`ml-auto flex items-center cursor-pointer gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-3 py-2 text-sm transition-colors shrink-0 ${
+              saved
+                ? "bg-primary/10 text-primary font-medium"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            }`}
+          >
+            {saved ? (
+              <BookmarkCheck className="h-4 w-4 fill-primary" />
+            ) : (
+              <Bookmark className="h-4 w-4" />
+            )}
             <span className="hidden sm:inline">{saved ? "Saved" : "Save"}</span>
           </button>
         </div>
 
-        {/* Comments */}
         <div>
           <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-accent" /> Comments ({comments.length})
+            <MessageCircle className="h-5 w-5 text-accent" /> Comments (
+            {totalComments})
           </h2>
 
           <div className="flex gap-2 sm:gap-3 mb-6">
             <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <span className="text-[10px] sm:text-xs font-semibold text-primary">{CURRENT_USER.initials}</span>
+              <span className="text-[10px] sm:text-xs font-semibold text-primary">
+                {CURRENT_USER.initials}
+              </span>
             </div>
             <div className="flex-1 min-w-0">
               <textarea
@@ -485,7 +1097,10 @@ const PostDetails = () => {
                 rows={3}
               />
               <div className="flex justify-end mt-2">
-                <button onClick={handleAddComment} className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
+                <button
+                  onClick={handleAddComment}
+                  className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
                   Comment
                 </button>
               </div>
@@ -494,22 +1109,31 @@ const PostDetails = () => {
 
           <div className="divide-y divide-border">
             {comments.map((comment) => (
-              <CommentComponent key={comment.id} comment={comment} onEdit={handleEditComment} onDelete={handleDeleteComment} />
+              <CommentComponent
+                key={comment.id}
+                comment={comment}
+                onEdit={handleEditComment}
+                onDelete={handleDeleteComment}
+                onVote={handleVoteComment}
+              />
             ))}
           </div>
         </div>
       </motion.article>
 
-      {/* Edit Post Modal */}
       <CreatePostModal
         open={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSubmit={handleEditPost}
-        initialData={{ title: postData.title, content: postData.content, category: postData.tag, fileName: postData.fileName }}
+        initialData={{
+          title: postData.title,
+          content: postData.content,
+          category: postData.tag,
+          fileName: postData.fileName,
+        }}
         mode="edit"
       />
 
-      {/* Delete Post Confirm */}
       <DeleteConfirmModal
         open={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
