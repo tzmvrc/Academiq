@@ -39,8 +39,18 @@ export interface DiscussionCardProps {
   comments: number;
   tag: string;
   isOwn: boolean;
+  isSaved?: boolean;
   userVoteState?: 1 | -1 | null; // 1 for upvote, -1 for downvote, null for no vote
   isAiVerified?: boolean;
+}
+
+export interface ToggleSaveResponse {
+  message: string;
+  saved: boolean;
+}
+
+export interface SaveStatusResponse {
+  saved: boolean;
 }
 
 // Get the initials from a full name
@@ -55,28 +65,36 @@ const getInitials = (name: string): string => {
 
 // Transform forum API response to discussion card format
 const transformForumToDiscussion = (
-  forum: ForumResponse,
+  forum: Partial<ForumResponse> & {
+    id: string;
+    title: string;
+    content: string;
+  },
   currentUserId?: string,
   userVoteState?: 1 | -1 | null,
 ): DiscussionCardProps => {
+  const authorName = forum.users?.name || "Unknown User";
+  const subjectName = forum.subjects?.name || "General";
+
   return {
     id: forum.id,
     title: forum.title,
-    author: forum.users.name,
-    authorInitials: getInitials(forum.users.name),
-    authorProfileUrl: forum.users.profile_url,
-    field: forum.subjects.name,
+    author: authorName,
+    authorInitials: getInitials(authorName),
+    authorProfileUrl: forum.users?.profile_url,
+    field: subjectName,
     preview:
-      forum.content.substring(0, 150) +
-      (forum.content.length > 150 ? "..." : ""),
+      (forum.content || "").substring(0, 150) +
+      ((forum.content || "").length > 150 ? "..." : ""),
     aiSummary: forum.ai_summary?.trim() ?? "",
     upvotes: forum.upvotes_count || 0,
     downvotes: forum.downvotes_count || 0,
     comments: forum.comments_count || 0,
-    tag: forum.subjects.name,
+    tag: subjectName,
     isOwn: currentUserId === forum.user_id,
+    isSaved: false,
     userVoteState: userVoteState ?? null,
-    isAiVerified: forum.is_ai_verified,
+    isAiVerified: forum.is_ai_verified ?? false,
   };
 };
 
@@ -133,6 +151,16 @@ export const forumService = {
     }
   },
 
+  async getSaveStatus(forumId: string): Promise<SaveStatusResponse> {
+    try {
+      const response = await axiosInstance.get(`/forums/${forumId}/save`);
+      return response.data;
+    } catch (error) {
+      console.error(`Failed to get save status for forum ${forumId}:`, error);
+      throw error;
+    }
+  },
+
   /**
    * Fetch forums created by the current user
    */
@@ -160,13 +188,48 @@ export const forumService = {
     subject_id?: string;
     subject?: string;
     topicIds?: string[];
+    file?: File;
   }): Promise<DiscussionCardProps> {
     try {
-      const response = await axiosInstance.post("/forums", data);
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("content", data.content);
+
+      if (data.subject) {
+        formData.append("subject", data.subject);
+      }
+
+      if (data.subject_id) {
+        formData.append("subject_id", data.subject_id);
+      }
+
+      if (data.topicIds?.length) {
+        formData.append("topicIds", JSON.stringify(data.topicIds));
+      }
+
+      if (data.file) {
+        formData.append("attachment", data.file);
+      }
+
+      const response = await axiosInstance.post("/forums", formData);
+
       const currentUser = localStorage.getItem("user");
       const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
 
-      return transformForumToDiscussion(response.data.forum, currentUserId);
+      const createdForum = response.data?.forum;
+
+      if (!createdForum?.id) {
+        throw new Error("Created forum ID was not returned by the API");
+      }
+
+      const fullForumResponse = await axiosInstance.get(
+        `/forums/${createdForum.id}`,
+      );
+
+      return transformForumToDiscussion(
+        fullForumResponse.data.forum,
+        currentUserId,
+      );
     } catch (error) {
       console.error("Failed to create forum:", error);
       throw error;
@@ -217,9 +280,10 @@ export const forumService = {
   /**
    * Toggle save status of a forum
    */
-  async toggleSaveForum(forumId: string): Promise<void> {
+  async toggleSaveForum(forumId: string): Promise<ToggleSaveResponse> {
     try {
-      await axiosInstance.post(`/forums/${forumId}/save`);
+      const response = await axiosInstance.post(`/forums/${forumId}/save`);
+      return response.data;
     } catch (error) {
       console.error(`Failed to toggle save for forum ${forumId}:`, error);
       throw error;

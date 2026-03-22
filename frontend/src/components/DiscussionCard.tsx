@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowBigUp,
   ArrowBigDown,
@@ -23,13 +23,14 @@ interface DiscussionCardProps {
   downvotes: number;
   comments: number;
   userVoteState?: 1 | -1 | null;
+  isSaved?: boolean;
   isVerified?: boolean;
   isAiVerified?: boolean;
   tag: string;
   index?: number;
   onVote?: (voteType: 1 | -1) => Promise<void>;
   onUnvote?: () => Promise<void>;
-  onSave?: () => Promise<void>;
+  onSave?: () => Promise<boolean | void>;
 }
 
 const DiscussionCard = ({
@@ -45,6 +46,7 @@ const DiscussionCard = ({
   downvotes,
   comments,
   userVoteState,
+  isSaved = false,
   isVerified = true,
   isAiVerified,
   tag,
@@ -55,7 +57,7 @@ const DiscussionCard = ({
 }: DiscussionCardProps) => {
   const [upvoted, setUpvoted] = useState<boolean>(userVoteState === 1);
   const [downvoted, setDownvoted] = useState<boolean>(userVoteState === -1);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState<boolean>(isSaved);
   const [isVoting, setIsVoting] = useState(false);
 
   // Use the upvotes value from server directly (it already includes user's vote)
@@ -87,6 +89,10 @@ const DiscussionCard = ({
     }
   };
 
+  useEffect(() => {
+    setSaved(isSaved);
+  }, [isSaved]);
+
   const handleDownvote = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (isVoting || !onVote || !onUnvote) return;
@@ -115,8 +121,13 @@ const DiscussionCard = ({
     if (!onSave) return;
 
     try {
-      await onSave();
-      setSaved(!saved);
+      const result = await onSave();
+
+      if (typeof result === "boolean") {
+        setSaved(result);
+      } else {
+        setSaved((prev) => !prev);
+      }
     } catch (error) {
       console.error("Error saving:", error);
     }

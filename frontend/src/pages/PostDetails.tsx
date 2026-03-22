@@ -92,7 +92,6 @@ const getInitials = (name?: string | null) => {
     .toUpperCase();
 };
 
-
 const getCurrentUser = () => {
   try {
     const rawUser = localStorage.getItem("user");
@@ -243,18 +242,41 @@ const CommentComponent = ({
   onEdit,
   onDelete,
   onVote,
+  onReply,
 }: {
   comment: Comment;
   depth?: number;
   onEdit: (id: string, text: string) => void;
   onDelete: (id: string) => void;
   onVote: (id: string, voteType: 1 | -1) => void;
+  onReply: (parentCommentId: string, text: string) => Promise<void>;
 }) => {
   const [showReplies, setShowReplies] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(comment.text);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showReplyBox, setShowReplyBox] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+
+  const handleReplySubmit = async () => {
+    if (isSubmittingReply) return;
+
+    if (!replyText.trim()) {
+      toast({ title: "Reply cannot be empty", variant: "destructive" });
+      return;
+    }
+
+    try {
+      setIsSubmittingReply(true);
+      await onReply(comment.id, replyText.trim());
+      setReplyText("");
+      setShowReplyBox(false);
+    } finally {
+      setIsSubmittingReply(false);
+    }
+  };
 
   const handleSaveEdit = () => {
     if (!editText.trim()) {
@@ -388,13 +410,47 @@ const CommentComponent = ({
                 {comment.downvotes}
               </button>
 
-              <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+              <button
+                onClick={() => setShowReplyBox((prev) => !prev)}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
                 <Reply className="h-3.5 w-3.5" /> Reply
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {showReplyBox && (
+        <div className="mt-3">
+          <textarea
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            placeholder={`Reply to ${comment.author}...`}
+            disabled={isSubmittingReply}
+            rows={3}
+            className="w-full rounded-lg border border-border bg-secondary/30 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 resize-none disabled:opacity-60"
+          />
+          <div className="flex justify-end gap-2 mt-2">
+            <button
+              onClick={() => {
+                setShowReplyBox(false);
+                setReplyText("");
+              }}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleReplySubmit}
+              disabled={isSubmittingReply || !replyText.trim()}
+              className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isSubmittingReply ? "Replying..." : "Reply"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {comment.replies && comment.replies.length > 0 && (
         <>
@@ -420,6 +476,7 @@ const CommentComponent = ({
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onVote={onVote}
+                onReply={onReply}
               />
             ))}
         </>
@@ -450,7 +507,67 @@ const PostDetails = () => {
   const [newComment, setNewComment] = useState("");
   const [showPostMenu, setShowPostMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const handleReplyToComment = async (
+    parentCommentId: string,
+    text: string,
+  ) => {
+    try {
+      const res = await axiosInstance.post(`/forums/${id}/comments`, {
+        content: text,
+        parent_comment_id: parentCommentId,
+      });
+
+      const created = res.data?.comment;
+
+      const mappedReply: Comment = {
+        id: created.id,
+        user_id: created.user_id,
+        author: created.users?.name || CURRENT_USER.name,
+        initials: getInitials(created.users?.name || CURRENT_USER.name),
+        timestamp: formatElapsedTime(created.created_at),
+        text: created.content,
+        upvotes: created.upvotes_count || 0,
+        downvotes: created.downvotes_count || 0,
+        myVote: null,
+        isAuthor: true,
+        replies: [],
+      };
+
+      const insertReplyIntoTree = (list: Comment[]): Comment[] =>
+        list.map((comment) => {
+          if (comment.id === parentCommentId) {
+            return {
+              ...comment,
+              replies: [...(comment.replies || []), mappedReply],
+            };
+          }
+
+          return {
+            ...comment,
+            replies: comment.replies
+              ? insertReplyIntoTree(comment.replies)
+              : [],
+          };
+        });
+
+      setComments((prev) => insertReplyIntoTree(prev));
+      setPostData((prev: any) => ({
+        ...prev,
+        comments: (prev?.comments || 0) + 1,
+      }));
+
+      toast({ title: "Reply posted!" });
+    } catch (err: any) {
+      console.error("Create reply error:", err);
+      toast({
+        title: err?.response?.data?.error || "Failed to post reply",
+        variant: "destructive",
+      });
+    }
+  };
 
   const fetchPostDetails = async () => {
     if (!id) return;
@@ -506,12 +623,13 @@ const PostDetails = () => {
       const mappedPost = {
         id: forum.id,
         user_id: forum.user_id,
+        created_at: forum.created_at,
+        subject_id: forum.subjects?.id || "",
         title: forum.title,
         author: forum.users?.name || "Unknown User",
         authorInitials: getInitials(forum.users?.name),
         university: forum.subjects?.name || "General",
         field: "",
-        date: new Date(forum.created_at).toLocaleDateString(),
         content: forum.content,
         aiSummary: forum.ai_summary || "",
         upvotes: forum.upvotes_count || 0,
@@ -597,12 +715,16 @@ const PostDetails = () => {
   const isPostAuthor = postData?.user_id === CURRENT_USER.id;
 
   const handleAddComment = async () => {
+    if (isSubmittingComment) return;
+
     if (!newComment.trim()) {
       toast({ title: "Comment cannot be empty", variant: "destructive" });
       return;
     }
 
     try {
+      setIsSubmittingComment(true);
+
       const res = await axiosInstance.post(`/forums/${id}/comments`, {
         content: newComment.trim(),
       });
@@ -637,6 +759,8 @@ const PostDetails = () => {
         title: err?.response?.data?.error || "Failed to post comment",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmittingComment(false);
     }
   };
 
@@ -759,17 +883,16 @@ const PostDetails = () => {
       await axiosInstance.put(`/forums/${id}`, {
         title: data.title,
         content: data.content,
-        category: data.category,
+        subject_id: postData.subject_id,
         document_url: data.fileName || null,
       });
 
-      setPostData({
-        ...postData,
+      setPostData((prev: any) => ({
+        ...prev,
         title: data.title,
         content: data.content,
-        tag: data.category,
         fileName: data.fileName || "",
-      });
+      }));
 
       setShowEditModal(false);
       toast({ title: "Post updated!" });
@@ -935,7 +1058,7 @@ const PostDetails = () => {
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground sm:ml-auto">
             <Calendar className="h-3.5 w-3.5" />{" "}
-            {formatElapsedTime(postData.created_at || postData.date)}
+            {formatElapsedTime(postData.created_at)}
           </div>
         </div>
 
@@ -1093,15 +1216,17 @@ const PostDetails = () => {
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Add a comment..."
-                className="w-full rounded-lg border border-border bg-secondary/30 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 resize-none font-body"
+                disabled={isSubmittingComment}
+                className="w-full rounded-lg border border-border bg-secondary/30 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 resize-none font-body disabled:opacity-60"
                 rows={3}
               />
               <div className="flex justify-end mt-2">
                 <button
                   onClick={handleAddComment}
-                  className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                  disabled={isSubmittingComment || !newComment.trim()}
+                  className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Comment
+                  {isSubmittingComment ? "Posting..." : "Comment"}
                 </button>
               </div>
             </div>
@@ -1115,6 +1240,7 @@ const PostDetails = () => {
                 onEdit={handleEditComment}
                 onDelete={handleDeleteComment}
                 onVote={handleVoteComment}
+                onReply={handleReplyToComment}
               />
             ))}
           </div>

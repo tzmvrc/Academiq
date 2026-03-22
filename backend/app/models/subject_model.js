@@ -2,6 +2,14 @@ import { supabase } from "../database/supabase.js";
 
 const TABLE = "subjects";
 
+const toSlug = (text) =>
+  text
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+
 export const SubjectModel = {
   async findAll() {
     const { data, error } = await supabase
@@ -23,9 +31,11 @@ export const SubjectModel = {
   },
 
   async create(name) {
+    const slug = toSlug(name);
+
     const { data, error } = await supabase
       .from(TABLE)
-      .insert({ name })
+      .insert({ name, slug })
       .select()
       .single();
 

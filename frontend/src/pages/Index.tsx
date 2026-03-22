@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import FeaturedSection from "@/components/FeaturedSection";
 import DiscussionCard from "@/components/DiscussionCard";
-import AISuggestionPanel from "@/components/AISuggestionPanel";
 import CreatePostModal from "@/components/CreatePostModal";
 import { toast } from "@/hooks/use-toast";
 import { DiscussionCardSkeleton } from "@/components/SkeletonLoaders";
@@ -20,6 +19,16 @@ import {
   forumService,
   type DiscussionCardProps,
 } from "@/integration/forum_service";
+import axiosInstance from "@/integration/axiosInstance";
+
+type Topic = {
+  id: string;
+  name: string;
+  slug?: string;
+  category?: string;
+  icon?: string | null;
+  color?: string | null;
+};
 
 const suggestedPeople = [
   {
@@ -66,36 +75,50 @@ const suggestedPeople = [
   },
 ];
 
-const suggestedTopics = [
-  { name: "Computer Science", followers: "24.5k" },
-  { name: "Artificial Intelligence", followers: "31.2k" },
-  { name: "Engineering", followers: "18.2k" },
-  { name: "Mathematics", followers: "15.8k" },
-  { name: "Business", followers: "21.3k" },
-];
-
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const topicFilter = searchParams.get("topic");
+
   const [followedPeople, setFollowedPeople] = useState<Set<string>>(new Set());
   const [followedTopics, setFollowedTopics] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [forums, setForums] = useState<DiscussionCardProps[]>([]);
+  const [topics, setTopics] = useState<Topic[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch forums from API on component mount
   useEffect(() => {
     const loadForums = async () => {
       try {
         setIsLoading(true);
         setError(null);
+
         const fetchedForums = await forumService.getAllForums();
-        setForums(fetchedForums);
+
+        const forumsWithSavedState = await Promise.all(
+          fetchedForums.map(async (forum) => {
+            if (!forum.id) return { ...forum, isSaved: false };
+
+            try {
+              const saveRes = await forumService.getSaveStatus(forum.id);
+              return {
+                ...forum,
+                isSaved: !!saveRes.saved,
+              };
+            } catch {
+              return {
+                ...forum,
+                isSaved: false,
+              };
+            }
+          }),
+        );
+
+        setForums(forumsWithSavedState);
       } catch (err) {
         console.error("Error loading forums:", err);
-        setError("Failed to load forums. Showing sample data.");
+        setError("Failed to load forums.");
       } finally {
         setIsLoading(false);
       }
@@ -104,9 +127,21 @@ const Index = () => {
     loadForums();
   }, []);
 
-  // Handle new posts created
+  useEffect(() => {
+    const loadTopics = async () => {
+      try {
+        const response = await axiosInstance.get("/topics");
+        setTopics(response.data.topics || []);
+      } catch (err) {
+        console.error("Error loading topics:", err);
+      }
+    };
+
+    loadTopics();
+  }, []);
+
   const handleNewPost = (newPost: DiscussionCardProps) => {
-    setForums([newPost, ...forums]);
+    setForums((prev) => [newPost, ...prev]);
   };
 
   const toggleFollowPerson = (name: string) => {
@@ -114,26 +149,31 @@ const Index = () => {
       const next = new Set(prev);
       const isFollowing = next.has(name);
       isFollowing ? next.delete(name) : next.add(name);
+
       toast({
         title: isFollowing ? `Unfollowed ${name}` : `Following ${name}`,
       });
+
       return next;
     });
   };
 
-  const handleTopicClick = (name: string) => {
-    navigate(`/feed?topic=${encodeURIComponent(name)}`);
+  const handleTopicClick = (topicValue: string) => {
+    navigate(`/feed?topic=${encodeURIComponent(topicValue)}`);
   };
 
   const toggleFollowTopic = (name: string, e: React.MouseEvent) => {
     e.stopPropagation();
+
     setFollowedTopics((prev) => {
       const next = new Set(prev);
       const isFollowing = next.has(name);
       isFollowing ? next.delete(name) : next.add(name);
+
       toast({
         title: isFollowing ? `Unfollowed ${name}` : `Following ${name}`,
       });
+
       return next;
     });
   };
@@ -142,20 +182,27 @@ const Index = () => {
     title: string;
     content: string;
     category: string;
+    file?: File;
     fileName?: string;
   }) => {
     try {
-      setIsLoading(true);
       const newForum = await forumService.createForum({
         title: data.title,
         content: data.content,
         subject: data.category,
+        file: data.file,
       });
-      handleNewPost(newForum);
+
+      if (!newForum?.id) {
+        throw new Error("New forum ID is missing");
+      }
+
       toast({
         title: "Post created successfully",
         description: "Your forum discussion has been published.",
       });
+
+      navigate(`/post/${newForum.id}`);
     } catch (err) {
       console.error("Error creating post:", err);
       toast({
@@ -164,15 +211,14 @@ const Index = () => {
           "Failed to create your forum discussion. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
+      throw err;
     }
   };
 
   const handleVoteForum = async (forumId: string, voteType: 1 | -1) => {
     try {
       const result = await forumService.voteForum(forumId, voteType);
-      // Update both the vote state and the vote counts from the server response
+
       setForums((prevForums) =>
         prevForums.map((forum) =>
           forum.id === forumId
@@ -185,6 +231,7 @@ const Index = () => {
             : forum,
         ),
       );
+
       toast({
         title: voteType === 1 ? "Upvoted!" : "Downvoted!",
       });
@@ -201,7 +248,7 @@ const Index = () => {
   const handleUnvoteForum = async (forumId: string) => {
     try {
       const result = await forumService.unvoteForum(forumId);
-      // Update both the vote state and the vote count from the server response
+
       setForums((prevForums) =>
         prevForums.map((forum) =>
           forum.id === forumId
@@ -214,6 +261,7 @@ const Index = () => {
             : forum,
         ),
       );
+
       toast({
         title: "Vote removed",
       });
@@ -229,10 +277,24 @@ const Index = () => {
 
   const handleSaveForum = async (forumId: string) => {
     try {
-      await forumService.toggleSaveForum(forumId);
+      const result = await forumService.toggleSaveForum(forumId);
+
+      setForums((prevForums) =>
+        prevForums.map((forum) =>
+          forum.id === forumId
+            ? {
+                ...forum,
+                isSaved: result.saved,
+              }
+            : forum,
+        ),
+      );
+
       toast({
-        title: "Forum saved",
+        title: result.saved ? "Forum saved" : "Forum unsaved",
       });
+
+      return result.saved;
     } catch (err) {
       console.error("Error saving forum:", err);
       toast({
@@ -240,6 +302,7 @@ const Index = () => {
         description: "Failed to save this forum.",
         variant: "destructive",
       });
+      return false;
     }
   };
 
@@ -300,6 +363,7 @@ const Index = () => {
         </h3>
         <ScrollButtons scrollRef={peopleScrollRef} />
       </div>
+
       <div
         ref={peopleScrollRef}
         className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth"
@@ -315,6 +379,7 @@ const Index = () => {
                 {person.initials}
               </span>
             </div>
+
             <p className="text-xs font-medium text-foreground truncate">
               {person.name}
             </p>
@@ -324,6 +389,7 @@ const Index = () => {
             <p className="text-[10px] text-accent font-medium mt-0.5">
               {person.field}
             </p>
+
             <button
               onClick={() => toggleFollowPerson(person.name)}
               className={`mt-3 w-full flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-colors ${
@@ -344,6 +410,7 @@ const Index = () => {
             </button>
           </div>
         ))}
+
         <button
           onClick={() => navigate("/peers")}
           className="shrink-0 w-40 sm:w-44 rounded-xl border border-dashed border-border bg-background p-3 sm:p-4 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-secondary/30 transition-all snap-start"
@@ -380,35 +447,36 @@ const Index = () => {
           <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground mb-4">
             Topics You May Like
           </h2>
+
           <div className="flex items-center justify-between mb-2">
             <div />
             <ScrollButtons scrollRef={topicsScrollRef} />
           </div>
+
           <div
             ref={topicsScrollRef}
             className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scroll-smooth"
             style={{ scrollbarWidth: "thin" }}
           >
-            {suggestedTopics.map((topic, i) => (
+            {topics.slice(0, 18).map((topic, i) => (
               <motion.button
-                key={topic.name}
+                key={topic.id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.05 }}
-                onClick={() => handleTopicClick(topic.name)}
+                transition={{ delay: i * 0.03 }}
+                onClick={() => handleTopicClick(topic.slug || topic.name)}
                 className={`shrink-0 flex items-center gap-2 rounded-lg border px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium transition-all ${
                   followedTopics.has(topic.name)
                     ? "border-primary bg-primary/5 text-primary"
                     : "border-border bg-card text-foreground hover:border-primary/15 hover:shadow-sm"
                 }`}
               >
-                {topic.name}
-                <span className="text-xs text-muted-foreground">
-                  {topic.followers}
-                </span>
+                <span>{topic.name}</span>
+
                 {followedTopics.has(topic.name) && (
                   <Check className="h-3.5 w-3.5" />
                 )}
+
                 <span
                   role="button"
                   onClick={(e) => toggleFollowTopic(topic.name, e)}
@@ -422,12 +490,13 @@ const Index = () => {
         </section>
       )}
 
-      <div className="grid gap-6 lg:gap-8 lg:grid-cols-[1fr_280px]">
+      <div className="max-w-3xl mx-auto">
         <div className="space-y-4 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground">
               {topicFilter ? "" : "Latest Discussions"}
             </h2>
+
             <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
@@ -466,6 +535,7 @@ const Index = () => {
                   >
                     <DiscussionCard
                       {...d}
+                      isSaved={d.isSaved}
                       index={item.index}
                       onVote={(voteType) => handleVoteForum(d.id!, voteType)}
                       onUnvote={() => handleUnvoteForum(d.id!)}
@@ -474,6 +544,7 @@ const Index = () => {
                   </Link>
                 );
               })}
+
               {filteredDiscussions.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">
@@ -489,12 +560,6 @@ const Index = () => {
               )}
             </>
           )}
-        </div>
-
-        <div className="hidden lg:block">
-          <div className="sticky top-24">
-            <AISuggestionPanel />
-          </div>
         </div>
       </div>
 
