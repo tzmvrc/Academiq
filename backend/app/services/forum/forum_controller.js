@@ -88,147 +88,141 @@ export const ForumsController = {
 
   // POST /api/forums
   async createForum(req, res) {
-  try {
-    console.log("CREATE BODY:", req.body);
-    console.log("CREATE FILE:", req.file);
-    console.log("CREATE CONTENT-TYPE:", req.headers["content-type"]);
+    try {
+      console.log("CREATE BODY:", req.body);
+      console.log("CREATE FILE:", req.file);
+      console.log("CREATE CONTENT-TYPE:", req.headers["content-type"]);
 
-    const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    let {
-      topicIds = [],
-      subject,
-      subject_id,
-      document_url,
-      fileName,
-      ...forumData
-    } = req.body;
+      let { topicIds = [], subject, subject_id, title, content } = req.body;
 
-    if (typeof topicIds === "string") {
-      try {
-        topicIds = JSON.parse(topicIds);
-      } catch {
-        topicIds = [];
+      if (typeof topicIds === "string") {
+        try {
+          topicIds = JSON.parse(topicIds);
+        } catch {
+          topicIds = [];
+        }
       }
-    }
 
-    let finalSubjectId = subject_id;
+      let finalSubjectId = subject_id;
 
-    if (subject && !subject_id) {
-      const { data: foundSubject } = await SubjectModel.findByName(subject);
+      if (subject && !subject_id) {
+        const { data: foundSubject } = await SubjectModel.findByName(subject);
 
-      if (foundSubject) {
-        finalSubjectId = foundSubject.id;
-      } else {
-        const { data: newSubject, error: createErr } = await supabase
-          .from("subjects")
-          .insert({
-            name: subject,
-            slug: subject.toLowerCase().replace(/\s+/g, "-"),
-          })
-          .select()
-          .single();
+        if (foundSubject) {
+          finalSubjectId = foundSubject.id;
+        } else {
+          const { data: newSubject, error: createErr } = await supabase
+            .from("subjects")
+            .insert({
+              name: subject,
+              slug: subject.toLowerCase().replace(/\s+/g, "-"),
+            })
+            .select()
+            .single();
 
-        if (createErr) throw createErr;
-        finalSubjectId = newSubject.id;
+          if (createErr) throw createErr;
+          finalSubjectId = newSubject.id;
+        }
       }
-    }
 
-    const uploadedDocumentUrl = await uploadForumAttachment(req.file, userId);
+      const uploadedDocumentUrl = await uploadForumAttachment(req.file, userId);
 
-    const payload = {
-      ...forumData,
-      user_id: userId,
-      subject_id: finalSubjectId,
-      document_url: uploadedDocumentUrl,
-    };
+      const payload = {
+        title,
+        content,
+        user_id: userId,
+        subject_id: finalSubjectId,
+        document_url: uploadedDocumentUrl || null,
+      };
 
-    const { data, error } = await ForumModel.create(payload);
-    if (error) throw error;
+      const { data, error } = await ForumModel.create(payload);
+      if (error) throw error;
 
-    if (Array.isArray(topicIds) && topicIds.length > 0) {
-      for (const topicId of topicIds) {
-        await ForumTopicModel.attachTopic(data.id, topicId);
+      if (Array.isArray(topicIds) && topicIds.length > 0) {
+        for (const topicId of topicIds) {
+          await ForumTopicModel.attachTopic(data.id, topicId);
+        }
       }
-    }
 
-    return res.status(201).json({ forum: data });
-  } catch (err) {
-    console.error("Create Forum Error:", err);
-    return res.status(500).json({ error: "Failed to create forum" });
-  }
-},
+      return res.status(201).json({ forum: data });
+    } catch (err) {
+      console.error("Create Forum Error:", err);
+      return res.status(500).json({ error: "Failed to create forum" });
+    }
+  },
 
   // PUT /api/forums/:id
- async updateForum(req, res) {
-  try {
-    console.log("UPDATE BODY:", req.body);
-    console.log("UPDATE FILE:", req.file);
-    console.log("UPDATE CONTENT-TYPE:", req.headers["content-type"]);
+  async updateForum(req, res) {
+    try {
+      console.log("UPDATE BODY:", req.body);
+      console.log("UPDATE FILE:", req.file);
+      console.log("UPDATE CONTENT-TYPE:", req.headers["content-type"]);
 
-    const { id } = req.params;
-    const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      const { id } = req.params;
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    const { data: existingForum, error: existingError } =
-      await ForumModel.findById(id);
+      const { data: existingForum, error: existingError } =
+        await ForumModel.findById(id);
 
-    if (existingError || !existingForum) {
-      return res.status(404).json({ error: "Forum not found" });
-    }
-
-    let {
-      topicIds,
-      subject,
-      subject_id,
-      category,
-      document_url,
-      fileName,
-      ...updates
-    } = req.body;
-
-    let finalSubjectId = subject_id || existingForum.subject_id;
-    const subjectName = subject || category;
-
-    if (subjectName && !subject_id) {
-      const { data: foundSubject } = await SubjectModel.findByName(subjectName);
-
-      if (foundSubject) {
-        finalSubjectId = foundSubject.id;
-      } else {
-        const { data: newSubject, error: createErr } = await supabase
-          .from("subjects")
-          .insert({
-            name: subjectName,
-            slug: subjectName.toLowerCase().replace(/\s+/g, "-"),
-          })
-          .select()
-          .single();
-
-        if (createErr) throw createErr;
-        finalSubjectId = newSubject.id;
+      if (existingError || !existingForum) {
+        return res.status(404).json({ error: "Forum not found" });
       }
+
+      let { topicIds, subject, subject_id, category, title, content } =
+        req.body;
+
+      let finalSubjectId =
+        subject_id || existingForum.subject_id || existingForum.subjects?.id;
+
+      const subjectName = subject || category;
+
+      if (subjectName && !subject_id) {
+        const { data: foundSubject } =
+          await SubjectModel.findByName(subjectName);
+
+        if (foundSubject) {
+          finalSubjectId = foundSubject.id;
+        } else {
+          const { data: newSubject, error: createErr } = await supabase
+            .from("subjects")
+            .insert({
+              name: subjectName,
+              slug: subjectName.toLowerCase().replace(/\s+/g, "-"),
+            })
+            .select()
+            .single();
+
+          if (createErr) throw createErr;
+          finalSubjectId = newSubject.id;
+        }
+      }
+
+      const updatePayload = {
+        title,
+        content,
+        subject_id: finalSubjectId,
+      };
+
+      if (req.file) {
+        updatePayload.document_url = await uploadForumAttachment(
+          req.file,
+          userId,
+        );
+      }
+
+      const { data, error } = await ForumModel.update(id, updatePayload);
+      if (error) throw error;
+
+      return res.json({ forum: data });
+    } catch (err) {
+      console.error("Update Forum Error:", err);
+      return res.status(500).json({ error: "Failed to update forum" });
     }
-
-    const updatePayload = {
-      ...updates,
-      subject_id: finalSubjectId,
-    };
-
-    if (req.file) {
-      updatePayload.document_url = await uploadForumAttachment(req.file, userId);
-    }
-
-    const { data, error } = await ForumModel.update(id, updatePayload);
-    if (error) throw error;
-
-    return res.json({ forum: data });
-  } catch (err) {
-    console.error("Update Forum Error:", err);
-    return res.status(500).json({ error: "Failed to update forum" });
-  }
-},
+  },
 
   // DELETE /api/forums/:id
   async deleteForum(req, res) {

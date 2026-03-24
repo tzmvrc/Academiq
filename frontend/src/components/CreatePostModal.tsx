@@ -3,16 +3,16 @@ import { X, Upload, FileText, Trash2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import axiosInstance from "@/integration/axiosInstance";
+import { forumService } from "@/integration/forum_service";
 
 interface CreatePostModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (post: {
+  onSubmit?: (post: {
     title: string;
     content: string;
     category: string;
     file?: File;
-    fileName?: string;
   }) => void | Promise<void>;
   initialData?: {
     title: string;
@@ -21,6 +21,8 @@ interface CreatePostModalProps {
     fileName?: string;
   };
   mode?: "create" | "edit";
+  forumId?: string;
+  onSuccess?: () => void | Promise<void>;
 }
 
 interface Subject {
@@ -36,6 +38,8 @@ const CreatePostModal = ({
   onSubmit,
   initialData,
   mode = "create",
+  forumId,
+  onSuccess,
 }: CreatePostModalProps) => {
   const [title, setTitle] = useState(initialData?.title || "");
   const [content, setContent] = useState(initialData?.content || "");
@@ -46,6 +50,8 @@ const CreatePostModal = ({
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
+  const [removeFile, setRemoveFile] = useState(false);
+
   const [submitting, setSubmitting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -53,12 +59,12 @@ const CreatePostModal = ({
 
   useEffect(() => {
     if (!open) return;
-
     setTitle(initialData?.title || "");
     setContent(initialData?.content || "");
     setCategory(initialData?.category || "");
     setFileName(initialData?.fileName || "");
     setSelectedFile(null);
+    setRemoveFile(false); // reset removal flag
   }, [open, initialData]);
 
   useEffect(() => {
@@ -69,7 +75,7 @@ const CreatePostModal = ({
         setLoadingSubjects(true);
         const res = await axiosInstance.get("/subjects");
         setSubjects(res.data?.subjects || []);
-      } catch (err: any) {
+      } catch (err) {
         console.error("Fetch subjects error:", err);
         toast({
           title: "Failed to load subjects",
@@ -106,13 +112,6 @@ const CreatePostModal = ({
       .slice(0, 8);
   }, [subjects, category]);
 
-  const exactSubjectExists = useMemo(() => {
-    const normalized = normalizeSubject(category).toLowerCase();
-    return subjects.some(
-      (subject) => normalizeSubject(subject.name).toLowerCase() === normalized,
-    );
-  }, [subjects, category]);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -126,7 +125,7 @@ const CreatePostModal = ({
     if (!allowed.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please upload a PDF or DOC file.",
+        description: "Please upload a PDF, DOC, or DOCX file.",
         variant: "destructive",
       });
       return;
@@ -151,7 +150,8 @@ const CreatePostModal = ({
 
     const existing = subjects.find(
       (subject) =>
-        normalizeSubject(subject.name).toLowerCase() === normalized.toLowerCase(),
+        normalizeSubject(subject.name).toLowerCase() ===
+        normalized.toLowerCase(),
     );
 
     if (existing) return existing;
@@ -195,13 +195,30 @@ const CreatePostModal = ({
 
       await ensureSubjectExists(normalizedCategory);
 
-      await onSubmit({
-        title: title.trim(),
-        content: content.trim(),
-        category: normalizedCategory,
-        file: selectedFile || undefined,
-        fileName: fileName || undefined,
-      });
+      if (mode === "edit") {
+        if (!forumId) throw new Error("Forum ID is required for editing");
+
+        await forumService.updateForum(forumId, {
+          title: title.trim(),
+          content: content.trim(),
+          subject: normalizedCategory,
+          file: selectedFile || undefined,
+          removeAttachment: removeFile,
+        });
+
+        setRemoveFile(false);
+      } else {
+        if (!onSubmit) {
+          throw new Error("onSubmit is required for create mode");
+        }
+
+        await onSubmit({
+          title: title.trim(),
+          content: content.trim(),
+          category: normalizedCategory,
+          file: selectedFile || undefined,
+        });
+      }
 
       toast({
         title: mode === "create" ? "Post published!" : "Post updated!",
@@ -211,6 +228,7 @@ const CreatePostModal = ({
             : "Your changes have been saved.",
       });
 
+      await onSuccess?.();
       onClose();
 
       if (mode === "create") {
@@ -223,7 +241,8 @@ const CreatePostModal = ({
     } catch (err: any) {
       console.error("Create/Edit post modal submit error:", err);
       toast({
-        title: err?.response?.data?.error || "Failed to submit post",
+        title:
+          err?.response?.data?.error || err?.message || "Failed to submit post",
         variant: "destructive",
       });
     } finally {
@@ -262,174 +281,167 @@ const CreatePostModal = ({
               </button>
             </div>
 
-            <div className="p-5 space-y-4">
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">
-                  Title *
+            <div className="space-y-5 px-5 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Title
                 </label>
                 <input
+                  type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter a descriptive title..."
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-                  maxLength={200}
+                  placeholder="Enter your post title"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
                 />
-                <p className="text-xs text-muted-foreground mt-1 text-right">
-                  {title.length}/200
-                </p>
               </div>
 
-              <div ref={subjectBoxRef}>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">
-                  Subject *
+              <div className="space-y-2" ref={subjectBoxRef}>
+                <label className="text-sm font-medium text-foreground">
+                  Subject
                 </label>
 
                 <div className="relative">
                   <input
+                    type="text"
                     value={category}
                     onChange={(e) => {
                       setCategory(e.target.value);
                       setShowSubjectDropdown(true);
                     }}
                     onFocus={() => setShowSubjectDropdown(true)}
-                    placeholder="Type a subject..."
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                    placeholder="Enter or select a subject"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 pr-10 text-sm outline-none focus:ring-2 focus:ring-primary"
                   />
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-
-                  {showSubjectDropdown && (
-                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-border bg-card shadow-lg overflow-hidden">
-                      <div className="max-h-56 overflow-y-auto">
-                        {loadingSubjects ? (
-                          <div className="px-3 py-2.5 text-sm text-muted-foreground">
-                            Loading subjects...
-                          </div>
-                        ) : filteredSubjects.length > 0 ? (
-                          filteredSubjects.map((subject) => (
-                            <button
-                              key={subject.id}
-                              type="button"
-                              onClick={() => {
-                                setCategory(subject.name);
-                                setShowSubjectDropdown(false);
-                              }}
-                              className="w-full px-3 py-2.5 text-left text-sm text-foreground hover:bg-secondary transition-colors"
-                            >
-                              {subject.name}
-                            </button>
-                          ))
-                        ) : normalizeSubject(category) ? (
-                          <div className="px-3 py-2.5 text-sm text-muted-foreground">
-                            No matching subject found.
-                          </div>
-                        ) : (
-                          <div className="px-3 py-2.5 text-sm text-muted-foreground">
-                            Start typing to search subjects.
-                          </div>
-                        )}
-
-                        {normalizeSubject(category) && !exactSubjectExists && (
-                          <button
-                            type="button"
-                            onClick={() => setShowSubjectDropdown(false)}
-                            className="w-full border-t border-border px-3 py-2.5 text-left text-sm text-primary hover:bg-primary/5 transition-colors"
-                          >
-                            Use "{normalizeSubject(category)}" as a new subject
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowSubjectDropdown((prev) => !prev)}
+                    className="absolute inset-y-0 right-2 flex items-center text-muted-foreground"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
                 </div>
 
-                <p className="text-xs text-muted-foreground mt-1">
-                  Type to search existing subjects. New subjects will be added automatically when you publish.
-                </p>
+                {showSubjectDropdown && (
+                  <div className="mt-2 max-h-48 overflow-y-auto rounded-lg border border-border bg-popover shadow-md">
+                    {loadingSubjects ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">
+                        Loading subjects...
+                      </div>
+                    ) : filteredSubjects.length > 0 ? (
+                      filteredSubjects.map((subject) => (
+                        <button
+                          key={subject.id}
+                          type="button"
+                          onClick={() => {
+                            setCategory(subject.name);
+                            setShowSubjectDropdown(false);
+                          }}
+                          className="block w-full px-3 py-2 text-left text-sm hover:bg-secondary"
+                        >
+                          {subject.name}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">
+                        No matching subjects found
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">
-                  Content *
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Content
                 </label>
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Share your research, findings, or questions..."
-                  rows={6}
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 resize-none"
-                  maxLength={5000}
+                  placeholder="Write your discussion here..."
+                  rows={7}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary resize-none"
                 />
-                <p className="text-xs text-muted-foreground mt-1 text-right">
-                  {content.length}/5000
-                </p>
               </div>
 
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">
-                  Attach Notes <span className="text-muted-foreground font-normal">(optional)</span>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Attachment
                 </label>
+
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={handleFileChange}
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   className="hidden"
+                  onChange={handleFileChange}
                 />
-                {fileName ? (
-                  <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/30 px-3 py-2.5">
-                    <FileText className="h-4 w-4 text-destructive shrink-0" />
-                    <span className="text-sm text-foreground truncate flex-1">
-                      {fileName}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFileName("");
-                        setSelectedFile(null);
-                        if (fileInputRef.current) fileInputRef.current.value = "";
-                      }}
-                      className="rounded p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ) : (
+
+                {!fileName ? (
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full flex items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-secondary/20 px-3 py-4 text-sm text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-secondary/40 transition-colors"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-background px-4 py-6 text-sm text-muted-foreground hover:bg-secondary transition-colors"
                   >
                     <Upload className="h-4 w-4" />
-                    Upload PDF or DOC file
+                    Upload PDF, DOC, or DOCX
                   </button>
+                ) : (
+                  <div className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-3">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="truncate text-sm text-foreground">
+                        {fileName}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Change
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedFile(null);
+                          setFileName("");
+                          setRemoveFile(true); // mark for removal
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = "";
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
                 )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  Max 20MB · PDF, DOC, DOCX
-                </p>
               </div>
             </div>
 
             <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4">
               <button
-                onClick={onClose}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors"
-                disabled={submitting}
                 type="button"
+                onClick={onClose}
+                className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+                disabled={submitting}
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="rounded-lg px-5 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60"
-                type="button"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60 transition"
               >
                 {submitting
                   ? mode === "create"
-                    ? "Publishing..."
+                    ? "Posting..."
                     : "Saving..."
                   : mode === "create"
-                    ? "Publish Post"
+                    ? "Post"
                     : "Save Changes"}
               </button>
             </div>

@@ -35,12 +35,13 @@ export interface DiscussionCardProps {
   preview: string;
   aiSummary: string;
   upvotes: number;
+  documentUrl?: string | null;
   downvotes: number;
   comments: number;
   tag: string;
   isOwn: boolean;
   isSaved?: boolean;
-  userVoteState?: 1 | -1 | null; // 1 for upvote, -1 for downvote, null for no vote
+  userVoteState?: 1 | -1 | null;
   isAiVerified?: boolean;
 }
 
@@ -53,7 +54,6 @@ export interface SaveStatusResponse {
   saved: boolean;
 }
 
-// Get the initials from a full name
 const getInitials = (name: string): string => {
   return name
     .split(" ")
@@ -63,7 +63,6 @@ const getInitials = (name: string): string => {
     .substring(0, 2);
 };
 
-// Transform forum API response to discussion card format
 const transformForumToDiscussion = (
   forum: Partial<ForumResponse> & {
     id: string;
@@ -90,6 +89,7 @@ const transformForumToDiscussion = (
     upvotes: forum.upvotes_count || 0,
     downvotes: forum.downvotes_count || 0,
     comments: forum.comments_count || 0,
+    documentUrl: forum.document_url || null,
     tag: subjectName,
     isOwn: currentUserId === forum.user_id,
     isSaved: false,
@@ -99,9 +99,6 @@ const transformForumToDiscussion = (
 };
 
 export const forumService = {
-  /**
-   * Fetch all forums from the backend with user vote states
-   */
   async getAllForums(): Promise<DiscussionCardProps[]> {
     try {
       const response = await axiosInstance.get("/forums");
@@ -112,15 +109,13 @@ export const forumService = {
         transformForumToDiscussion(forum, currentUserId),
       );
 
-      // If user is authenticated, fetch vote states for all forums
       if (currentUserId) {
         const forumsWithVotes = await Promise.all(
           forums.map(async (forum) => {
             try {
               const voteState = await this.getUserVoteState(forum.id!);
               return { ...forum, userVoteState: voteState };
-            } catch (err) {
-              // If vote fetch fails, just return forum without vote state
+            } catch {
               return forum;
             }
           }),
@@ -135,9 +130,6 @@ export const forumService = {
     }
   },
 
-  /**
-   * Fetch a specific forum by ID
-   */
   async getForumById(id: string): Promise<DiscussionCardProps> {
     try {
       const response = await axiosInstance.get(`/forums/${id}`);
@@ -161,9 +153,6 @@ export const forumService = {
     }
   },
 
-  /**
-   * Fetch forums created by the current user
-   */
   async getMyForums(): Promise<DiscussionCardProps[]> {
     try {
       const response = await axiosInstance.get("/forums/users/me");
@@ -179,9 +168,6 @@ export const forumService = {
     }
   },
 
-  /**
-   * Create a new forum
-   */
   async createForum(data: {
     title: string;
     content: string;
@@ -236,9 +222,68 @@ export const forumService = {
     }
   },
 
-  /**
-   * Vote on a forum
-   */
+  async updateForum(
+    id: string,
+    data: {
+      title: string;
+      content: string;
+      subject_id?: string;
+      subject?: string;
+      topicIds?: string[];
+      file?: File;
+      removeAttachment?: boolean; // new
+    },
+  ): Promise<DiscussionCardProps> {
+    try {
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("content", data.content);
+
+      if (data.subject) {
+        formData.append("subject", data.subject);
+      }
+
+      if (data.subject_id) {
+        formData.append("subject_id", data.subject_id);
+      }
+
+      if (data.topicIds?.length) {
+        formData.append("topicIds", JSON.stringify(data.topicIds));
+      }
+
+      if (data.file) {
+        formData.append("attachment", data.file);
+      }
+
+      const response = await axiosInstance.put(`/forums/${id}`, formData);
+
+      const currentUser = localStorage.getItem("user");
+      const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
+
+      const updatedForum = response.data?.forum;
+
+      if (!updatedForum?.id) {
+        throw new Error("Updated forum ID was not returned by the API");
+      }
+
+      if (data.removeAttachment) {
+        formData.append("removeAttachment", "true");
+      }
+
+      const fullForumResponse = await axiosInstance.get(
+        `/forums/${updatedForum.id}`,
+      );
+
+      return transformForumToDiscussion(
+        fullForumResponse.data.forum,
+        currentUserId,
+      );
+    } catch (error) {
+      console.error(`Failed to update forum ${id}:`, error);
+      throw error;
+    }
+  },
+
   async voteForum(
     forumId: string,
     voteType: 1 | -1,
@@ -260,9 +305,6 @@ export const forumService = {
     }
   },
 
-  /**
-   * Remove vote from a forum
-   */
   async unvoteForum(
     forumId: string,
   ): Promise<{ voteCount: { upvotes: number; downvotes: number } }> {
@@ -277,9 +319,6 @@ export const forumService = {
     }
   },
 
-  /**
-   * Toggle save status of a forum
-   */
   async toggleSaveForum(forumId: string): Promise<ToggleSaveResponse> {
     try {
       const response = await axiosInstance.post(`/forums/${forumId}/save`);
@@ -290,9 +329,6 @@ export const forumService = {
     }
   },
 
-  /**
-   * Get the current user's vote state on a forum
-   */
   async getUserVoteState(forumId: string): Promise<1 | -1 | null> {
     try {
       const response = await axiosInstance.get(`/forums/${forumId}/my-vote`);

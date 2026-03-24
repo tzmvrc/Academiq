@@ -1250,7 +1250,6 @@ const PostDetails = () => {
       <CreatePostModal
         open={showEditModal}
         onClose={() => setShowEditModal(false)}
-        onSubmit={handleEditPost}
         initialData={{
           title: postData.title,
           content: postData.content,
@@ -1258,6 +1257,8 @@ const PostDetails = () => {
           fileName: postData.fileName,
         }}
         mode="edit"
+        forumId={postData.id}
+        onSuccess={fetchPostDetails}
       />
 
       <DeleteConfirmModal

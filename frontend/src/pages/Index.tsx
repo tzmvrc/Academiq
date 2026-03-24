@@ -183,36 +183,13 @@ const Index = () => {
     content: string;
     category: string;
     file?: File;
-    fileName?: string;
   }) => {
-    try {
-      const newForum = await forumService.createForum({
-        title: data.title,
-        content: data.content,
-        subject: data.category,
-        file: data.file,
-      });
-
-      if (!newForum?.id) {
-        throw new Error("New forum ID is missing");
-      }
-
-      toast({
-        title: "Post created successfully",
-        description: "Your forum discussion has been published.",
-      });
-
-      navigate(`/post/${newForum.id}`);
-    } catch (err) {
-      console.error("Error creating post:", err);
-      toast({
-        title: "Error creating post",
-        description:
-          "Failed to create your forum discussion. Please try again.",
-        variant: "destructive",
-      });
-      throw err;
-    }
+    await forumService.createForum({
+      title: data.title,
+      content: data.content,
+      subject: data.category,
+      file: data.file,
+    });
   };
 
   const handleVoteForum = async (forumId: string, voteType: 1 | -1) => {
@@ -537,6 +514,7 @@ const Index = () => {
                       {...d}
                       isSaved={d.isSaved}
                       index={item.index}
+                      
                       onVote={(voteType) => handleVoteForum(d.id!, voteType)}
                       onUnvote={() => handleUnvoteForum(d.id!)}
                       onSave={() => handleSaveForum(d.id!)}

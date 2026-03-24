@@ -19,6 +19,7 @@ interface DiscussionCardProps {
   field: string;
   preview: string;
   aiSummary?: string;
+  documentUrl?: string;
   upvotes: number;
   downvotes: number;
   comments: number;
@@ -42,6 +43,7 @@ const DiscussionCard = ({
   field,
   preview,
   aiSummary,
+  documentUrl,
   upvotes,
   downvotes,
   comments,
@@ -178,6 +180,21 @@ const DiscussionCard = ({
       <p className="text-sm text-muted-foreground leading-relaxed mb-3 line-clamp-2">
         {preview}
       </p>
+
+      {documentUrl && (
+        <div className="mb-3">
+          <a
+            href={documentUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors truncate"
+          >
+            <span>📎</span>
+            <span className="truncate">{documentUrl.split("/").pop()}</span>
+          </a>
+        </div>
+      )}
 
       {/* AI Summary */}
       {aiSummary?.trim()?.length > 0 && (
