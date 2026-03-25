@@ -6,6 +6,7 @@ import {
   Bookmark,
   BookmarkCheck,
   Sparkles,
+  FileText,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import AIBadge from "./AIBadge";
@@ -33,6 +34,42 @@ interface DiscussionCardProps {
   onUnvote?: () => Promise<void>;
   onSave?: () => Promise<boolean | void>;
 }
+
+// Format raw filename into a readable display name
+const formatDocumentName = (rawName: string): string => {
+  // Remove common file extensions
+  let name = rawName.replace(/\.(pdf|docx?|txt|jpg|png|gif|zip)$/i, "");
+  // Strip leading numbers, dashes, underscores
+  name = name.replace(/^[\d\-_]+/, "");
+  // Replace dashes and underscores with spaces
+  name = name.replace(/[-_]/g, " ");
+  // Capitalize each word
+  name = name.replace(/\b\w/g, (char) => char.toUpperCase());
+  return name || rawName; // fallback to original if result is empty
+};
+
+// Extract and clean the filename from a URL
+const getFileNameFromUrl = (url: string): string => {
+  try {
+    const parsed = new URL(url);
+    let path = parsed.pathname;
+    path = path.replace(/\/+$/, ""); // remove trailing slashes
+    const segments = path.split("/");
+    const lastSegment = segments[segments.length - 1];
+    if (lastSegment) {
+      const decoded = decodeURIComponent(lastSegment);
+      return formatDocumentName(decoded);
+    }
+    return "document";
+  } catch {
+    // Fallback for malformed URLs
+    const parts = url.split("/");
+    const lastPart = parts[parts.length - 1];
+    const cleaned = lastPart.split(/[?#]/)[0];
+    const formatted = formatDocumentName(cleaned);
+    return formatted || "document";
+  }
+};
 
 const DiscussionCard = ({
   id,
@@ -62,10 +99,7 @@ const DiscussionCard = ({
   const [saved, setSaved] = useState<boolean>(isSaved);
   const [isVoting, setIsVoting] = useState(false);
 
-  // Use the upvotes value from server directly (it already includes user's vote)
   const upvoteCount = upvotes;
-  // For downvotes, we don't have a separate count from server, so show 0 for now
-  // This would need backend changes to track downvotes separately if needed
   const downvoteCount = downvotes;
 
   const handleUpvote = async (e: React.MouseEvent) => {
@@ -75,11 +109,9 @@ const DiscussionCard = ({
     setIsVoting(true);
     try {
       if (upvoted) {
-        // Remove upvote
         await onUnvote();
         setUpvoted(false);
       } else {
-        // Add upvote
         await onVote(1);
         setUpvoted(true);
         if (downvoted) setDownvoted(false);
@@ -102,11 +134,9 @@ const DiscussionCard = ({
     setIsVoting(true);
     try {
       if (downvoted) {
-        // Remove downvote
         await onUnvote();
         setDownvoted(false);
       } else {
-        // Add downvote
         await onVote(-1);
         setDownvoted(true);
         if (upvoted) setUpvoted(false);
@@ -124,7 +154,6 @@ const DiscussionCard = ({
 
     try {
       const result = await onSave();
-
       if (typeof result === "boolean") {
         setSaved(result);
       } else {
@@ -181,6 +210,7 @@ const DiscussionCard = ({
         {preview}
       </p>
 
+      {/* Document Attachment */}
       {documentUrl && (
         <div className="mb-3">
           <a
@@ -188,10 +218,12 @@ const DiscussionCard = ({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors truncate"
+            className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2 transition-colors hover:bg-muted/50 hover:border-primary/20 group/document"
           >
-            <span>📎</span>
-            <span className="truncate">{documentUrl.split("/").pop()}</span>
+            <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="truncate text-sm font-medium text-foreground group-hover/document:text-primary transition-colors">
+              {getFileNameFromUrl(documentUrl)}
+            </span>
           </a>
         </div>
       )}

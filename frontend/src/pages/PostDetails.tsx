@@ -764,13 +764,28 @@ const PostDetails = () => {
     }
   };
 
+  // Add this helper above getFileNameFromUrl
+  const formatDocumentName = (rawName: string): string => {
+    // Remove common file extensions
+    let name = rawName.replace(/\.(pdf|docx?|txt|jpg|png|gif|zip)$/i, "");
+    // Strip leading numbers, dashes, underscores
+    name = name.replace(/^[\d\-_]+/, "");
+    // Replace dashes and underscores with spaces
+    name = name.replace(/[-_]/g, " ");
+    // Capitalize each word
+    name = name.replace(/\b\w/g, (char) => char.toUpperCase());
+    return name || rawName; // fallback to original if result is empty
+  };
+
+  // Then replace the existing getFileNameFromUrl with:
   const getFileNameFromUrl = (url?: string | null) => {
     if (!url) return "Attachment";
 
     try {
       const cleanUrl = url.split("?")[0];
       const fileName = cleanUrl.substring(cleanUrl.lastIndexOf("/") + 1);
-      return decodeURIComponent(fileName) || "Attachment";
+      const decoded = decodeURIComponent(fileName) || "Attachment";
+      return formatDocumentName(decoded);
     } catch {
       return "Attachment";
     }

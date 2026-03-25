@@ -184,12 +184,14 @@ const Index = () => {
     category: string;
     file?: File;
   }) => {
-    await forumService.createForum({
+    const newForum = await forumService.createForum({
       title: data.title,
       content: data.content,
       subject: data.category,
       file: data.file,
     });
+    // Redirect to the new post
+    navigate(`/post/${newForum.id}`);
   };
 
   const handleVoteForum = async (forumId: string, voteType: 1 | -1) => {
@@ -514,7 +516,6 @@ const Index = () => {
                       {...d}
                       isSaved={d.isSaved}
                       index={item.index}
-                      
                       onVote={(voteType) => handleVoteForum(d.id!, voteType)}
                       onUnvote={() => handleUnvoteForum(d.id!)}
                       onSave={() => handleSaveForum(d.id!)}

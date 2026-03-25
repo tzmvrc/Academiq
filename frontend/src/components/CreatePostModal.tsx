@@ -32,6 +32,33 @@ interface Subject {
 
 const normalizeSubject = (value: string) => value.trim().replace(/\s+/g, " ");
 
+const extractFilenameFromUrl = (url: string): string => {
+  try {
+    const parsed = new URL(url);
+    let path = parsed.pathname;
+    path = path.replace(/\/+$/, "");
+    const segments = path.split("/");
+    const lastSegment = segments[segments.length - 1];
+    if (lastSegment) {
+      return decodeURIComponent(lastSegment);
+    }
+    return "";
+  } catch {
+    const parts = url.split("/");
+    const lastPart = parts[parts.length - 1];
+    const cleaned = lastPart.split(/[?#]/)[0];
+    return cleaned || "";
+  }
+};
+
+const formatDocumentName = (rawName: string): string => {
+  let name = rawName.replace(/\.(pdf|docx?|txt|jpg|png|gif|zip)$/i, "");
+  name = name.replace(/^[\d\-_]+/, "");
+  name = name.replace(/[-_]/g, " ");
+  name = name.replace(/\b\w/g, (char) => char.toUpperCase());
+  return name || rawName;
+};
+
 const CreatePostModal = ({
   open,
   onClose,
@@ -53,6 +80,15 @@ const CreatePostModal = ({
   const [removeFile, setRemoveFile] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
+
+  // Add this useMemo after all state declarations
+  const displayFileName = useMemo(() => {
+    if (!fileName) return "";
+    const isUrl =
+      fileName.startsWith("http://") || fileName.startsWith("https://");
+    const rawName = isUrl ? extractFilenameFromUrl(fileName) : fileName;
+    return formatDocumentName(rawName);
+  }, [fileName]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subjectBoxRef = useRef<HTMLDivElement>(null);
@@ -341,6 +377,17 @@ const CreatePostModal = ({
                           {subject.name}
                         </button>
                       ))
+                    ) : category.trim() !== "" ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCategory(category.trim());
+                          setShowSubjectDropdown(false);
+                        }}
+                        className="block w-full px-3 py-2 text-left text-sm text-primary hover:bg-secondary"
+                      >
+                        Create "{category.trim()}"
+                      </button>
                     ) : (
                       <div className="px-3 py-2 text-sm text-muted-foreground">
                         No matching subjects found
@@ -390,10 +437,9 @@ const CreatePostModal = ({
                     <div className="flex min-w-0 items-center gap-2">
                       <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                       <span className="truncate text-sm text-foreground">
-                        {fileName}
+                        {displayFileName} {/* ← changed */}
                       </span>
                     </div>
-
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
@@ -401,19 +447,6 @@ const CreatePostModal = ({
                         className="text-xs text-primary hover:underline"
                       >
                         Change
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedFile(null);
-                          setFileName("");
-                          setRemoveFile(true); // mark for removal
-                          if (fileInputRef.current) {
-                            fileInputRef.current.value = "";
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
