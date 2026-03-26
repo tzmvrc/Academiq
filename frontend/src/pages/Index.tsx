@@ -499,10 +499,15 @@ const Index = () => {
                 if (!d) return null;
 
                 return (
-                  <Link
-                    to={`/post/${d.id}`}
+                  <div
+                    onClick={() => navigate(`/post/${d.id}`)}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && navigate(`/post/${d.id}`)
+                    }
+                    role="link"
+                    tabIndex={0}
                     key={d.id ?? idx}
-                    className="block"
+                    className="block cursor-pointer"
                   >
                     <DiscussionCard
                       {...d}
@@ -512,7 +517,7 @@ const Index = () => {
                       onUnvote={() => handleUnvoteForum(d.id!)}
                       onSave={() => handleSaveForum(d.id!)}
                     />
-                  </Link>
+                  </div>
                 );
               })}
 

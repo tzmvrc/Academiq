@@ -554,7 +554,7 @@ const PostDetails = () => {
     // --- New comment ---
     const onCommentCreated = (comment: BackendComment) => {
       if (comment.forum_id !== id) return;
-
+      if (CURRENT_USER.id === comment.user_id) return;
       setComments((prev) => {
         // Avoid adding duplicate (from optimistic update)
         if (commentExists(prev, comment.id)) return prev;
@@ -677,6 +677,7 @@ const PostDetails = () => {
         user_id: created.user_id,
         author: created.users?.name || CURRENT_USER.name,
         initials: getInitials(created.users?.name || CURRENT_USER.name),
+        profileUrl: created.users?.profile_url || CURRENT_USER.profileUrl,
         timestamp: formatElapsedTime(created.created_at),
         originalCreatedAt: created.created_at,
         text: created.content,
@@ -895,6 +896,7 @@ const PostDetails = () => {
         user_id: created.user_id,
         author: created.users?.name || CURRENT_USER.name,
         initials: getInitials(created.users?.name || CURRENT_USER.name),
+        profileUrl: created.users?.profile_url || CURRENT_USER.profileUrl,
         timestamp: formatElapsedTime(created.created_at),
         originalCreatedAt: created.created_at,
         text: created.content,
@@ -1432,16 +1434,21 @@ const PostDetails = () => {
           </div>
 
           <div className="divide-y divide-border">
-            {comments.map((comment) => (
-              <CommentComponent
-                key={comment.id}
-                comment={comment}
-                onEdit={handleEditComment}
-                onDelete={handleDeleteComment}
-                onVote={handleVoteComment}
-                onReply={handleReplyToComment}
-              />
-            ))}
+            {comments
+              .filter(
+                (comment, index, self) =>
+                  index === self.findIndex((c) => c.id === comment.id),
+              )
+              .map((comment) => (
+                <CommentComponent
+                  key={comment.id}
+                  comment={comment}
+                  onEdit={handleEditComment}
+                  onDelete={handleDeleteComment}
+                  onVote={handleVoteComment}
+                  onReply={handleReplyToComment}
+                />
+              ))}
           </div>
         </div>
       </motion.article>
