@@ -1,3 +1,4 @@
+// app/app.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -28,8 +29,4 @@ app.get("/", (req, res) => {
   res.send("Academiq Backend is running!");
 });
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server running on port ${process.env.PORT}`);
-});
-
-export default app;
+export default app; // ✅ no app.listen() here

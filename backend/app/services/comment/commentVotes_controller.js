@@ -1,83 +1,100 @@
 import { VotesModel } from "../../models/votes_model.js";
+import { getIO } from "../../middlewares/socket.js";
 
 export const CommentVotesController = {
   // POST /api/comments/:id/vote
   async voteComment(req, res) {
-    try {
-      const userId = req.user?.id;
-      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-      const commentId = req.params.id;
-      const voteTypeNum = Number(req.body?.voteType);
+    const commentId = req.params.id;
+    const voteTypeNum = Number(req.body?.voteType);
 
-      if (voteTypeNum !== 1 && voteTypeNum !== -1) {
-        return res.status(400).json({ error: "voteType must be 1 or -1" });
-      }
-
-      const { data: voteRow, error } = await VotesModel.setVote(
-        userId,
-        "comment",
-        commentId,
-        voteTypeNum,
-      );
-
-      if (error) {
-        console.error("VotesModel.setVote error:", error);
-        return res
-          .status(500)
-          .json({ error: "Failed to save vote", details: error.message });
-      }
-
-      // Fetch updated vote count
-      const { data: voteCount } = await VotesModel.getVoteCount(
-        "comment",
-        commentId,
-      );
-
-      res.json({
-        voteType: voteRow.vote_type,
-        voteCount: voteCount || { upvotes: 0, downvotes: 0 },
-        message: "Vote saved",
-      });
-    } catch (err) {
-      console.error("Vote Comment Error:", err);
-      res
-        .status(500)
-        .json({ error: "Failed to vote on comment", details: err.message });
+    if (voteTypeNum !== 1 && voteTypeNum !== -1) {
+      return res.status(400).json({ error: "voteType must be 1 or -1" });
     }
-  },
+
+    const { data: voteRow, error } = await VotesModel.setVote(
+      userId,
+      "comment",
+      commentId,
+      voteTypeNum,
+    );
+
+    if (error) {
+      console.error("VotesModel.setVote error:", error);
+      return res.status(500).json({ error: "Failed to save vote", details: error.message });
+    }
+
+    // Fetch updated vote count
+    const { data: voteCount } = await VotesModel.getVoteCount("comment", commentId);
+
+    // ---- Emit real-time event ----
+    // First, get the comment to know its forum_id
+    const { data: comment, error: fetchErr } = await CommentModel.findById(commentId);
+    if (!fetchErr && comment) {
+      const io = getIO();
+      io.to(`post:${comment.forum_id}`).emit('comment_voted', {
+        commentId,
+        voteType: voteRow.vote_type,
+        upvotes: voteCount?.upvotes || 0,
+        downvotes: voteCount?.downvotes || 0,
+        userId,
+      });
+    }
+    // ------------------------------
+
+    res.json({
+      voteType: voteRow.vote_type,
+      voteCount: voteCount || { upvotes: 0, downvotes: 0 },
+      message: "Vote saved",
+    });
+  } catch (err) {
+    console.error("Vote Comment Error:", err);
+    res.status(500).json({ error: "Failed to vote on comment", details: err.message });
+  }
+},
 
   // DELETE /api/comments/:id/vote
   async unvoteComment(req, res) {
-    try {
-      const userId = req.user?.id;
-      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-      const commentId = req.params.id;
+    const commentId = req.params.id;
 
-      const { error } = await VotesModel.removeVote(
-        userId,
-        "comment",
+    const { error } = await VotesModel.removeVote(userId, "comment", commentId);
+    if (error) throw error;
+
+    // Fetch updated vote count
+    const { data: voteCount } = await VotesModel.getVoteCount("comment", commentId);
+
+    // ---- Emit real-time event ----
+    // Get comment to know forum_id
+    const { data: comment, error: fetchErr } = await CommentModel.findById(commentId);
+    if (!fetchErr && comment) {
+      const io = getIO();
+      io.to(`post:${comment.forum_id}`).emit('comment_voted', {
         commentId,
-      );
-      if (error) throw error;
-
-      // Fetch updated vote count
-      const { data: voteCount } = await VotesModel.getVoteCount(
-        "comment",
-        commentId,
-      );
-
-      res.json({
         voteType: null,
-        voteCount: voteCount || { upvotes: 0, downvotes: 0 },
-        message: "Vote removed",
+        upvotes: voteCount?.upvotes || 0,
+        downvotes: voteCount?.downvotes || 0,
+        userId,
       });
-    } catch (err) {
-      console.error("Unvote Comment Error:", err);
-      res.status(500).json({ error: "Failed to remove vote" });
     }
-  },
+    // ------------------------------
+
+    res.json({
+      voteType: null,
+      voteCount: voteCount || { upvotes: 0, downvotes: 0 },
+      message: "Vote removed",
+    });
+  } catch (err) {
+    console.error("Unvote Comment Error:", err);
+    res.status(500).json({ error: "Failed to remove vote" });
+  }
+},
 
   // GET /api/comments/:id/my-vote
   async getMyVote(req, res) {

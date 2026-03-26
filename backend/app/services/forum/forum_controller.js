@@ -43,17 +43,66 @@ const uploadForumAttachment = async (file, userId) => {
 
 export const ForumsController = {
   // GET /api/forums
-  async getAllForums(req, res) {
-    try {
+  // In ForumsController.getAllForums
+
+async getAllForums(req, res) {
+  try {
+    const { topic } = req.query; // e.g., ?topic=artificial-intelligence
+
+    let forumsData = [];
+
+    if (topic) {
+      // 1. Find the topic by its slug
+      const { data: topicData, error: topicError } = await supabase
+        .from("topics")
+        .select("id")
+        .eq("slug", topic)
+        .single();
+
+      if (topicError || !topicData) {
+        // Topic not found → return empty array
+        return res.json({ forums: [] });
+      }
+
+      // 2. Get forum IDs that have this topic
+      const { data: forumTopics, error: ftError } = await supabase
+        .from("forum_topics")
+        .select("forum_id")
+        .eq("topic_id", topicData.id);
+
+      if (ftError) throw ftError;
+
+      const forumIds = forumTopics.map(ft => ft.forum_id);
+      if (forumIds.length === 0) {
+        return res.json({ forums: [] });
+      }
+
+      // 3. Fetch the forums with all related data
+      const { data: forums, error: forumsError } = await supabase
+        .from("forums")
+        .select(`
+          *,
+          users (id, name, profile_url),
+          subjects (id, name)
+        `)
+        .in("id", forumIds)
+        .order("created_at", { ascending: false });
+
+      if (forumsError) throw forumsError;
+      forumsData = forums;
+    } else {
+      // No topic filter – return all forums
       const { data, error } = await ForumModel.findAll();
       if (error) throw error;
-
-      res.json({ forums: data });
-    } catch (err) {
-      console.error("Get Forums Error:", err);
-      res.status(500).json({ error: "Failed to fetch forums" });
+      forumsData = data;
     }
-  },
+
+    res.json({ forums: forumsData });
+  } catch (err) {
+    console.error("Get Forums Error:", err);
+    res.status(500).json({ error: "Failed to fetch forums" });
+  }
+},
 
   // GET /api/forums/:id
   async getForumById(req, res) {

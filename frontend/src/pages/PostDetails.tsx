@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useSocket } from "@/components/SocketContext";
 import {
   ArrowLeft,
   ArrowBigUp,
@@ -32,7 +33,9 @@ interface Comment {
   user_id?: string;
   author: string;
   initials: string;
+  profileUrl?: string | null;
   timestamp: string;
+  originalCreatedAt: string;
   text: string;
   upvotes: number;
   downvotes: number;
@@ -101,6 +104,7 @@ const getCurrentUser = () => {
         id: parsed?.id || parsed?.user_id || null,
         name: parsed?.name || "You",
         initials: getInitials(parsed?.name || "You"),
+        profileUrl: parsed?.profile_url || null,
       };
     }
 
@@ -137,7 +141,9 @@ const buildCommentTree = (
       user_id: comment.user_id,
       author: comment.users?.name || "Unknown User",
       initials: getInitials(comment.users?.name),
+      profileUrl: comment.users?.profile_url || null,
       timestamp: formatElapsedTime(comment.created_at),
+      originalCreatedAt: comment.created_at, // <-- new
       text: comment.content,
       upvotes: comment.upvotes_count || 0,
       downvotes: comment.downvotes_count || 0,
@@ -295,7 +301,19 @@ const CommentComponent = ({
         <div className="flex items-start gap-2 sm:gap-3">
           <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
             <span className="text-[10px] sm:text-xs font-semibold text-primary">
-              {comment.initials}
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 overflow-hidden">
+                {comment.profileUrl ? (
+                  <img
+                    src={comment.profileUrl}
+                    alt={comment.author}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-[10px] sm:text-xs font-semibold text-primary">
+                    {comment.initials}
+                  </span>
+                )}
+              </div>
             </span>
           </div>
 
@@ -509,6 +527,138 @@ const PostDetails = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const { socket } = useSocket();
+
+  // Socket listeners
+  useEffect(() => {
+    if (!socket || !id) return;
+
+    // Join the room for this post
+    if (socket.connected) {
+      socket.emit("join_post_room", id);
+    } else {
+      socket.once("connect", () => {
+        socket.emit("join_post_room", id);
+      });
+    }
+
+    // Helper to check if a comment already exists (prevents duplicates)
+    const commentExists = (list: Comment[], targetId: string): boolean => {
+      for (const c of list) {
+        if (c.id === targetId) return true;
+        if (c.replies && commentExists(c.replies, targetId)) return true;
+      }
+      return false;
+    };
+
+    // --- New comment ---
+    const onCommentCreated = (comment: BackendComment) => {
+      if (comment.forum_id !== id) return;
+
+      setComments((prev) => {
+        // Avoid adding duplicate (from optimistic update)
+        if (commentExists(prev, comment.id)) return prev;
+
+        const newComment: Comment = {
+          id: comment.id,
+          user_id: comment.user_id,
+          author: comment.users?.name || "Unknown User",
+          initials: getInitials(comment.users?.name),
+          profileUrl: comment.users?.profile_url || null,
+          timestamp: formatElapsedTime(comment.created_at),
+          originalCreatedAt: comment.created_at,
+          text: comment.content,
+          upvotes: comment.upvotes_count || 0,
+          downvotes: comment.downvotes_count || 0,
+          myVote: null,
+          isVerified: false,
+          isAuthor: CURRENT_USER.id === comment.user_id,
+          replies: [],
+        };
+
+        if (comment.parent_comment_id) {
+          // Insert as reply
+          const insertReply = (list: Comment[]): Comment[] =>
+            list.map((c) => {
+              if (c.id === comment.parent_comment_id) {
+                return { ...c, replies: [...(c.replies || []), newComment] };
+              }
+              if (c.replies) {
+                return { ...c, replies: insertReply(c.replies) };
+              }
+              return c;
+            });
+          return insertReply(prev);
+        } else {
+          // Top-level comment
+          return [newComment, ...prev];
+        }
+      });
+
+      setPostData((prev: any) => ({
+        ...prev,
+        comments: (prev?.comments || 0) + 1,
+      }));
+    };
+
+    // --- Edit comment ---
+    const onCommentUpdated = (updated: BackendComment) => {
+      if (updated.forum_id !== id) return;
+
+      setComments((prev) =>
+        updateCommentInTree(prev, updated.id, (c) => ({
+          ...c,
+          text: updated.content,
+          upvotes: updated.upvotes_count || 0,
+          downvotes: updated.downvotes_count || 0,
+        })),
+      );
+    };
+
+    // --- Delete comment ---
+    const onCommentDeleted = (data: { commentId: string; forumId: string }) => {
+      if (data.forumId !== id) return;
+
+      setComments((prev) => deleteCommentFromTree(prev, data.commentId));
+      setPostData((prev: any) => ({
+        ...prev,
+        comments: Math.max((prev?.comments || 1) - 1, 0),
+      }));
+    };
+
+    // --- Vote on comment ---
+    const onCommentVoted = (data: {
+      commentId: string;
+      voteType: 1 | -1 | null;
+      upvotes: number;
+      downvotes: number;
+      userId: string;
+    }) => {
+      setComments((prev) =>
+        updateCommentInTree(prev, data.commentId, (c) => ({
+          ...c,
+          upvotes: data.upvotes,
+          downvotes: data.downvotes,
+          myVote: data.userId === CURRENT_USER.id ? data.voteType : c.myVote,
+        })),
+      );
+    };
+
+    // Register listeners
+    socket.on("comment_created", onCommentCreated);
+    socket.on("comment_updated", onCommentUpdated);
+    socket.on("comment_deleted", onCommentDeleted);
+    socket.on("comment_voted", onCommentVoted);
+
+    // Cleanup on unmount
+    return () => {
+      socket.off("comment_created", onCommentCreated);
+      socket.off("comment_updated", onCommentUpdated);
+      socket.off("comment_deleted", onCommentDeleted);
+      socket.off("comment_voted", onCommentVoted);
+      socket.emit("leave_post_room", id);
+    };
+  }, [socket, id]);
 
   const handleReplyToComment = async (
     parentCommentId: string,
@@ -528,6 +678,7 @@ const PostDetails = () => {
         author: created.users?.name || CURRENT_USER.name,
         initials: getInitials(created.users?.name || CURRENT_USER.name),
         timestamp: formatElapsedTime(created.created_at),
+        originalCreatedAt: created.created_at,
         text: created.content,
         upvotes: created.upvotes_count || 0,
         downvotes: created.downvotes_count || 0,
@@ -628,6 +779,7 @@ const PostDetails = () => {
         title: forum.title,
         author: forum.users?.name || "Unknown User",
         authorInitials: getInitials(forum.users?.name),
+        authorProfileUrl: forum.users?.profile_url || null,
         university: forum.subjects?.name || "General",
         field: "",
         content: forum.content,
@@ -641,7 +793,14 @@ const PostDetails = () => {
       };
 
       setPostData(mappedPost);
-      setComments(buildCommentTree(commentsWithVoteState, CURRENT_USER.id));
+      const tree = buildCommentTree(commentsWithVoteState, CURRENT_USER.id);
+      // Sort top-level comments by originalCreatedAt descending (newest first)
+      tree.sort(
+        (a, b) =>
+          new Date(b.originalCreatedAt).getTime() -
+          new Date(a.originalCreatedAt).getTime(),
+      );
+      setComments(tree);
 
       if (saveRes?.data) {
         setSaved(!!saveRes.data.saved);
@@ -737,6 +896,7 @@ const PostDetails = () => {
         author: created.users?.name || CURRENT_USER.name,
         initials: getInitials(created.users?.name || CURRENT_USER.name),
         timestamp: formatElapsedTime(created.created_at),
+        originalCreatedAt: created.created_at,
         text: created.content,
         upvotes: created.upvotes_count || 0,
         downvotes: created.downvotes_count || 0,
@@ -1051,7 +1211,19 @@ const PostDetails = () => {
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center">
               <span className="text-xs sm:text-sm font-semibold text-primary">
-                {postData.authorInitials}
+                <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                  {postData.authorProfileUrl ? (
+                    <img
+                      src={postData.authorProfileUrl}
+                      alt={postData.author}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-xs sm:text-sm font-semibold text-primary">
+                      {postData.authorInitials}
+                    </span>
+                  )}
+                </div>
               </span>
             </div>
             <div>
@@ -1223,7 +1395,19 @@ const PostDetails = () => {
           <div className="flex gap-2 sm:gap-3 mb-6">
             <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <span className="text-[10px] sm:text-xs font-semibold text-primary">
-                {CURRENT_USER.initials}
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                  {CURRENT_USER.profileUrl ? (
+                    <img
+                      src={CURRENT_USER.profileUrl}
+                      alt={CURRENT_USER.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-[10px] sm:text-xs font-semibold text-primary">
+                      {CURRENT_USER.initials}
+                    </span>
+                  )}
+                </div>
               </span>
             </div>
             <div className="flex-1 min-w-0">

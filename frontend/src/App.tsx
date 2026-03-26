@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import SocketProvider from "@/components/SocketContext"; // already imported
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   BrowserRouter,
@@ -183,7 +184,7 @@ const AppRoutes = () => {
         />
 
         <Route
-          path="/acad-chat"
+          path="/open-forum"
           element={
             <ProtectedRoute>
               <SecretChat />
@@ -211,7 +212,10 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <AppRoutes />
+            {/* Wrap AppRoutes with SocketProvider */}
+            <SocketProvider>
+              <AppRoutes />
+            </SocketProvider>
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>

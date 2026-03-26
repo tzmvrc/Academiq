@@ -88,29 +88,25 @@ const Index = () => {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  // Load forums – pass topicFilter to backend
   useEffect(() => {
     const loadForums = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        const fetchedForums = await forumService.getAllForums();
+        const fetchedForums = await forumService.getAllForums(
+          topicFilter || undefined,
+        );
 
         const forumsWithSavedState = await Promise.all(
           fetchedForums.map(async (forum) => {
             if (!forum.id) return { ...forum, isSaved: false };
-
             try {
               const saveRes = await forumService.getSaveStatus(forum.id);
-              return {
-                ...forum,
-                isSaved: !!saveRes.saved,
-              };
+              return { ...forum, isSaved: !!saveRes.saved };
             } catch {
-              return {
-                ...forum,
-                isSaved: false,
-              };
+              return { ...forum, isSaved: false };
             }
           }),
         );
@@ -125,8 +121,9 @@ const Index = () => {
     };
 
     loadForums();
-  }, []);
+  }, [topicFilter]); // <- correct, no stray slash
 
+  // Load topics for "Topics You May Like"
   useEffect(() => {
     const loadTopics = async () => {
       try {
@@ -190,7 +187,6 @@ const Index = () => {
       subject: data.category,
       file: data.file,
     });
-    // Redirect to the new post
     navigate(`/post/${newForum.id}`);
   };
 
@@ -285,15 +281,12 @@ const Index = () => {
     }
   };
 
+  // Directly use forums (already filtered by backend)
   const allDiscussions = forums;
-  const filteredDiscussions = topicFilter
-    ? allDiscussions.filter((d) =>
-        d.tag.toLowerCase().includes(topicFilter.toLowerCase()),
-      )
-    : allDiscussions;
 
+  // Build feed items: every third post (index 2) we insert the people section
   const feedItems: { type: "post" | "people"; index: number }[] = [];
-  filteredDiscussions.forEach((_, i) => {
+  allDiscussions.forEach((_, i) => {
     feedItems.push({ type: "post", index: i });
     if (i === 2) feedItems.push({ type: "people", index: 0 });
   });
@@ -499,11 +492,10 @@ const Index = () => {
           ) : (
             <>
               {feedItems.map((item, idx) => {
-                if (item.type === "people") {
+                if (item.type === "people")
                   return <PeopleSection key="people-section" />;
-                }
 
-                const d = filteredDiscussions[item.index];
+                const d = allDiscussions[item.index];
                 if (!d) return null;
 
                 return (
@@ -524,17 +516,21 @@ const Index = () => {
                 );
               })}
 
-              {filteredDiscussions.length === 0 && (
+              {allDiscussions.length === 0 && !isLoading && (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">
-                    No discussions found for "{topicFilter}".
+                    {topicFilter
+                      ? `No discussions found for "${topicFilter}".`
+                      : "No discussions yet. Create the first post!"}
                   </p>
-                  <button
-                    onClick={() => setSearchParams({})}
-                    className="text-primary hover:underline text-sm mt-2"
-                  >
-                    View all discussions
-                  </button>
+                  {topicFilter && (
+                    <button
+                      onClick={() => setSearchParams({})}
+                      className="text-primary hover:underline text-sm mt-2"
+                    >
+                      View all discussions
+                    </button>
+                  )}
                 </div>
               )}
             </>
