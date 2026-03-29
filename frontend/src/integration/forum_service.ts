@@ -1,3 +1,5 @@
+// src/integration/forum_service.ts
+
 import axiosInstance from "./axiosInstance";
 
 export interface ForumResponse {
@@ -14,15 +16,24 @@ export interface ForumResponse {
   downvotes_count: number;
   created_at: string;
   updated_at?: string;
-  users: {
+  user: {
     id: string;
     name: string;
     profile_url?: string;
+    school?: string;
   };
-  subjects: {
+  subject: {
     id: string;
     name: string;
   };
+  tags?: Tag[]; // added
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  slug?: string;
+  usage_count?: number;
 }
 
 export interface DiscussionCardProps {
@@ -31,14 +42,16 @@ export interface DiscussionCardProps {
   author: string;
   authorInitials: string;
   authorProfileUrl?: string;
-  field: string;
+  authorSchool?: string;
+  field: string; // subject name
+  tags?: Tag[]; // array of tags
   preview: string;
   aiSummary: string;
   upvotes: number;
   documentUrl?: string | null;
   downvotes: number;
   comments: number;
-  tag: string;
+  tag: string; // keep for backward compatibility? Actually we might remove and use field+tags
   isOwn: boolean;
   isSaved?: boolean;
   userVoteState?: 1 | -1 | null;
@@ -63,25 +76,24 @@ const getInitials = (name: string): string => {
     .substring(0, 2);
 };
 
+// Transform a raw forum from the API into a DiscussionCardProps object
 const transformForumToDiscussion = (
-  forum: Partial<ForumResponse> & {
-    id: string;
-    title: string;
-    content: string;
-  },
+  forum: ForumResponse,
   currentUserId?: string,
   userVoteState?: 1 | -1 | null,
 ): DiscussionCardProps => {
-  const authorName = forum.users?.name || "Unknown User";
-  const subjectName = forum.subjects?.name || "General";
+  const authorName = forum.user?.name || "Unknown User";
+  const subjectName = forum.subject?.name || "General";
 
   return {
     id: forum.id,
     title: forum.title,
     author: authorName,
     authorInitials: getInitials(authorName),
-    authorProfileUrl: forum.users?.profile_url,
+    authorProfileUrl: forum.user?.profile_url,
+    authorSchool: forum.user?.school || "",
     field: subjectName,
+    tags: forum.tags || [],
     preview:
       (forum.content || "").substring(0, 150) +
       ((forum.content || "").length > 150 ? "..." : ""),
@@ -99,9 +111,18 @@ const transformForumToDiscussion = (
 };
 
 export const forumService = {
-  async getAllForums(): Promise<DiscussionCardProps[]> {
+  // Get all forums with optional filtering by subject or tag
+  async getAllForums(params?: {
+    subjectId?: string;
+    tagId?: string;
+  }): Promise<DiscussionCardProps[]> {
     try {
-      const response = await axiosInstance.get("/forums");
+      const query = new URLSearchParams();
+      if (params?.subjectId) query.append("subjectId", params.subjectId);
+      if (params?.tagId) query.append("tagId", params.tagId);
+      const url = query.toString() ? `/forums?${query}` : "/forums";
+
+      const response = await axiosInstance.get(url);
       const currentUser = localStorage.getItem("user");
       const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
 
@@ -173,7 +194,7 @@ export const forumService = {
     content: string;
     subject_id?: string;
     subject?: string;
-    topicIds?: string[];
+    tagIds?: string[];
     file?: File;
   }): Promise<DiscussionCardProps> {
     try {
@@ -184,26 +205,21 @@ export const forumService = {
       if (data.subject) {
         formData.append("subject", data.subject);
       }
-
       if (data.subject_id) {
         formData.append("subject_id", data.subject_id);
       }
-
-      if (data.topicIds?.length) {
-        formData.append("topicIds", JSON.stringify(data.topicIds));
+      if (data.tagIds?.length) {
+        formData.append("tagIds", JSON.stringify(data.tagIds));
       }
-
       if (data.file) {
         formData.append("attachment", data.file);
       }
 
       const response = await axiosInstance.post("/forums", formData);
-
       const currentUser = localStorage.getItem("user");
       const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
 
       const createdForum = response.data?.forum;
-
       if (!createdForum?.id) {
         throw new Error("Created forum ID was not returned by the API");
       }
@@ -211,7 +227,6 @@ export const forumService = {
       const fullForumResponse = await axiosInstance.get(
         `/forums/${createdForum.id}`,
       );
-
       return transformForumToDiscussion(
         fullForumResponse.data.forum,
         currentUserId,
@@ -229,9 +244,9 @@ export const forumService = {
       content: string;
       subject_id?: string;
       subject?: string;
-      topicIds?: string[];
+      tagIds?: string[];
       file?: File;
-      removeAttachment?: boolean; // new
+      removeAttachment?: boolean;
     },
   ): Promise<DiscussionCardProps> {
     try {
@@ -242,38 +257,31 @@ export const forumService = {
       if (data.subject) {
         formData.append("subject", data.subject);
       }
-
       if (data.subject_id) {
         formData.append("subject_id", data.subject_id);
       }
-
-      if (data.topicIds?.length) {
-        formData.append("topicIds", JSON.stringify(data.topicIds));
+      if (data.tagIds?.length) {
+        formData.append("tagIds", JSON.stringify(data.tagIds));
       }
-
       if (data.file) {
         formData.append("attachment", data.file);
       }
+      if (data.removeAttachment) {
+        formData.append("removeAttachment", "true");
+      }
 
       const response = await axiosInstance.put(`/forums/${id}`, formData);
-
       const currentUser = localStorage.getItem("user");
       const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
 
       const updatedForum = response.data?.forum;
-
       if (!updatedForum?.id) {
         throw new Error("Updated forum ID was not returned by the API");
-      }
-
-      if (data.removeAttachment) {
-        formData.append("removeAttachment", "true");
       }
 
       const fullForumResponse = await axiosInstance.get(
         `/forums/${updatedForum.id}`,
       );
-
       return transformForumToDiscussion(
         fullForumResponse.data.forum,
         currentUserId,

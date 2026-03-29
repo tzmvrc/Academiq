@@ -19,6 +19,9 @@ const client = new OAuth2Client(
   "http://localhost:8080",
 );
 
+// Helper: convert name to uppercase (e.g., "John Doe" -> "JOHN DOE")
+const toUpperCaseName = (name) => name?.toUpperCase().trim() || "";
+
 // Generate JWT
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: "7d" });
@@ -72,6 +75,9 @@ export const AuthController = {
       const payload = ticket.getPayload();
       const { sub: google_id, email, name, picture } = payload;
 
+      // Uppercase the name
+      const upperName = toUpperCaseName(name);
+
       // Extract domain
       const domainParts = email.split("@")[1].split(".");
       const rootDomain =
@@ -112,13 +118,16 @@ export const AuthController = {
           if (!user.google_id) {
             await UserModel.updateGoogleId(user.id, google_id);
           }
-
+          // Also update name to uppercase if it changed?
+          if (user.name !== upperName) {
+            await UserModel.update(user.id, { name: upperName });
+          }
           user = await UserModel.findById(user.id);
         } else {
           user = await UserModel.create({
             email,
             google_id,
-            name,
+            name: upperName, // uppercase
             profile_url: picture,
             school_id: school.id,
             onboarding_completed: false,
@@ -441,11 +450,14 @@ export const AuthController = {
       // STEP 5 — Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
+      // Uppercase the name
+      const upperName = toUpperCaseName(name);
+
       // STEP 6 — Create user
       const user = await UserModel.create({
         email,
         password: hashedPassword,
-        name,
+        name: upperName, // uppercase
         school_id: school.id,
         onboarding_completed: false, // new user must do onboarding
       });

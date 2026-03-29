@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowBigUp,
   ArrowBigDown,
@@ -7,17 +8,25 @@ import {
   BookmarkCheck,
   Sparkles,
   FileText,
+  Hash,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import AIBadge from "./AIBadge";
+
+interface Tag {
+  id: string;
+  name: string;
+}
 
 interface DiscussionCardProps {
   id?: string;
   title: string;
   author: string;
+  authorSchool?: string;
   authorInitials: string;
   authorProfileUrl?: string;
-  field: string;
+  field: string; // subject name
+  tags?: Tag[]; // array of tags
   preview: string;
   aiSummary?: string;
   documentUrl?: string;
@@ -28,32 +37,28 @@ interface DiscussionCardProps {
   isSaved?: boolean;
   isVerified?: boolean;
   isAiVerified?: boolean;
-  tag: string;
+  tag: string; // legacy, subject name
   index?: number;
   onVote?: (voteType: 1 | -1) => Promise<void>;
   onUnvote?: () => Promise<void>;
   onSave?: () => Promise<boolean | void>;
+  onTagClick?: (tagId: string) => void; // optional tag click handler
 }
 
 // Format raw filename into a readable display name
 const formatDocumentName = (rawName: string): string => {
-  // Remove common file extensions
   let name = rawName.replace(/\.(pdf|docx?|txt|jpg|png|gif|zip)$/i, "");
-  // Strip leading numbers, dashes, underscores
   name = name.replace(/^[\d\-_]+/, "");
-  // Replace dashes and underscores with spaces
   name = name.replace(/[-_]/g, " ");
-  // Capitalize each word
   name = name.replace(/\b\w/g, (char) => char.toUpperCase());
-  return name || rawName; // fallback to original if result is empty
+  return name || rawName;
 };
 
-// Extract and clean the filename from a URL
 const getFileNameFromUrl = (url: string): string => {
   try {
     const parsed = new URL(url);
     let path = parsed.pathname;
-    path = path.replace(/\/+$/, ""); // remove trailing slashes
+    path = path.replace(/\/+$/, "");
     const segments = path.split("/");
     const lastSegment = segments[segments.length - 1];
     if (lastSegment) {
@@ -62,7 +67,6 @@ const getFileNameFromUrl = (url: string): string => {
     }
     return "document";
   } catch {
-    // Fallback for malformed URLs
     const parts = url.split("/");
     const lastPart = parts[parts.length - 1];
     const cleaned = lastPart.split(/[?#]/)[0];
@@ -75,9 +79,11 @@ const DiscussionCard = ({
   id,
   title,
   author,
+  authorSchool,
   authorInitials,
   authorProfileUrl,
   field,
+  tags = [],
   preview,
   aiSummary,
   documentUrl,
@@ -88,12 +94,14 @@ const DiscussionCard = ({
   isSaved = false,
   isVerified = true,
   isAiVerified,
-  tag,
+  tag: legacyTag, // kept for compatibility
   index = 0,
   onVote,
   onUnvote,
   onSave,
+  onTagClick,
 }: DiscussionCardProps) => {
+  const navigate = useNavigate();
   const [upvoted, setUpvoted] = useState<boolean>(userVoteState === 1);
   const [downvoted, setDownvoted] = useState<boolean>(userVoteState === -1);
   const [saved, setSaved] = useState<boolean>(isSaved);
@@ -104,6 +112,7 @@ const DiscussionCard = ({
 
   const handleUpvote = async (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (isVoting || !onVote || !onUnvote) return;
 
     setIsVoting(true);
@@ -129,6 +138,7 @@ const DiscussionCard = ({
 
   const handleDownvote = async (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (isVoting || !onVote || !onUnvote) return;
 
     setIsVoting(true);
@@ -150,6 +160,7 @@ const DiscussionCard = ({
 
   const handleSave = async (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!onSave) return;
 
     try {
@@ -164,13 +175,21 @@ const DiscussionCard = ({
     }
   };
 
+  const handleTagClick = (tagId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onTagClick) {
+      onTagClick(tagId);
+    } else {
+      navigate(`/feed?tagId=${tagId}`);
+    }
+  };
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08, duration: 0.4 }}
-      className="group rounded-xl border border-border bg-card p-4 sm:p-6 transition-all duration-300 hover:shadow-md hover:border-primary/10 w-full"
-    >
+      className="group rounded-xl border border-border bg-card p-4 sm:p-6 transition-all duration-300 hover:shadow-md hover:border-primary/10 w-full">
       {/* Author row */}
       <div className="flex items-center gap-2 sm:gap-3 mb-3">
         <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
@@ -190,12 +209,14 @@ const DiscussionCard = ({
           <p className="text-sm font-medium text-foreground truncate">
             {author}
           </p>
-          <p className="text-xs text-muted-foreground truncate">{field}</p>
+          <p className="text-xs text-muted-foreground truncate">
+            {authorSchool || "No school"}
+          </p>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {isVerified && isAiVerified && <AIBadge variant="verified" />}
           <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-medium whitespace-nowrap">
-            {tag}
+            {field}
           </span>
         </div>
       </div>
@@ -210,6 +231,21 @@ const DiscussionCard = ({
         {preview}
       </p>
 
+      {/* Tags row */}
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {tags.map((tag) => (
+            <button
+              key={tag.id}
+              onClick={(e) => handleTagClick(tag.id, e)}
+              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs text-primary hover:bg-primary/20 transition-colors">
+              <Hash className="h-2.5 w-2.5" />
+              {tag.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Document Attachment */}
       {documentUrl && (
         <div className="mb-3">
@@ -218,8 +254,7 @@ const DiscussionCard = ({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2 transition-colors hover:bg-muted/50 hover:border-primary/20 group/document"
-          >
+            className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2 transition-colors hover:bg-muted/50 hover:border-primary/20 group/document">
             <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
             <span className="truncate text-sm font-medium text-foreground group-hover/document:text-primary transition-colors">
               {getFileNameFromUrl(documentUrl)}
@@ -244,8 +279,7 @@ const DiscussionCard = ({
       {/* Actions */}
       <div
         className="flex items-center gap-0.5 sm:gap-1"
-        onClick={(e) => e.preventDefault()}
-      >
+        onClick={(e) => e.preventDefault()}>
         <button
           onClick={handleUpvote}
           disabled={isVoting}
@@ -253,8 +287,7 @@ const DiscussionCard = ({
             upvoted
               ? "text-primary bg-primary/10"
               : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-          }`}
-        >
+          }`}>
           <ArrowBigUp className={`h-4 w-4 ${upvoted ? "fill-primary" : ""}`} />
           <span className="text-xs font-semibold">{upvoteCount}</span>
         </button>
@@ -265,8 +298,7 @@ const DiscussionCard = ({
             downvoted
               ? "text-destructive bg-destructive/10"
               : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-          }`}
-        >
+          }`}>
           <ArrowBigDown
             className={`h-4 w-4 ${downvoted ? "fill-destructive" : ""}`}
           />
@@ -282,8 +314,7 @@ const DiscussionCard = ({
             saved
               ? "text-primary bg-primary/10"
               : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-          }`}
-        >
+          }`}>
           {saved ? (
             <BookmarkCheck className="h-4 w-4 fill-primary" />
           ) : (

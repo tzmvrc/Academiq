@@ -1,3 +1,5 @@
+// src/pages/Index.tsx
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -21,83 +23,43 @@ import {
 } from "@/integration/forum_service";
 import axiosInstance from "@/integration/axiosInstance";
 
-type Topic = {
+type TopicItem = {
   id: string;
   name: string;
-  slug?: string;
-  category?: string;
-  icon?: string | null;
-  color?: string | null;
+  type: "subject" | "tag";
 };
 
 const suggestedPeople = [
-  {
-    name: "Dr. Sarah Chen",
-    initials: "SC",
-    university: "MIT",
-    field: "Machine Learning",
-    reputation: 4820,
-  },
-  {
-    name: "Prof. James Rivera",
-    initials: "JR",
-    university: "Harvard",
-    field: "Bioethics",
-    reputation: 3950,
-  },
-  {
-    name: "Dr. Anika Patel",
-    initials: "AP",
-    university: "Caltech",
-    field: "Quantum Computing",
-    reputation: 3640,
-  },
-  {
-    name: "Dr. Emily Zhang",
-    initials: "EZ",
-    university: "Stanford",
-    field: "NLP",
-    reputation: 4150,
-  },
-  {
-    name: "Prof. Yuki Tanaka",
-    initials: "YT",
-    university: "U of Tokyo",
-    field: "Robotics",
-    reputation: 3080,
-  },
-  {
-    name: "Lina Kovacs",
-    initials: "LK",
-    university: "ETH Zürich",
-    field: "PL Theory",
-    reputation: 2870,
-  },
+  // ... keep as before
 ];
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const topicFilter = searchParams.get("topic");
+
+  const subjectId = searchParams.get("subjectId");
+  const tagId = searchParams.get("tagId");
 
   const [followedPeople, setFollowedPeople] = useState<Set<string>>(new Set());
   const [followedTopics, setFollowedTopics] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [forums, setForums] = useState<DiscussionCardProps[]>([]);
-  const [topics, setTopics] = useState<Topic[]>([]);
+  const [topics, setTopics] = useState<TopicItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Load forums – pass topicFilter to backend
+  // Load forums – pass subjectId / tagId to backend
   useEffect(() => {
     const loadForums = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        const fetchedForums = await forumService.getAllForums(
-          topicFilter || undefined,
-        );
+        const filters: { subjectId?: string; tagId?: string } = {};
+        if (subjectId) filters.subjectId = subjectId;
+        if (tagId) filters.tagId = tagId;
+
+        const fetchedForums = await forumService.getAllForums(filters);
 
         const forumsWithSavedState = await Promise.all(
           fetchedForums.map(async (forum) => {
@@ -121,14 +83,34 @@ const Index = () => {
     };
 
     loadForums();
-  }, [topicFilter]); // <- correct, no stray slash
+  }, [subjectId, tagId]);
 
-  // Load topics for "Topics You May Like"
+  // Load subjects and popular tags for "Topics You May Like"
   useEffect(() => {
     const loadTopics = async () => {
       try {
-        const response = await axiosInstance.get("/topics");
-        setTopics(response.data.topics || []);
+        // Fetch subjects (all)
+        const subjectsRes = await axiosInstance.get("/subjects");
+        const subjects = subjectsRes.data.subjects || [];
+
+        // Fetch popular tags (limit 10)
+        const tagsRes = await axiosInstance.get("/tags?sort=popular&limit=10");
+        const tags = tagsRes.data.tags || [];
+
+        // Combine: subjects first, then tags with "#" prefix
+        const combined: TopicItem[] = [
+          ...subjects.map((s: any) => ({
+            id: s.id,
+            name: s.name,
+            type: "subject" as const,
+          })),
+          ...tags.map((t: any) => ({
+            id: t.id,
+            name: t.name,
+            type: "tag" as const,
+          })),
+        ];
+        setTopics(combined);
       } catch (err) {
         console.error("Error loading topics:", err);
       }
@@ -139,6 +121,10 @@ const Index = () => {
 
   const handleNewPost = (newPost: DiscussionCardProps) => {
     setForums((prev) => [newPost, ...prev]);
+  };
+
+  const handleTagClick = (tagId: string) => {
+    setSearchParams({ tagId });
   };
 
   const toggleFollowPerson = (name: string) => {
@@ -155,8 +141,16 @@ const Index = () => {
     });
   };
 
-  const handleTopicClick = (topicValue: string) => {
-    navigate(`/feed?topic=${encodeURIComponent(topicValue)}`);
+  const handleTopicClick = (item: TopicItem) => {
+    if (item.type === "subject") {
+      setSearchParams({ subjectId: item.id });
+    } else {
+      setSearchParams({ tagId: item.id });
+    }
+  };
+
+  const clearFilter = () => {
+    setSearchParams({});
   };
 
   const toggleFollowTopic = (name: string, e: React.MouseEvent) => {
@@ -179,12 +173,14 @@ const Index = () => {
     title: string;
     content: string;
     category: string;
+    tagIds?: string[];
     file?: File;
   }) => {
     const newForum = await forumService.createForum({
       title: data.title,
       content: data.content,
       subject: data.category,
+      tagIds: data.tagIds,
       file: data.file,
     });
     navigate(`/post/${newForum.id}`);
@@ -281,10 +277,8 @@ const Index = () => {
     }
   };
 
-  // Directly use forums (already filtered by backend)
   const allDiscussions = forums;
 
-  // Build feed items: every third post (index 2) we insert the people section
   const feedItems: { type: "post" | "people"; index: number }[] = [];
   allDiscussions.forEach((_, i) => {
     feedItems.push({ type: "post", index: i });
@@ -314,14 +308,12 @@ const Index = () => {
     <div className="flex gap-1">
       <button
         onClick={() => scroll(scrollRef, "left")}
-        className="rounded-full border border-border bg-background p-1 hover:bg-secondary transition-colors"
-      >
+        className="rounded-full border border-border bg-background p-1 hover:bg-secondary transition-colors">
         <ChevronLeft className="h-4 w-4 text-muted-foreground" />
       </button>
       <button
         onClick={() => scroll(scrollRef, "right")}
-        className="rounded-full border border-border bg-background p-1 hover:bg-secondary transition-colors"
-      >
+        className="rounded-full border border-border bg-background p-1 hover:bg-secondary transition-colors">
         <ChevronRight className="h-4 w-4 text-muted-foreground" />
       </button>
     </div>
@@ -339,13 +331,11 @@ const Index = () => {
       <div
         ref={peopleScrollRef}
         className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth"
-        style={{ scrollbarWidth: "thin" }}
-      >
+        style={{ scrollbarWidth: "thin" }}>
         {suggestedPeople.map((person, i) => (
           <div
             key={i}
-            className="shrink-0 w-40 sm:w-44 rounded-xl border border-border bg-background p-3 sm:p-4 text-center hover:shadow-sm hover:border-primary/10 transition-all snap-start"
-          >
+            className="shrink-0 w-40 sm:w-44 rounded-xl border border-border bg-background p-3 sm:p-4 text-center hover:shadow-sm hover:border-primary/10 transition-all snap-start">
             <div className="mx-auto mb-2.5 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-primary/10 flex items-center justify-center">
               <span className="text-xs font-semibold text-primary">
                 {person.initials}
@@ -368,8 +358,7 @@ const Index = () => {
                 followedPeople.has(person.name)
                   ? "bg-secondary text-secondary-foreground"
                   : "bg-primary text-primary-foreground hover:bg-primary/90"
-              }`}
-            >
+              }`}>
               {followedPeople.has(person.name) ? (
                 <>
                   <Check className="h-3 w-3" /> Following
@@ -385,8 +374,7 @@ const Index = () => {
 
         <button
           onClick={() => navigate("/peers")}
-          className="shrink-0 w-40 sm:w-44 rounded-xl border border-dashed border-border bg-background p-3 sm:p-4 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-secondary/30 transition-all snap-start"
-        >
+          className="shrink-0 w-40 sm:w-44 rounded-xl border border-dashed border-border bg-background p-3 sm:p-4 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-secondary/30 transition-all snap-start">
           <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-secondary flex items-center justify-center">
             <ArrowRight className="h-4 w-4" />
           </div>
@@ -398,23 +386,22 @@ const Index = () => {
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8">
-      {!topicFilter && <FeaturedSection />}
+      {!subjectId && !tagId && <FeaturedSection />}
 
-      {topicFilter && (
+      {(subjectId || tagId) && (
         <div className="flex items-center gap-3 mb-6 flex-wrap">
           <h2 className="text-lg sm:text-xl font-heading font-bold text-foreground">
-            {topicFilter} Discussions
+            {subjectId ? "Subject Discussions" : tagId ? "Tag Discussions" : ""}
           </h2>
           <button
-            onClick={() => setSearchParams({})}
-            className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors"
-          >
+            onClick={clearFilter}
+            className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors">
             <X className="h-3 w-3" /> Clear filter
           </button>
         </div>
       )}
 
-      {!topicFilter && (
+      {!subjectId && !tagId && (
         <section className="mb-8 sm:mb-10">
           <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground mb-4">
             Topics You May Like
@@ -428,33 +415,31 @@ const Index = () => {
           <div
             ref={topicsScrollRef}
             className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scroll-smooth"
-            style={{ scrollbarWidth: "thin" }}
-          >
-            {topics.slice(0, 18).map((topic, i) => (
+            style={{ scrollbarWidth: "thin" }}>
+            {topics.slice(0, 18).map((item, i) => (
               <motion.button
-                key={topic.id}
+                key={`${item.type}-${item.id}`}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.03 }}
-                onClick={() => handleTopicClick(topic.slug || topic.name)}
+                onClick={() => handleTopicClick(item)}
                 className={`shrink-0 flex items-center gap-2 rounded-lg border px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium transition-all ${
-                  followedTopics.has(topic.name)
+                  followedTopics.has(item.name)
                     ? "border-primary bg-primary/5 text-primary"
                     : "border-border bg-card text-foreground hover:border-primary/15 hover:shadow-sm"
-                }`}
-              >
-                <span>{topic.name}</span>
+                }`}>
+                {item.type === "tag" && "#"}
+                {item.name}
 
-                {followedTopics.has(topic.name) && (
+                {followedTopics.has(item.name) && (
                   <Check className="h-3.5 w-3.5" />
                 )}
 
                 <span
                   role="button"
-                  onClick={(e) => toggleFollowTopic(topic.name, e)}
-                  className="ml-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {followedTopics.has(topic.name) ? "✓" : "+"}
+                  onClick={(e) => toggleFollowTopic(item.name, e)}
+                  className="ml-1 text-xs text-muted-foreground hover:text-primary transition-colors">
+                  {followedTopics.has(item.name) ? "✓" : "+"}
                 </span>
               </motion.button>
             ))}
@@ -466,13 +451,12 @@ const Index = () => {
         <div className="space-y-4 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground">
-              {topicFilter ? "" : "Latest Discussions"}
+              {subjectId || tagId ? "" : "Latest Discussions"}
             </h2>
 
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
+              className="flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors">
               <Plus className="h-4 w-4" /> New Post
             </button>
           </div>
@@ -507,8 +491,7 @@ const Index = () => {
                     role="link"
                     tabIndex={0}
                     key={d.id ?? idx}
-                    className="block cursor-pointer"
-                  >
+                    className="block cursor-pointer">
                     <DiscussionCard
                       {...d}
                       isSaved={d.isSaved}
@@ -524,15 +507,14 @@ const Index = () => {
               {allDiscussions.length === 0 && !isLoading && (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">
-                    {topicFilter
-                      ? `No discussions found for "${topicFilter}".`
+                    {subjectId || tagId
+                      ? `No discussions found for this filter.`
                       : "No discussions yet. Create the first post!"}
                   </p>
-                  {topicFilter && (
+                  {(subjectId || tagId) && (
                     <button
-                      onClick={() => setSearchParams({})}
-                      className="text-primary hover:underline text-sm mt-2"
-                    >
+                      onClick={clearFilter}
+                      className="text-primary hover:underline text-sm mt-2">
                       View all discussions
                     </button>
                   )}

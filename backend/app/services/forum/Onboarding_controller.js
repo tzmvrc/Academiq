@@ -1,85 +1,87 @@
-import { TopicModel } from "../../models/topic_model.js";
-import { UserTopicsModel } from "../../models/userTopics_model.js";
+import { SubjectModel } from "../../models/subject_model.js";
+import { UserSubjectsModel } from "../../models/userSubjects_model.js";
 import { UserModel } from "../../models/user_model.js";
 
 export const OnboardingController = {
-  // GET /forums/topics
-  async getTopics(req, res) {
+  // GET /onboarding/subjects
+  async getSubjects(req, res) {
     try {
-      const topics = await TopicModel.getAll();
+      const { data: subjects, error } = await SubjectModel.findAll();
+      if (error) throw error;
 
       return res.status(200).json({
-        message: "Topics fetched successfully",
-        topics,
+        message: "Subjects fetched successfully",
+        subjects,
       });
     } catch (error) {
-      console.error("Get Topics Error:", error);
+      console.error("Get Subjects Error:", error);
       return res.status(500).json({
-        error: "Failed to fetch topics",
+        error: "Failed to fetch subjects",
       });
     }
   },
 
-  // GET /forums/my-topics
-  async getMyTopics(req, res) {
+  // GET /onboarding/my-subjects
+  async getMySubjects(req, res) {
     try {
       const userId = req.user.id;
-      const userTopics = await UserTopicsModel.getByUser(userId);
+      const subjects = await UserSubjectsModel.getByUser(userId);
 
       return res.status(200).json({
-        message: "User topics fetched successfully",
-        topics: userTopics,
+        message: "User subjects fetched successfully",
+        subjects,
       });
     } catch (error) {
-      console.error("Get My Topics Error:", error);
+      console.error("Get My Subjects Error:", error);
       return res.status(500).json({
-        error: "Failed to fetch user topics",
+        error: "Failed to fetch user subjects",
       });
     }
   },
 
-  // POST /forums/my-topics
-  async saveTopics(req, res) {
+  // POST /onboarding/my-subjects
+  async saveSubjects(req, res) {
     try {
       const userId = req.user.id;
-      const { topicIds } = req.body;
+      const { subjectIds } = req.body;
 
-      if (!Array.isArray(topicIds)) {
+      if (!Array.isArray(subjectIds)) {
         return res.status(400).json({
-          error: "topicIds must be an array",
+          error: "subjectIds must be an array",
         });
       }
 
-      const uniqueTopicIds = [...new Set(topicIds)];
+      const uniqueSubjectIds = [...new Set(subjectIds)];
 
-      if (uniqueTopicIds.length < 3) {
+      if (uniqueSubjectIds.length < 3) {
         return res.status(400).json({
-          error: "Please select at least 3 topics",
+          error: "Please select at least 3 subjects",
         });
       }
 
-      const validTopics = await TopicModel.findByIds(uniqueTopicIds);
+      // Validate all subject IDs exist
+      const validSubjects = await SubjectModel.findByIds(uniqueSubjectIds);
 
-      if (!validTopics || validTopics.length !== uniqueTopicIds.length) {
+      if (!validSubjects || validSubjects.length !== uniqueSubjectIds.length) {
         return res.status(400).json({
-          error: "One or more selected topics are invalid",
+          error: "One or more selected subjects are invalid",
         });
       }
 
-      await UserTopicsModel.replaceForUser(userId, uniqueTopicIds);
+      await UserSubjectsModel.replaceForUser(userId, uniqueSubjectIds);
       await UserModel.updateOnboardingStatus(userId, true);
 
-      const savedTopics = await UserTopicsModel.getByUser(userId);
+      const savedSubjects = await UserSubjectsModel.getByUser(userId);
 
       return res.status(200).json({
-        message: "Topics saved successfully",
-        topics: savedTopics,
+        message: "Subjects saved successfully",
+        subjects: savedSubjects,
         onboardingRequired: false,
       });
     } catch (error) {
-      console.error("Save Topics Error:", error);
+      console.error("Save Subjects Error:", error);
       return res.status(500).json({
-        error: "Failed to save topics",
+        error: "Failed to save subjects",
       });
     }
   },

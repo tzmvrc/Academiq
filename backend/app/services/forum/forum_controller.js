@@ -1,7 +1,7 @@
 import path from "path";
 import { ForumModel } from "../../models/forum_model.js";
-import { ForumTopicModel } from "../../models/forumTopics_model.js";
 import { SubjectModel } from "../../models/subject_model.js";
+import { TagModel } from "../../models/tag_model.js";
 import { VotesModel } from "../../models/votes_model.js";
 import { supabase } from "../../database/supabase.js";
 
@@ -41,77 +41,99 @@ const uploadForumAttachment = async (file, userId) => {
   return publicUrlData?.publicUrl || null;
 };
 
+// Helper: set tags for a forum and update usage counts
+const setForumTags = async (forumId, newTagIds) => {
+  // Get existing tag IDs
+  const { data: existingRows } = await supabase
+    .from("forum_tags")
+    .select("tag_id")
+    .eq("forum_id", forumId);
+  const existingTagIds = existingRows?.map((row) => row.tag_id) || [];
+
+  // Determine added and removed tags
+  const added = newTagIds.filter((id) => !existingTagIds.includes(id));
+  const removed = existingTagIds.filter((id) => !newTagIds.includes(id));
+
+  // Update forum_tags table
+  if (added.length > 0) {
+    const rows = added.map((tagId) => ({ forum_id: forumId, tag_id: tagId }));
+    const { error: insertError } = await supabase
+      .from("forum_tags")
+      .insert(rows);
+    if (insertError) throw insertError;
+  }
+  if (removed.length > 0) {
+    const { error: deleteError } = await supabase
+      .from("forum_tags")
+      .delete()
+      .eq("forum_id", forumId)
+      .in("tag_id", removed);
+    if (deleteError) throw deleteError;
+  }
+
+  // Update usage counts
+  for (const tagId of added) {
+    await TagModel.updateUsageCount(tagId, 1);
+  }
+  for (const tagId of removed) {
+    await TagModel.updateUsageCount(tagId, -1);
+  }
+};
+
 export const ForumsController = {
   // GET /api/forums
-  // In ForumsController.getAllForums
+  async getAllForums(req, res) {
+    try {
+      const { subjectId, tagId } = req.query;
+      let query = supabase.from("forums").select(`
+      *,
+      user:user_id(id, name, profile_url, school),
+      subject:subject_id(id, name),
+      forum_tags(
+        tag:tag_id(id, name, slug, usage_count)
+      )
+    `);
 
-async getAllForums(req, res) {
-  try {
-    const { topic } = req.query; // e.g., ?topic=artificial-intelligence
-
-    let forumsData = [];
-
-    if (topic) {
-      // 1. Find the topic by its slug
-      const { data: topicData, error: topicError } = await supabase
-        .from("topics")
-        .select("id")
-        .eq("slug", topic)
-        .single();
-
-      if (topicError || !topicData) {
-        // Topic not found → return empty array
-        return res.json({ forums: [] });
+      if (subjectId) {
+        query = query.eq("subject_id", subjectId);
+      }
+      if (tagId) {
+        const { data: forumIds } = await supabase
+          .from("forum_tags")
+          .select("forum_id")
+          .eq("tag_id", tagId);
+        const ids = forumIds.map((ft) => ft.forum_id);
+        if (ids.length === 0) {
+          return res.json({ forums: [] });
+        }
+        query = query.in("id", ids);
       }
 
-      // 2. Get forum IDs that have this topic
-      const { data: forumTopics, error: ftError } = await supabase
-        .from("forum_topics")
-        .select("forum_id")
-        .eq("topic_id", topicData.id);
-
-      if (ftError) throw ftError;
-
-      const forumIds = forumTopics.map(ft => ft.forum_id);
-      if (forumIds.length === 0) {
-        return res.json({ forums: [] });
-      }
-
-      // 3. Fetch the forums with all related data
-      const { data: forums, error: forumsError } = await supabase
-        .from("forums")
-        .select(`
-          *,
-          users (id, name, profile_url),
-          subjects (id, name)
-        `)
-        .in("id", forumIds)
-        .order("created_at", { ascending: false });
-
-      if (forumsError) throw forumsError;
-      forumsData = forums;
-    } else {
-      // No topic filter – return all forums
-      const { data, error } = await ForumModel.findAll();
+      const { data, error } = await query.order("created_at", {
+        ascending: false,
+      });
       if (error) throw error;
-      forumsData = data;
-    }
 
-    res.json({ forums: forumsData });
-  } catch (err) {
-    console.error("Get Forums Error:", err);
-    res.status(500).json({ error: "Failed to fetch forums" });
-  }
-},
+      // Transform to include tags array
+      const forums = data.map((forum) => ({
+        ...forum,
+        tags: (forum.forum_tags || []).map((ft) => ft.tag).filter(Boolean),
+        forum_tags: undefined,
+      }));
+
+      res.json({ forums });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch forums" });
+    }
+  },
 
   // GET /api/forums/:id
   async getForumById(req, res) {
     try {
       const { id } = req.params;
-
       const { data, error } = await ForumModel.findById(id);
       if (error) throw error;
-
       res.json({ forum: data });
     } catch (err) {
       console.error("Get Forum Error:", err);
@@ -145,30 +167,30 @@ async getAllForums(req, res) {
       const userId = req.user?.id;
       if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-      let { topicIds = [], subject, subject_id, title, content } = req.body;
+      // Accept tagIds (instead of topicIds)
+      let { tagIds = [], subject, subject_id, title, content } = req.body;
 
-      if (typeof topicIds === "string") {
+      // Parse tagIds if sent as JSON string
+      if (typeof tagIds === "string") {
         try {
-          topicIds = JSON.parse(topicIds);
+          tagIds = JSON.parse(tagIds);
         } catch {
-          topicIds = [];
+          tagIds = [];
         }
       }
 
       let finalSubjectId = subject_id;
 
+      // Handle subject creation/retrieval if only subject name provided
       if (subject && !subject_id) {
         const { data: foundSubject } = await SubjectModel.findByName(subject);
-
         if (foundSubject) {
           finalSubjectId = foundSubject.id;
         } else {
+          // Create new subject without slug
           const { data: newSubject, error: createErr } = await supabase
             .from("subjects")
-            .insert({
-              name: subject,
-              slug: subject.toLowerCase().replace(/\s+/g, "-"),
-            })
+            .insert({ name: subject })
             .select()
             .single();
 
@@ -187,16 +209,15 @@ async getAllForums(req, res) {
         document_url: uploadedDocumentUrl || null,
       };
 
-      const { data, error } = await ForumModel.create(payload);
+      const { data: forum, error } = await ForumModel.create(payload);
       if (error) throw error;
 
-      if (Array.isArray(topicIds) && topicIds.length > 0) {
-        for (const topicId of topicIds) {
-          await ForumTopicModel.attachTopic(data.id, topicId);
-        }
+      // Attach tags and update usage counts
+      if (Array.isArray(tagIds) && tagIds.length > 0) {
+        await setForumTags(forum.id, tagIds);
       }
 
-      return res.status(201).json({ forum: data });
+      return res.status(201).json({ forum });
     } catch (err) {
       console.error("Create Forum Error:", err);
       return res.status(500).json({ error: "Failed to create forum" });
@@ -216,35 +237,34 @@ async getAllForums(req, res) {
 
       const { data: existingForum, error: existingError } =
         await ForumModel.findById(id);
-
       if (existingError || !existingForum) {
         return res.status(404).json({ error: "Forum not found" });
       }
 
-      let { topicIds, subject, subject_id, category, title, content } =
-        req.body;
+      let { tagIds, subject, subject_id, title, content } = req.body;
 
-      let finalSubjectId =
-        subject_id || existingForum.subject_id || existingForum.subjects?.id;
+      // Parse tagIds if sent as JSON string
+      if (typeof tagIds === "string") {
+        try {
+          tagIds = JSON.parse(tagIds);
+        } catch {
+          tagIds = [];
+        }
+      }
 
-      const subjectName = subject || category;
+      let finalSubjectId = subject_id || existingForum.subject_id;
 
-      if (subjectName && !subject_id) {
-        const { data: foundSubject } =
-          await SubjectModel.findByName(subjectName);
-
+      // Handle subject update if a new subject name is provided
+      if (subject && !subject_id) {
+        const { data: foundSubject } = await SubjectModel.findByName(subject);
         if (foundSubject) {
           finalSubjectId = foundSubject.id;
         } else {
           const { data: newSubject, error: createErr } = await supabase
             .from("subjects")
-            .insert({
-              name: subjectName,
-              slug: subjectName.toLowerCase().replace(/\s+/g, "-"),
-            })
+            .insert({ name: subject })
             .select()
             .single();
-
           if (createErr) throw createErr;
           finalSubjectId = newSubject.id;
         }
@@ -263,10 +283,18 @@ async getAllForums(req, res) {
         );
       }
 
-      const { data, error } = await ForumModel.update(id, updatePayload);
+      const { data: updatedForum, error } = await ForumModel.update(
+        id,
+        updatePayload,
+      );
       if (error) throw error;
 
-      return res.json({ forum: data });
+      // Update tags if tagIds were provided
+      if (tagIds !== undefined) {
+        await setForumTags(id, tagIds);
+      }
+
+      return res.json({ forum: updatedForum });
     } catch (err) {
       console.error("Update Forum Error:", err);
       return res.status(500).json({ error: "Failed to update forum" });
@@ -278,8 +306,21 @@ async getAllForums(req, res) {
     try {
       const { id } = req.params;
 
+      // First, get all tags associated with this forum to decrement usage counts
+      const { data: tags } = await supabase
+        .from("forum_tags")
+        .select("tag_id")
+        .eq("forum_id", id);
+      const tagIds = tags?.map((t) => t.tag_id) || [];
+
+      // Delete forum (this will cascade to forum_tags)
       const { error } = await ForumModel.delete(id);
       if (error) throw error;
+
+      // Decrement usage counts for all tags
+      for (const tagId of tagIds) {
+        await TagModel.updateUsageCount(tagId, -1);
+      }
 
       res.json({ message: "Forum deleted successfully" });
     } catch (err) {

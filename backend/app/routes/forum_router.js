@@ -26,10 +26,16 @@ const upload = multer({
   },
 });
 
-// Get all available topics
-router.get("/topics", authMiddleware, OnboardingController.getTopics);
-router.get("/my-topics", authMiddleware, OnboardingController.getMyTopics);
-router.post("/my-topics", authMiddleware, OnboardingController.saveTopics);
+// Onboarding: subjects (replaces topics)
+router.get("/subjects", authMiddleware, OnboardingController.getSubjects);
+router.get("/my-subjects", authMiddleware, OnboardingController.getMySubjects);
+router.post("/my-subjects", authMiddleware, OnboardingController.saveSubjects);
+
+// Optional: keep old topic routes for backward compatibility (or remove)
+// If you want to remove them, just delete these lines:
+// router.get("/topics", authMiddleware, OnboardingController.getTopics);
+// router.get("/my-topics", authMiddleware, OnboardingController.getMyTopics);
+// router.post("/my-topics", authMiddleware, OnboardingController.saveTopics);
 
 /* -----------------------
    Forums (Public)

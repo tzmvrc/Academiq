@@ -20,6 +20,7 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
+  Hash,
 } from "lucide-react";
 import axiosInstance from "@/integration/axiosInstance";
 import AIBadge from "@/components/AIBadge";
@@ -57,12 +58,16 @@ interface BackendForum {
   upvotes_count?: number;
   downvotes_count?: number;
   created_at: string;
-  users?: {
+  user?: {
+    // changed from 'users' to 'user'
     id?: string;
     name?: string;
     profile_url?: string | null;
+    school?: string;
   } | null;
-  subjects?: {
+  tags?: { id: string; name: string; slug?: string }[];
+  subject?: {
+    // changed from 'subjects' to 'subject'
     id?: string;
     name?: string;
   } | null;
@@ -295,8 +300,7 @@ const CommentComponent = ({
 
   return (
     <div
-      className={`${depth > 0 ? "ml-4 sm:ml-6 pl-3 sm:pl-4 border-l-2 border-border" : ""}`}
-    >
+      className={`${depth > 0 ? "ml-4 sm:ml-6 pl-3 sm:pl-4 border-l-2 border-border" : ""}`}>
       <div className="py-3 sm:py-4">
         <div className="flex items-start gap-2 sm:gap-3">
           <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -336,8 +340,7 @@ const CommentComponent = ({
                 <div className="relative ml-auto">
                   <button
                     onClick={() => setShowMenu(!showMenu)}
-                    className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                  >
+                    className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
                     <MoreHorizontal className="h-4 w-4" />
                   </button>
 
@@ -348,8 +351,7 @@ const CommentComponent = ({
                           setEditing(true);
                           setShowMenu(false);
                         }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
-                      >
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors">
                         <Pencil className="h-3.5 w-3.5" /> Edit
                       </button>
                       <button
@@ -357,8 +359,7 @@ const CommentComponent = ({
                           setShowDeleteConfirm(true);
                           setShowMenu(false);
                         }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-                      >
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors">
                         <Trash2 className="h-3.5 w-3.5" /> Delete
                       </button>
                     </div>
@@ -378,8 +379,7 @@ const CommentComponent = ({
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={handleSaveEdit}
-                    className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
-                  >
+                    className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors">
                     Save
                   </button>
                   <button
@@ -387,8 +387,7 @@ const CommentComponent = ({
                       setEditing(false);
                       setEditText(comment.text);
                     }}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors"
-                  >
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors">
                     Cancel
                   </button>
                 </div>
@@ -406,8 +405,7 @@ const CommentComponent = ({
                   comment.myVote === 1
                     ? "text-primary font-medium"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
+                }`}>
                 <ArrowBigUp
                   className={`h-4 w-4 ${comment.myVote === 1 ? "fill-primary" : ""}`}
                 />
@@ -420,8 +418,7 @@ const CommentComponent = ({
                   comment.myVote === -1
                     ? "text-destructive font-medium"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
+                }`}>
                 <ArrowBigDown
                   className={`h-4 w-4 ${comment.myVote === -1 ? "fill-destructive" : ""}`}
                 />
@@ -430,8 +427,7 @@ const CommentComponent = ({
 
               <button
                 onClick={() => setShowReplyBox((prev) => !prev)}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
                 <Reply className="h-3.5 w-3.5" /> Reply
               </button>
             </div>
@@ -455,15 +451,13 @@ const CommentComponent = ({
                 setShowReplyBox(false);
                 setReplyText("");
               }}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors"
-            >
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors">
               Cancel
             </button>
             <button
               onClick={handleReplySubmit}
               disabled={isSubmittingReply || !replyText.trim()}
-              className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-            >
+              className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
               {isSubmittingReply ? "Replying..." : "Reply"}
             </button>
           </div>
@@ -474,8 +468,7 @@ const CommentComponent = ({
         <>
           <button
             onClick={() => setShowReplies(!showReplies)}
-            className="flex items-center gap-1 text-xs text-primary font-medium ml-9 sm:ml-11 mb-1 hover:underline"
-          >
+            className="flex items-center gap-1 text-xs text-primary font-medium ml-9 sm:ml-11 mb-1 hover:underline">
             {showReplies ? (
               <ChevronUp className="h-3 w-3" />
             ) : (
@@ -749,7 +742,8 @@ const PostDetails = () => {
         await Promise.all(requests);
 
       const forum: BackendForum = forumRes.data?.forum;
-
+      const forumTags = forum.tags || [];
+      const userSchool = forum.user?.school || "";
       const rawComments: BackendComment[] = commentsRes.data?.comments || [];
 
       const commentsWithVoteState = await Promise.all(
@@ -776,21 +770,23 @@ const PostDetails = () => {
         id: forum.id,
         user_id: forum.user_id,
         created_at: forum.created_at,
-        subject_id: forum.subjects?.id || "",
+        subject_id: forum.subject?.id || "",
         title: forum.title,
-        author: forum.users?.name || "Unknown User",
-        authorInitials: getInitials(forum.users?.name),
-        authorProfileUrl: forum.users?.profile_url || null,
-        university: forum.subjects?.name || "General",
+        author: forum.user?.name || "Unknown User",
+        authorInitials: getInitials(forum.user?.name),
+        authorProfileUrl: forum.user?.profile_url || null,
+        authorSchool: userSchool,
+        university: forum.subject?.name || "General",
         field: "",
         content: forum.content,
         aiSummary: forum.ai_summary || "",
         upvotes: forum.upvotes_count || 0,
         downvotes: forum.downvotes_count || 0,
         comments: forum.comments_count || 0,
-        tag: forum.subjects?.name || "General",
+        tag: forum.subject?.name || "General",
         fileName: forum.document_url || "",
         isAiVerified: forum.is_ai_verified || false,
+        tags: forumTags,
       };
 
       setPostData(mappedPost);
@@ -1156,15 +1152,13 @@ const PostDetails = () => {
     <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 sm:py-8">
       <Link
         to="/feed"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
-      >
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6">
         <ArrowLeft className="h-4 w-4" /> Back to Feed
       </Link>
 
       <motion.article
         initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
+        animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <span className="text-xs px-2.5 py-0.5 rounded-full bg-accent/10 text-accent font-medium">
             {postData.tag}
@@ -1175,8 +1169,7 @@ const PostDetails = () => {
             <div className="relative ml-auto">
               <button
                 onClick={() => setShowPostMenu(!showPostMenu)}
-                className="rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-              >
+                className="rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
                 <MoreHorizontal className="h-5 w-5" />
               </button>
               {showPostMenu && (
@@ -1186,8 +1179,7 @@ const PostDetails = () => {
                       setShowEditModal(true);
                       setShowPostMenu(false);
                     }}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
-                  >
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors">
                     <Pencil className="h-3.5 w-3.5" /> Edit Post
                   </button>
                   <button
@@ -1195,8 +1187,7 @@ const PostDetails = () => {
                       setShowDeleteModal(true);
                       setShowPostMenu(false);
                     }}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-                  >
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors">
                     <Trash2 className="h-3.5 w-3.5" /> Delete Post
                   </button>
                 </div>
@@ -1211,22 +1202,18 @@ const PostDetails = () => {
 
         <div className="flex items-start sm:items-center gap-3 mb-6 flex-col sm:flex-row">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-xs sm:text-sm font-semibold text-primary">
-                <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-                  {postData.authorProfileUrl ? (
-                    <img
-                      src={postData.authorProfileUrl}
-                      alt={postData.author}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-xs sm:text-sm font-semibold text-primary">
-                      {postData.authorInitials}
-                    </span>
-                  )}
-                </div>
-              </span>
+            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+              {postData.authorProfileUrl ? (
+                <img
+                  src={postData.authorProfileUrl}
+                  alt={postData.author}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-xs sm:text-sm font-semibold text-primary">
+                  {postData.authorInitials}
+                </span>
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -1240,8 +1227,8 @@ const PostDetails = () => {
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
+                {postData.authorSchool ? `${postData.authorSchool} • ` : ""}
                 {postData.university}
-                {postData.field ? ` · ${postData.field}` : ""}
               </p>
             </div>
           </div>
@@ -1251,28 +1238,6 @@ const PostDetails = () => {
           </div>
         </div>
 
-        <button
-          onClick={() => setShowAiSummary(!showAiSummary)}
-          className="w-full rounded-lg bg-ai-subtle border cursor-pointer border-ai/10 p-3 mb-6 text-left hover:border-ai/20 transition-colors"
-        >
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-ai" />
-            <span className="text-sm font-medium text-ai">AI Summary</span>
-            <ChevronDown
-              className={`h-3.5 w-3.5 text-ai ml-auto transition-transform ${showAiSummary ? "rotate-180" : ""}`}
-            />
-          </div>
-          {showAiSummary && (
-            <motion.p
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="text-sm text-muted-foreground mt-2 leading-relaxed"
-            >
-              {postData.aiSummary || "No AI summary available."}
-            </motion.p>
-          )}
-        </button>
-
         <div className="prose prose-sm max-w-none mb-8">
           {postData.content
             .split("\n\n")
@@ -1281,8 +1246,7 @@ const PostDetails = () => {
                 return (
                   <h2
                     key={i}
-                    className="text-base sm:text-lg font-heading font-semibold text-foreground mt-6 mb-3"
-                  >
+                    className="text-base sm:text-lg font-heading font-semibold text-foreground mt-6 mb-3">
                     {paragraph.replace("## ", "")}
                   </h2>
                 );
@@ -1292,8 +1256,7 @@ const PostDetails = () => {
                     {paragraph.split("\n").map((item: string, j: number) => (
                       <li
                         key={j}
-                        className="text-sm text-foreground/90 leading-relaxed ml-4 list-disc"
-                      >
+                        className="text-sm text-foreground/90 leading-relaxed ml-4 list-disc">
                         {item.replace("- ", "")}
                       </li>
                     ))}
@@ -1314,6 +1277,41 @@ const PostDetails = () => {
             })}
         </div>
 
+        {/* Tags row */}
+        {postData.tags && postData.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {postData.tags.map((tag: { id: string; name: string }) => (
+              <button
+                key={tag.id}
+                onClick={() => navigate(`/feed?tagId=${tag.id}`)}
+                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs text-primary hover:bg-primary/20 transition-colors">
+                <Hash className="h-2.5 w-2.5" />
+                {tag.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <button
+          onClick={() => setShowAiSummary(!showAiSummary)}
+          className="w-full rounded-lg bg-ai-subtle border cursor-pointer border-ai/10 p-3 mb-6 text-left hover:border-ai/20 transition-colors">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-ai" />
+            <span className="text-sm font-medium text-ai">AI Summary</span>
+            <ChevronDown
+              className={`h-3.5 w-3.5 text-ai ml-auto transition-transform ${showAiSummary ? "rotate-180" : ""}`}
+            />
+          </div>
+          {showAiSummary && (
+            <motion.p
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="text-sm text-muted-foreground mt-2 leading-relaxed">
+              {postData.aiSummary || "No AI summary available."}
+            </motion.p>
+          )}
+        </button>
+
         {postData.fileName && (
           <div className="mb-8">
             <h3 className="text-sm font-semibold text-foreground mb-3">
@@ -1324,8 +1322,7 @@ const PostDetails = () => {
                 href={postData.fileName}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 sm:px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:border-primary/20 hover:text-foreground transition-colors cursor-pointer"
-              >
+                className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 sm:px-3 py-2 text-xs sm:text-sm text-muted-foreground hover:border-primary/20 hover:text-foreground transition-colors cursor-pointer">
                 <FileText className="h-4 w-4 text-primary shrink-0" />
                 <span className="truncate">
                   {getFileNameFromUrl(postData.fileName)}
@@ -1342,8 +1339,7 @@ const PostDetails = () => {
               upvoted
                 ? "bg-primary/10 text-primary font-medium"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}
-          >
+            }`}>
             <ArrowBigUp
               className={`h-5 w-5 ${upvoted ? "fill-primary" : ""}`}
             />
@@ -1356,8 +1352,7 @@ const PostDetails = () => {
               downvoted
                 ? "bg-destructive/10 text-destructive font-medium"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}
-          >
+            }`}>
             <ArrowBigDown
               className={`h-5 w-5 ${downvoted ? "fill-destructive" : ""}`}
             />
@@ -1377,8 +1372,7 @@ const PostDetails = () => {
               saved
                 ? "bg-primary/10 text-primary font-medium"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}
-          >
+            }`}>
             {saved ? (
               <BookmarkCheck className="h-4 w-4 fill-primary" />
             ) : (
@@ -1425,8 +1419,7 @@ const PostDetails = () => {
                 <button
                   onClick={handleAddComment}
                   disabled={isSubmittingComment || !newComment.trim()}
-                  className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                >
+                  className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
                   {isSubmittingComment ? "Posting..." : "Comment"}
                 </button>
               </div>

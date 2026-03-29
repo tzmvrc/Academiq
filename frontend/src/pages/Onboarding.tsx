@@ -3,88 +3,72 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  Sparkles,
-  Check,
-  Cpu,
-  Cog,
-  Calculator,
-  Briefcase,
-  Heart,
-  FlaskConical,
-  Globe,
-  BookOpen,
-  Atom,
-  Brain,
-  Scale,
-  Palette,
-} from "lucide-react";
+import { Sparkles, Check } from "lucide-react";
+import * as Icons from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import axiosInstance from "@/integration/axiosInstance";
 
-type Topic = {
+type Subject = {
   id: string;
   name: string;
-  slug?: string;
-  category?: string;
-  icon?: string | null;
-  color?: string | null;
 };
 
-const MAX_TOPICS_TO_SHOW = 18;
+const MAX_SUBJECTS_TO_SHOW = 18;
 
-const iconMap: Record<string, any> = {
-  "computer-science": Cpu,
-  "artificial-intelligence": Brain,
-  engineering: Cog,
-  mathematics: Calculator,
-  business: Briefcase,
-  medicine: Heart,
-  physics: Atom,
-  "natural-sciences": FlaskConical,
-  "social-sciences": Globe,
-  humanities: BookOpen,
-  law: Scale,
-  "arts-design": Palette,
-  "arts-and-design": Palette,
+// Helper: map subject name to an icon component
+const getIconForSubject = (name: string) => {
+  const lowerName = name.toLowerCase();
+  if (lowerName.includes("math")) return Icons.Calculator;
+  if (lowerName.includes("physic")) return Icons.Atom;
+  if (lowerName.includes("chem")) return Icons.FlaskConical;
+  if (lowerName.includes("biol")) return Icons.Dna;
+  if (lowerName.includes("comput") || lowerName.includes("program")) return Icons.Cpu;
+  if (lowerName.includes("engin")) return Icons.Cog;
+  if (lowerName.includes("busin") || lowerName.includes("econ")) return Icons.Briefcase;
+  if (lowerName.includes("medic")) return Icons.Heart;
+  if (lowerName.includes("psych")) return Icons.Brain;
+  if (lowerName.includes("law") || lowerName.includes("legal")) return Icons.Scale;
+  if (lowerName.includes("art") || lowerName.includes("design")) return Icons.Palette;
+  if (lowerName.includes("histor")) return Icons.BookOpen;
+  if (lowerName.includes("lang") || lowerName.includes("literature")) return Icons.Languages;
+  if (lowerName.includes("geog")) return Icons.Globe;
+  if (lowerName.includes("sociol") || lowerName.includes("anthro")) return Icons.Users;
+  if (lowerName.includes("philos")) return Icons.Brain;
+  if (lowerName.includes("educ")) return Icons.GraduationCap;
+  return Icons.BookOpen;
 };
 
-const getTopicIcon = (topic: Topic) => {
-  if (topic.slug && iconMap[topic.slug]) return iconMap[topic.slug];
-
-  const normalized = topic.name
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/&/g, "and");
-
-  if (iconMap[normalized]) return iconMap[normalized];
-
-  return BookOpen;
+// Optional: generate a consistent pastel color for the icon background
+const getIconColor = (name: string) => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) - hash) + name.charCodeAt(i);
+    hash |= 0;
+  }
+  const hue = Math.abs(hash % 360);
+  return `hsl(${hue}, 70%, 85%)`;
 };
 
 const Onboarding = () => {
   const navigate = useNavigate();
 
-  const [topics, setTopics] = useState<Topic[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const visibleTopics = topics.slice(0, MAX_TOPICS_TO_SHOW);
+  const visibleSubjects = subjects.slice(0, MAX_SUBJECTS_TO_SHOW);
 
-  const fetchTopics = async () => {
+  const fetchSubjects = async () => {
     try {
       setLoading(true);
-
-      const res = await axiosInstance.get("/forums/topics");
-      setTopics(res.data.topics || []);
+      const res = await axiosInstance.get("/forums/subjects");
+      setSubjects(res.data.subjects || []);
     } catch (error: any) {
-      console.error("Fetch topics error:", error);
-
+      console.error("Fetch subjects error:", error);
       toast({
-        title: "Failed to load topics",
-        description:
-          error?.response?.data?.error || "Please refresh and try again.",
+        title: "Failed to load subjects",
+        description: error?.response?.data?.error || "Please refresh and try again.",
         variant: "destructive",
       });
     } finally {
@@ -93,22 +77,22 @@ const Onboarding = () => {
   };
 
   useEffect(() => {
-    fetchTopics();
+    fetchSubjects();
   }, []);
 
-  const toggle = (topicId: string, topicName: string) => {
+  const toggle = (subjectId: string, subjectName: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      const isAdding = !next.has(topicId);
+      const isAdding = !next.has(subjectId);
 
       if (isAdding) {
-        next.add(topicId);
+        next.add(subjectId);
         toast({
-          title: `Added ${topicName}`,
-          description: "Topic added to your interests.",
+          title: `Added ${subjectName}`,
+          description: "Subject added to your interests.",
         });
       } else {
-        next.delete(topicId);
+        next.delete(subjectId);
       }
 
       return next;
@@ -118,8 +102,8 @@ const Onboarding = () => {
   const handleContinue = async () => {
     if (selected.size < 3) {
       toast({
-        title: "Select more topics",
-        description: `Please select at least 3 topics. You've selected ${selected.size}.`,
+        title: "Select more subjects",
+        description: `Please select at least 3 subjects. You've selected ${selected.size}.`,
         variant: "destructive",
       });
       return;
@@ -127,9 +111,8 @@ const Onboarding = () => {
 
     try {
       setSaving(true);
-
-      await axiosInstance.post("/forums/my-topics", {
-        topicIds: Array.from(selected),
+      await axiosInstance.post("/forums/my-subjects", {
+        subjectIds: Array.from(selected),
       });
 
       toast({
@@ -139,10 +122,9 @@ const Onboarding = () => {
 
       navigate("/feed");
     } catch (error: any) {
-      console.error("Save topics error:", error);
-
+      console.error("Save subjects error:", error);
       toast({
-        title: "Failed to save topics",
+        title: "Failed to save subjects",
         description: error?.response?.data?.error || "Please try again.",
         variant: "destructive",
       });
@@ -169,66 +151,56 @@ const Onboarding = () => {
 
         <div className="text-center mb-8">
           <h1 className="text-2xl font-heading font-bold text-foreground mb-2">
-            What are you interested in?
+            What subjects are you interested in?
           </h1>
           <p className="text-muted-foreground">
             Select at least{" "}
-            <span className="font-semibold text-foreground">3 topics</span> to
+            <span className="font-semibold text-foreground">3 subjects</span> to
             personalize your feed.
           </p>
 
-          {!loading && topics.length > MAX_TOPICS_TO_SHOW && (
+          {!loading && subjects.length > MAX_SUBJECTS_TO_SHOW && (
             <p className="text-xs text-muted-foreground mt-2">
-              Showing {MAX_TOPICS_TO_SHOW} of {topics.length} topics
+              Showing {MAX_SUBJECTS_TO_SHOW} of {subjects.length} subjects
             </p>
           )}
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <p className="text-muted-foreground text-sm">Loading topics...</p>
+            <p className="text-muted-foreground text-sm">Loading subjects...</p>
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-            {visibleTopics.map((topic, i) => {
-              const isSelected = selected.has(topic.id);
-              const Icon = getTopicIcon(topic);
+            {visibleSubjects.map((subject, i) => {
+              const isSelected = selected.has(subject.id);
+              const Icon = getIconForSubject(subject.name);
+              const iconBg = getIconColor(subject.name);
 
               return (
                 <motion.button
-                  key={topic.id}
+                  key={subject.id}
                   type="button"
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03, duration: 0.3 }}
-                  onClick={() => toggle(topic.id, topic.name)}
-                  className={`relative flex cursor-pointer items-center gap-3 rounded-xl border p-4 text-left transition-all duration-200 ${
+                  onClick={() => toggle(subject.id, subject.name)}
+                  className={`relative flex cursor-pointer items-center justify-between rounded-xl border p-4 text-left transition-all duration-200 ${
                     isSelected
                       ? "border-primary bg-primary/5 shadow-sm"
                       : "border-border bg-card hover:shadow-md hover:border-primary/15"
                   }`}
                 >
-                  <div
-                    className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                      isSelected ? "bg-primary/10" : "bg-secondary"
-                    }`}
-                  >
-                    <Icon
-                      className={`h-5 w-5 ${
-                        isSelected ? "text-primary" : "text-muted-foreground"
-                      }`}
-                    />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <p className="font-heading font-semibold text-foreground text-sm">
-                      {topic.name}
-                    </p>
-                    {topic.category && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {topic.category}
-                      </p>
-                    )}
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: iconBg }}
+                    >
+                      <Icon className="h-4 w-4 text-foreground" />
+                    </div>
+                    <span className="font-heading font-semibold text-foreground text-sm">
+                      {subject.name}
+                    </span>
                   </div>
 
                   {isSelected && (
