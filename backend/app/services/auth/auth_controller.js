@@ -130,6 +130,7 @@ export const AuthController = {
             name: upperName, // uppercase
             profile_url: picture,
             school_id: school.id,
+            school: school.school_name, // store school name for easy access
             onboarding_completed: false,
           });
         }
@@ -459,6 +460,7 @@ export const AuthController = {
         password: hashedPassword,
         name: upperName, // uppercase
         school_id: school.id,
+        school: school.school_name, // store school name for easy access
         onboarding_completed: false, // new user must do onboarding
       });
 
