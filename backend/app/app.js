@@ -9,6 +9,7 @@ import commentRouter from "./routes/comment_router.js";
 import subjectRouter from "./routes/subject_router.js";
 import forumRouter from "./routes/forum_router.js";
 import peersRouter from "./routes/peers_router.js";
+import profileRouter from "./routes/profile_router.js";
 
 dotenv.config();
 const app = express();
@@ -24,6 +25,7 @@ app.use("/api/comments", commentRouter);
 app.use("/api/subjects", subjectRouter);
 app.use("/api/forums", forumRouter);
 app.use("/api/peers", peersRouter);
+app.use("/api/profile", profileRouter);
 
 app.get("/", (req, res) => {
   res.send("Academiq Backend is running!");
