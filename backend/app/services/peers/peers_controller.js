@@ -31,6 +31,21 @@ export const UserFollowsController = {
     }
   },
 
+
+  // In UserFollowsController, add:
+async getAllUsers(req, res) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const users = await UserFollowModel.getAllUsersWithFollowStatus(userId);
+    res.json({ users });
+  } catch (err) {
+    console.error('Get All Users Error:', err);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+},
+
   // GET /api/users/me/following
   async getMyFollowing(req, res) {
     try {

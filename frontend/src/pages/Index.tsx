@@ -90,6 +90,7 @@ const Index = () => {
   const [forums, setForums] = useState<DiscussionCardProps[]>([]);
   const [topics, setTopics] = useState<TopicItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [filterName, setFilterName] = useState<string>("");
 
   // Edit/Delete state
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -168,6 +169,43 @@ const Index = () => {
 
     loadTopics();
   }, []);
+
+  // Update filter name when subjectId/tagId changes or topics load
+  useEffect(() => {
+    const updateFilterName = async () => {
+      if (subjectId) {
+        const subject = topics.find(
+          (t) => t.type === "subject" && t.id === subjectId,
+        );
+        if (subject) {
+          setFilterName(subject.name);
+        } else {
+          try {
+            const res = await axiosInstance.get(`/subjects/${subjectId}`);
+            setFilterName(res.data.subject?.name || "Subject");
+          } catch {
+            setFilterName("Subject");
+          }
+        }
+      } else if (tagId) {
+        const tag = topics.find((t) => t.type === "tag" && t.id === tagId);
+        if (tag) {
+          setFilterName(tag.name);
+        } else {
+          try {
+            const res = await axiosInstance.get(`/tags/${tagId}`);
+            setFilterName(res.data.tag?.name || "Tag");
+          } catch {
+            setFilterName("Tag");
+          }
+        }
+      } else {
+        setFilterName("");
+      }
+    };
+
+    updateFilterName();
+  }, [subjectId, tagId, topics]);
 
   const handleNewPost = (newPost: DiscussionCardProps) => {
     setForums((prev) => [newPost, ...prev]);
@@ -515,7 +553,13 @@ const Index = () => {
       {(subjectId || tagId) && (
         <div className="flex items-center gap-3 mb-6 flex-wrap">
           <h2 className="text-lg sm:text-xl font-heading font-bold text-foreground">
-            {subjectId ? "Subject Discussions" : tagId ? "Tag Discussions" : ""}
+            {filterName
+              ? `${filterName} Discussions`
+              : subjectId
+                ? "Subject Discussions"
+                : tagId
+                  ? "Tag Discussions"
+                  : ""}
           </h2>
           <button
             onClick={clearFilter}

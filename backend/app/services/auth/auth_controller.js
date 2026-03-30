@@ -216,6 +216,7 @@ export const AuthController = {
 
       if (!user) return res.status(404).json({ error: "User not found" });
 
+      // Include points, followers_count, following_count, and maybe bio
       res.json({
         id: user.id,
         email: user.email,
@@ -223,6 +224,10 @@ export const AuthController = {
         profile_url: user.profile_url,
         role: user.role,
         school: user.school,
+        points: user.points || 0,
+        followers_count: user.followers_count || 0,
+        following_count: user.following_count || 0,
+        bio: user.bio || "",
       });
     } catch (err) {
       console.error("GetMe Error:", err.message);

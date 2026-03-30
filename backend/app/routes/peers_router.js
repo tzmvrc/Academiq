@@ -11,6 +11,7 @@ const router = express.Router();
 
 // Protected - get users the authenticated user is following
 router.get("/users/me/following", authMiddleware, UserFollowsController.getMyFollowing);
+router.get('/users', authMiddleware, UserFollowsController.getAllUsers);
 
 // Public - get all followers of a user
 router.get("/users/:id/followers", UserFollowsController.getFollowers);

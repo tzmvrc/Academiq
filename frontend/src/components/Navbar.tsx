@@ -5,7 +5,6 @@ import {
   Search,
   Bell,
   ChevronDown,
-  Sparkles,
   Menu,
   X,
   Settings,
@@ -13,10 +12,20 @@ import {
   Sun,
   Moon,
   Monitor,
+  User,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import Icon from "@/components/ui/Icon.png";
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  profile_url: string | null;
+  role: string;
+  school: string | null;
+}
 
 const navTabs = [
   { label: "Feed", path: "/feed" },
@@ -25,6 +34,7 @@ const navTabs = [
   { label: "Interests", path: "/interests" },
 ];
 
+// Dummy suggestions (replace with real data later)
 const searchSuggestions = [
   { type: "topic", text: "Computer Science" },
   { type: "topic", text: "Artificial Intelligence" },
@@ -58,6 +68,10 @@ const Navbar = () => {
   const [theme, setTheme] = useState<ThemeMode>(() => {
     return (localStorage.getItem("academiq-theme") as ThemeMode) || "light";
   });
+  // User state
+  const [user, setUser] = useState<User | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+
   const profileRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
@@ -70,6 +84,39 @@ const Navbar = () => {
           )
           .slice(0, 6)
       : [];
+
+  // Fetch current user
+  useEffect(() => {
+    const fetchUser = async () => {
+      // Try multiple possible token keys
+      let token = localStorage.getItem("userToken");
+      if (!token) token = localStorage.getItem("user");
+      if (!token) token = localStorage.getItem("jwt");
+
+      console.log("Token found:", !!token);
+      if (!token) {
+        setUser(null);
+        setLoadingUser(false);
+        return;
+      }
+
+      try {
+        const response = await axiosInstance.get("/auth/me");
+        console.log("User fetch response:", response.data);
+        setUser(response.data);
+      } catch (err: any) {
+        console.error("Failed to fetch user:", err);
+        // If the error is 401, token is invalid – clear it
+        if (err.response?.status === 401) {
+          clearAuth();
+        }
+        setUser(null);
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+    fetchUser();
+  }, []);
 
   // Apply theme
   useEffect(() => {
@@ -116,25 +163,17 @@ const Navbar = () => {
     setMobileSearchOpen(false);
   }, [location.pathname]);
 
-  // const handleLogout = () => {
-  //   setLogoutConfirm(false);
-  //   setProfileOpen(false);
-  //   toast({
-  //     title: "Logged out",
-  //     description: "You have been signed out successfully.",
-  //   });
-  //   navigate("/");
-  // };
-
   const handleLogout = async () => {
     try {
       await axiosInstance.post("/auth/logout");
     } catch (err) {
       console.error("Logout API failed:", err);
-      // even if API fails, still clear local session
     } finally {
-      clearAuth()
+      clearAuth();
+      setUser(null);
       setProfileOpen(false);
+      navigate("/");
+      toast({ title: "Logged out", description: "See you next time!" });
     }
   };
 
@@ -159,6 +198,16 @@ const Navbar = () => {
   const themeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
   const ThemeIcon = themeIcon;
 
+  const getUserInitials = () => {
+    if (!user) return "?";
+    return user.name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   const SuggestionsList = () => (
     <>
       {filteredSuggestions.map((s, i) => (
@@ -168,8 +217,7 @@ const Navbar = () => {
             e.preventDefault();
             handleSearchSelect(s);
           }}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-secondary/50 transition-colors"
-        >
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-secondary/50 transition-colors">
           <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium w-10 shrink-0">
             {s.type}
           </span>
@@ -185,8 +233,7 @@ const Navbar = () => {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4 }}
-        className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-xl"
-      >
+        className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-xl">
         <div className="mx-auto flex h-14 sm:h-16 max-w-6xl items-center px-4 sm:px-6 gap-2">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -212,8 +259,7 @@ const Navbar = () => {
                     isActive
                       ? "text-foreground"
                       : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
+                  }`}>
                   {tab.label}
                   {isActive && (
                     <motion.div
@@ -237,8 +283,7 @@ const Navbar = () => {
             {/* Desktop search */}
             <div
               ref={searchRef}
-              className={`relative hidden sm:block transition-all duration-300 ${searchFocused ? "w-64 lg:w-72" : "w-40 lg:w-48"}`}
-            >
+              className={`relative hidden sm:block transition-all duration-300 ${searchFocused ? "w-64 lg:w-72" : "w-40 lg:w-48"}`}>
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
@@ -254,8 +299,7 @@ const Navbar = () => {
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 4 }}
-                    className="absolute top-full left-0 right-0 mt-1 rounded-xl border border-border bg-card shadow-lg overflow-hidden z-50"
-                  >
+                    className="absolute top-full left-0 right-0 mt-1 rounded-xl border border-border bg-card shadow-lg overflow-hidden z-50">
                     <SuggestionsList />
                   </motion.div>
                 )}
@@ -265,151 +309,173 @@ const Navbar = () => {
             {/* Mobile search toggle */}
             <button
               className="sm:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-              onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-            >
+              onClick={() => setMobileSearchOpen(!mobileSearchOpen)}>
               <Search className="h-5 w-5" />
             </button>
 
             <Link
               to="/notifications"
-              className="relative p-1.5 sm:p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-            >
+              className="relative p-1.5 sm:p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
               <Bell className="h-5 w-5" />
               <span className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 h-2 w-2 rounded-full bg-accent" />
             </Link>
 
-            {/* Profile dropdown */}
-            <div ref={profileRef} className="relative">
-              <button
-                onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-1.5 sm:gap-2 rounded-lg p-1 sm:p-1.5 hover:bg-secondary transition-colors"
-              >
-                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-[10px] sm:text-xs font-semibold text-primary">
-                    AK
-                  </span>
-                </div>
-                <ChevronDown
-                  className={`h-3.5 w-3.5 text-muted-foreground hidden sm:block transition-transform ${profileOpen ? "rotate-180" : ""}`}
-                />
-              </button>
+            {/* Profile / Login */}
+            {!loadingUser && !user ? (
+              <Link
+                to="/auth"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
+                Sign In
+              </Link>
+            ) : (
+              <div ref={profileRef} className="relative">
+                <button
+                  onClick={() => setProfileOpen(!profileOpen)}
+                  className="flex items-center gap-1.5 sm:gap-2 rounded-lg p-1 sm:p-1.5 hover:bg-secondary transition-colors">
+                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                    {user?.profile_url ? (
+                      <img
+                        src={user.profile_url}
+                        alt={user.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-[10px] sm:text-xs font-semibold text-primary">
+                        {getUserInitials()}
+                      </span>
+                    )}
+                  </div>
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 text-muted-foreground hidden sm:block transition-transform ${profileOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
 
-              <AnimatePresence>
-                {profileOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 4, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 4, scale: 0.95 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-border bg-card shadow-lg overflow-hidden z-50"
-                  >
-                    <Link
-                      to="/profile"
-                      onClick={() => setProfileOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
-                    >
-                      <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-[10px] font-semibold text-primary">
-                          AK
-                        </span>
-                      </div>
-                      Profile
-                    </Link>
-                    <div className="h-px bg-border" />
+                <AnimatePresence>
+                  {profileOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 4, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-border bg-card shadow-lg overflow-hidden z-50">
+                      {user && (
+                        <>
+                          <div className="px-4 py-3 border-b border-border">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {user.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {user.email}
+                            </p>
+                            {user.school && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {user.school}
+                              </p>
+                            )}
+                          </div>
+                          <Link
+                            to="/profile"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors">
+                            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                              <User className="h-3.5 w-3.5 text-primary" />
+                            </div>
+                            Profile
+                          </Link>
+                          <div className="h-px bg-border" />
 
-                    {/* Theme Mode */}
-                    <div className="relative">
-                      <button
-                        onClick={() => setThemeOpen(!themeOpen)}
-                        className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
-                      >
-                        <span className="flex items-center gap-3">
-                          <ThemeIcon className="h-4 w-4 text-muted-foreground" />
-                          Theme
-                        </span>
-                        <ChevronDown
-                          className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${themeOpen ? "rotate-180" : ""}`}
-                        />
-                      </button>
-                      <AnimatePresence>
-                        {themeOpen && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden"
-                          >
-                            {[
-                              {
-                                mode: "light" as ThemeMode,
-                                icon: Sun,
-                                label: "Light",
-                              },
-                              {
-                                mode: "dark" as ThemeMode,
-                                icon: Moon,
-                                label: "Dark",
-                              },
-                              {
-                                mode: "system" as ThemeMode,
-                                icon: Monitor,
-                                label: "System",
-                              },
-                            ].map((opt) => (
-                              <button
-                                key={opt.mode}
-                                onClick={() => handleThemeChange(opt.mode)}
-                                className={`w-full flex items-center gap-3 px-4 pl-8 py-2 text-sm transition-colors ${
-                                  theme === opt.mode
-                                    ? "text-primary bg-primary/5"
-                                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                                }`}
-                              >
-                                <opt.icon className="h-3.5 w-3.5" />
-                                {opt.label}
-                              </button>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
+                          {/* Theme Mode */}
+                          <div className="relative">
+                            <button
+                              onClick={() => setThemeOpen(!themeOpen)}
+                              className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors">
+                              <span className="flex items-center gap-3">
+                                <ThemeIcon className="h-4 w-4 text-muted-foreground" />
+                                Theme
+                              </span>
+                              <ChevronDown
+                                className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${themeOpen ? "rotate-180" : ""}`}
+                              />
+                            </button>
+                            <AnimatePresence>
+                              {themeOpen && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  className="overflow-hidden">
+                                  {[
+                                    {
+                                      mode: "light" as ThemeMode,
+                                      icon: Sun,
+                                      label: "Light",
+                                    },
+                                    {
+                                      mode: "dark" as ThemeMode,
+                                      icon: Moon,
+                                      label: "Dark",
+                                    },
+                                    {
+                                      mode: "system" as ThemeMode,
+                                      icon: Monitor,
+                                      label: "System",
+                                    },
+                                  ].map((opt) => (
+                                    <button
+                                      key={opt.mode}
+                                      onClick={() =>
+                                        handleThemeChange(opt.mode)
+                                      }
+                                      className={`w-full flex items-center gap-3 px-4 pl-8 py-2 text-sm transition-colors ${
+                                        theme === opt.mode
+                                          ? "text-primary bg-primary/5"
+                                          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                                      }`}>
+                                      <opt.icon className="h-3.5 w-3.5" />
+                                      {opt.label}
+                                    </button>
+                                  ))}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
 
-                    <div className="h-px bg-border" />
-                    <Link
-                      to="/settings"
-                      onClick={() => setProfileOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
-                    >
-                      <Settings className="h-4 w-4 text-muted-foreground" />
-                      Settings
-                    </Link>
-                    <button
-                      onClick={() => {
-                        setProfileOpen(false);
-                        setLogoutConfirm(true);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/5 transition-colors"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Logout
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Mobile menu toggle */}
-            <button
-              className="md:hidden p-1.5 sm:p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </button>
+                          <div className="h-px bg-border" />
+                          <Link
+                            to="/settings"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors">
+                            <Settings className="h-4 w-4 text-muted-foreground" />
+                            Settings
+                          </Link>
+                          <button
+                            onClick={() => {
+                              setProfileOpen(false);
+                              setLogoutConfirm(true);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/5 transition-colors">
+                            <LogOut className="h-4 w-4" />
+                            Logout
+                          </button>
+                        </>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
+
+          {/* Mobile menu toggle */}
+          <button
+            className="md:hidden p-1.5 sm:p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </button>
         </div>
 
         {/* Mobile search dropdown */}
@@ -420,8 +486,7 @@ const Navbar = () => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="sm:hidden border-t border-border overflow-hidden"
-            >
+              className="sm:hidden border-t border-border overflow-hidden">
               <div className="px-4 py-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -451,8 +516,7 @@ const Navbar = () => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="md:hidden border-t border-border overflow-hidden"
-            >
+              className="md:hidden border-t border-border overflow-hidden">
               <div className="px-4 py-3 space-y-1">
                 {navTabs.map((tab) => {
                   const isActive = location.pathname === tab.path;
@@ -465,8 +529,7 @@ const Navbar = () => {
                         isActive
                           ? "bg-secondary text-foreground"
                           : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                      }`}
-                    >
+                      }`}>
                       {tab.label}
                     </Link>
                   );
@@ -485,15 +548,13 @@ const Navbar = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/20 backdrop-blur-sm px-4 sm:px-6"
-            onClick={() => setLogoutConfirm(false)}
-          >
+            onClick={() => setLogoutConfirm(false)}>
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl"
-            >
+              className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
               <h3 className="text-lg font-heading font-semibold text-foreground mb-2">
                 Sign out?
               </h3>
@@ -503,14 +564,12 @@ const Navbar = () => {
               <div className="flex gap-3">
                 <button
                   onClick={() => setLogoutConfirm(false)}
-                  className="flex-1 cursor-pointer rounded-lg border border-border py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
-                >
+                  className="flex-1 cursor-pointer rounded-lg border border-border py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors">
                   Cancel
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="flex-1 cursor-pointer rounded-lg bg-destructive py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors"
-                >
+                  className="flex-1 cursor-pointer rounded-lg bg-destructive py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors">
                   Logout
                 </button>
               </div>
