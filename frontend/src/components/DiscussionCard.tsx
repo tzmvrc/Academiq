@@ -9,6 +9,9 @@ import {
   Sparkles,
   FileText,
   Hash,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import AIBadge from "./AIBadge";
@@ -20,6 +23,7 @@ interface Tag {
 
 interface DiscussionCardProps {
   id?: string;
+  user_id?: string; // author ID
   title: string;
   author: string;
   authorSchool?: string;
@@ -28,6 +32,7 @@ interface DiscussionCardProps {
   field: string; // subject name
   tags?: Tag[]; // array of tags
   preview: string;
+  fullContent: string;
   aiSummary?: string;
   documentUrl?: string;
   upvotes: number;
@@ -43,6 +48,9 @@ interface DiscussionCardProps {
   onUnvote?: () => Promise<void>;
   onSave?: () => Promise<boolean | void>;
   onTagClick?: (tagId: string) => void; // optional tag click handler
+  isAuthor?: boolean; // whether current user is the author
+  onEdit?: (postData: DiscussionCardProps) => void;
+  onDelete?: (postId: string) => void;
 }
 
 // Format raw filename into a readable display name
@@ -77,6 +85,7 @@ const getFileNameFromUrl = (url: string): string => {
 
 const DiscussionCard = ({
   id,
+  user_id,
   title,
   author,
   authorSchool,
@@ -85,6 +94,7 @@ const DiscussionCard = ({
   field,
   tags = [],
   preview,
+  fullContent,
   aiSummary,
   documentUrl,
   upvotes,
@@ -100,15 +110,30 @@ const DiscussionCard = ({
   onUnvote,
   onSave,
   onTagClick,
+  isAuthor = false,
+  onEdit,
+  onDelete,
 }: DiscussionCardProps) => {
   const navigate = useNavigate();
   const [upvoted, setUpvoted] = useState<boolean>(userVoteState === 1);
   const [downvoted, setDownvoted] = useState<boolean>(userVoteState === -1);
   const [saved, setSaved] = useState<boolean>(isSaved);
   const [isVoting, setIsVoting] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   const upvoteCount = upvotes;
   const downvoteCount = downvotes;
+
+  // Handle click outside to close menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showMenu && !(event.target as Element).closest(".post-menu")) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [showMenu]);
 
   const handleUpvote = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -184,6 +209,46 @@ const DiscussionCard = ({
     }
   };
 
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEdit) {
+      // Pass all necessary data for editing
+      onEdit({
+        id,
+        user_id,
+        title,
+        author,
+        authorSchool,
+        authorInitials,
+        authorProfileUrl,
+        field,
+        tags,
+        preview,
+        fullContent,
+        aiSummary,
+        documentUrl,
+        upvotes,
+        downvotes,
+        comments,
+        userVoteState,
+        isSaved,
+        isVerified,
+        isAiVerified,
+        tag: legacyTag,
+        isAuthor,
+      });
+    }
+    setShowMenu(false);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete && id) {
+      onDelete(id);
+    }
+    setShowMenu(false);
+  };
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 15 }}
@@ -219,6 +284,33 @@ const DiscussionCard = ({
             {field}
           </span>
         </div>
+
+        {isAuthor && (
+          <div className="relative ml-auto post-menu">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(!showMenu);
+              }}
+              className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-1 z-10 w-36 rounded-lg border border-border bg-card shadow-lg py-1">
+                <button
+                  onClick={handleEditClick}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors">
+                  <Pencil className="h-3.5 w-3.5" /> Edit Post
+                </button>
+                <button
+                  onClick={handleDeleteClick}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors">
+                  <Trash2 className="h-3.5 w-3.5" /> Delete Post
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Title */}

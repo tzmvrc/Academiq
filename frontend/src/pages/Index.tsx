@@ -1,5 +1,3 @@
-// src/pages/Index.tsx
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -15,6 +13,7 @@ import {
 import FeaturedSection from "@/components/FeaturedSection";
 import DiscussionCard from "@/components/DiscussionCard";
 import CreatePostModal from "@/components/CreatePostModal";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { toast } from "@/hooks/use-toast";
 import { DiscussionCardSkeleton } from "@/components/SkeletonLoaders";
 import {
@@ -29,8 +28,52 @@ type TopicItem = {
   type: "subject" | "tag";
 };
 
+// Helper to get current user from localStorage (same as in PostDetails)
+const getCurrentUser = () => {
+  try {
+    const rawUser = localStorage.getItem("user");
+    if (rawUser) {
+      const parsed = JSON.parse(rawUser);
+      return {
+        id: parsed?.id || parsed?.user_id || null,
+        name: parsed?.name || "You",
+        initials: (parsed?.name || "You")
+          .trim()
+          .split(/\s+/)
+          .map((part: string) => part[0])
+          .slice(0, 2)
+          .join("")
+          .toUpperCase(),
+        profileUrl: parsed?.profile_url || null,
+      };
+    }
+
+    const id =
+      localStorage.getItem("userId") ||
+      localStorage.getItem("user_id") ||
+      localStorage.getItem("id");
+
+    return {
+      id: id || null,
+      name: "You",
+      initials: "YO",
+      profileUrl: null,
+    };
+  } catch {
+    return {
+      id: null,
+      name: "You",
+      initials: "YO",
+      profileUrl: null,
+    };
+  }
+};
+
+const CURRENT_USER = getCurrentUser();
+
+// Suggested people data – keep as in your original code
 const suggestedPeople = [
-  // ... keep as before
+  // ... your array here ...
 ];
 
 const Index = () => {
@@ -47,6 +90,13 @@ const Index = () => {
   const [forums, setForums] = useState<DiscussionCardProps[]>([]);
   const [topics, setTopics] = useState<TopicItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // Edit/Delete state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [selectedPostData, setSelectedPostData] =
+    useState<DiscussionCardProps | null>(null);
 
   // Load forums – pass subjectId / tagId to backend
   useEffect(() => {
@@ -184,6 +234,80 @@ const Index = () => {
       file: data.file,
     });
     navigate(`/post/${newForum.id}`);
+  };
+
+  // Edit/Delete Handlers
+  const handleEditPost = (post: DiscussionCardProps) => {
+    setSelectedPostId(post.id!);
+    setSelectedPostData(post);
+    setEditModalOpen(true);
+  };
+
+  const handleDeletePost = (postId: string) => {
+    setSelectedPostId(postId);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeletePost = async () => {
+    if (!selectedPostId) return;
+    try {
+      await axiosInstance.delete(`/forums/${selectedPostId}`);
+      setForums((prev) => prev.filter((f) => f.id !== selectedPostId));
+      toast({ title: "Post deleted." });
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast({
+        title: "Failed to delete post",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteModalOpen(false);
+      setSelectedPostId(null);
+    }
+  };
+
+  // Robust handler: after edit, fetch the latest forum data
+  const handlePostUpdated = async () => {
+    if (!selectedPostId) return;
+
+    try {
+      // Fetch the updated forum from the server
+      const freshForum = await forumService.getForumById(selectedPostId);
+
+      // Recompute truncated preview
+      const truncatedPreview =
+        (freshForum.fullContent || "").substring(0, 150) +
+        ((freshForum.fullContent || "").length > 150 ? "..." : "");
+
+      setForums((prev) =>
+        prev.map((f) =>
+          f.id === freshForum.id
+            ? {
+                ...f,
+                title: freshForum.title,
+                fullContent: freshForum.fullContent,
+                preview: truncatedPreview,
+                field: freshForum.field,
+                tags: freshForum.tags,
+                documentUrl: freshForum.documentUrl,
+                // Keep other fields like author, votes, etc.
+              }
+            : f,
+        ),
+      );
+
+      toast({ title: "Post updated successfully!" });
+    } catch (err) {
+      console.error("Failed to refresh forum after edit:", err);
+      toast({
+        title: "Post updated but could not refresh display",
+        variant: "destructive",
+      });
+    } finally {
+      setEditModalOpen(false);
+      setSelectedPostId(null);
+      setSelectedPostData(null);
+    }
   };
 
   const handleVoteForum = async (forumId: string, voteType: 1 | -1) => {
@@ -482,6 +606,8 @@ const Index = () => {
                 const d = allDiscussions[item.index];
                 if (!d) return null;
 
+                const isAuthor = CURRENT_USER.id === d.user_id;
+
                 return (
                   <div
                     onClick={() => navigate(`/post/${d.id}`)}
@@ -496,6 +622,9 @@ const Index = () => {
                       {...d}
                       isSaved={d.isSaved}
                       index={item.index}
+                      isAuthor={isAuthor}
+                      onEdit={handleEditPost}
+                      onDelete={handleDeletePost}
                       onVote={(voteType) => handleVoteForum(d.id!, voteType)}
                       onUnvote={() => handleUnvoteForum(d.id!)}
                       onSave={() => handleSaveForum(d.id!)}
@@ -525,10 +654,41 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Create Post Modal */}
       <CreatePostModal
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreatePost}
+      />
+
+      {/* Edit Post Modal */}
+      <CreatePostModal
+        key={selectedPostId || "create"}
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        initialData={
+          selectedPostData
+            ? {
+                title: selectedPostData.title,
+                content: selectedPostData.fullContent,
+                category: selectedPostData.field,
+                fileName: selectedPostData.documentUrl,
+                tagIds: selectedPostData.tags?.map((t) => t.id) || [],
+              }
+            : undefined
+        }
+        mode="edit"
+        forumId={selectedPostId || undefined}
+        onSuccess={handlePostUpdated}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        open={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDeletePost}
+        title="Delete Post"
+        message="Are you sure you want to delete this post? This action cannot be undone. All comments and attached files will be removed."
       />
     </div>
   );

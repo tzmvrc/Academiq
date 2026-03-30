@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import axiosInstance from "@/integration/axiosInstance";
 import { forumService } from "@/integration/forum_service";
 
-// --- Types and helpers (unchanged) ---
+// --- Types and helpers ---
 interface CreatePostModalProps {
   open: boolean;
   onClose: () => void;
@@ -97,7 +97,7 @@ const CreatePostModal = ({
   const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
   const [removeFile, setRemoveFile] = useState(false);
 
-  // Tags state – new design
+  // Tags state
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
     initialData?.tagIds || [],
@@ -113,6 +113,20 @@ const CreatePostModal = ({
   const subjectBoxRef = useRef<HTMLDivElement>(null);
   const tagBoxRef = useRef<HTMLDivElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset form when modal opens with new data
+  useEffect(() => {
+    if (open) {
+      setTitle(initialData?.title || "");
+      setContent(initialData?.content || "");
+      setCategory(initialData?.category || "");
+      setFileName(initialData?.fileName || "");
+      setSelectedTagIds(initialData?.tagIds || []);
+      setTagInputValue("");
+      setSelectedFile(null);
+      setRemoveFile(false);
+    }
+  }, [open, initialData]);
 
   // Display name for attachment
   const displayFileName = useMemo(() => {
@@ -153,7 +167,6 @@ const CreatePostModal = ({
     const fetchTags = async () => {
       try {
         setLoadingTags(true);
-        // Get tags sorted by usage (popular first) to show usage counts
         const res = await axiosInstance.get("/tags?sort=popular");
         setAllTags(res.data?.tags || []);
       } catch (err) {
@@ -170,7 +183,7 @@ const CreatePostModal = ({
     fetchTags();
   }, [open]);
 
-  // --- Fetch forum tags on edit ---
+  // --- Fetch forum tags on edit (if not provided in initialData) ---
   useEffect(() => {
     if (!open || mode !== "edit" || !forumId || initialData?.tagIds) return;
 
@@ -316,12 +329,10 @@ const CreatePostModal = ({
     let tagId = tagIdOrName;
     let tag: Tag | null = null;
 
-    // Check if it's an existing tag ID or a new tag name
     const existingTag = allTags.find((t) => t.id === tagIdOrName);
     if (existingTag) {
       tagId = existingTag.id;
     } else {
-      // It's a name – create tag
       tag = await ensureTagExists(tagIdOrName);
       if (!tag) return;
       tagId = tag.id;
@@ -341,7 +352,6 @@ const CreatePostModal = ({
     }
     setTagInputValue("");
     setShowTagDropdown(false);
-    // Focus the input again
     tagInputRef.current?.focus();
   };
 
@@ -351,14 +361,12 @@ const CreatePostModal = ({
       const trimmed = tagInputValue.trim();
       if (!trimmed) return;
 
-      // If there's an exact match in filteredTags, add that tag
       const exactMatch = filteredTags.find(
         (t) => t.name.toLowerCase() === trimmed.toLowerCase(),
       );
       if (exactMatch) {
         addTag(exactMatch.id);
       } else {
-        // Otherwise create a new tag
         addTag(trimmed);
       }
     }
@@ -393,7 +401,6 @@ const CreatePostModal = ({
     try {
       setSubmitting(true);
 
-      // Ensure subject exists
       await ensureSubjectExists(normalizedCategory);
 
       if (mode === "edit") {
@@ -433,16 +440,6 @@ const CreatePostModal = ({
 
       await onSuccess?.();
       onClose();
-
-      if (mode === "create") {
-        setTitle("");
-        setContent("");
-        setCategory("");
-        setFileName("");
-        setSelectedFile(null);
-        setSelectedTagIds([]);
-        setTagInputValue("");
-      }
     } catch (err: any) {
       console.error("Create/Edit post modal submit error:", err);
       toast({
@@ -576,7 +573,7 @@ const CreatePostModal = ({
                 />
               </div>
 
-              {/* Tags (now below content) */}
+              {/* Tags */}
               <div className="space-y-2" ref={tagBoxRef}>
                 <label className="text-sm font-medium text-foreground flex items-center gap-1">
                   <Tag className="h-4 w-4" />
@@ -584,7 +581,6 @@ const CreatePostModal = ({
                 </label>
                 <div className="relative">
                   <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-primary">
-                    {/* Selected tags as chips inside the input area */}
                     {selectedTagIds.map((tagId) => {
                       const tag = allTags.find((t) => t.id === tagId);
                       if (!tag) return null;
@@ -622,7 +618,6 @@ const CreatePostModal = ({
                     />
                   </div>
 
-                  {/* Dropdown */}
                   {showTagDropdown &&
                     (tagInputValue.trim() !== "" ||
                       filteredTags.length > 0) && (

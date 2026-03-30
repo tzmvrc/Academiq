@@ -46,6 +46,7 @@ export interface DiscussionCardProps {
   field: string; // subject name
   tags?: Tag[]; // array of tags
   preview: string;
+  fullContent: string;
   aiSummary: string;
   upvotes: number;
   documentUrl?: string | null;
@@ -87,6 +88,7 @@ const transformForumToDiscussion = (
 
   return {
     id: forum.id,
+    user_id: forum.user_id,
     title: forum.title,
     author: authorName,
     authorInitials: getInitials(authorName),
@@ -97,6 +99,7 @@ const transformForumToDiscussion = (
     preview:
       (forum.content || "").substring(0, 150) +
       ((forum.content || "").length > 150 ? "..." : ""),
+    fullContent: forum.content || "",
     aiSummary: forum.ai_summary?.trim() ?? "",
     upvotes: forum.upvotes_count || 0,
     downvotes: forum.downvotes_count || 0,
