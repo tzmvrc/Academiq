@@ -7,6 +7,7 @@ import { OtpModel } from "../../models/otp_model.js";
 import axios from "axios";
 import sgMail from "@sendgrid/mail";
 import { title } from "process";
+import { findSchoolByDomain } from "../../services/school/schoolValidator.js";
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -85,19 +86,14 @@ export const AuthController = {
           ? domainParts.slice(-3).join(".")
           : domainParts.join(".");
 
-      // Validate school
-      const response = await axios.get(
-        `http://universities.hipolabs.com/search?domain=${rootDomain}`,
-      );
-
-      if (!response.data || response.data.length === 0) {
+      // Validate school using local JSON
+      const schoolInfo = findSchoolByDomain(rootDomain);
+      if (!schoolInfo) {
         return res.status(400).json({
           title: "Invalid School Email",
           message: "Google login requires a valid school email.",
         });
       }
-
-      const schoolInfo = response.data[0];
 
       let school = await SchoolModel.findByEmailDomain(rootDomain);
 
@@ -290,22 +286,19 @@ export const AuthController = {
         });
       }
 
-      // Check domain via Universities API
-      const response = await axios.get(
-        `http://universities.hipolabs.com/search?domain=${domain}`,
-      );
+      // Check domain via local JSON file
+      const schoolInfo = findSchoolByDomain(domain);
 
-      if (!response.data || response.data.length === 0) {
+      if (!schoolInfo) {
         return res.status(400).json({
           title: "Invalid School Email",
           message: "No university found with this email domain.",
         });
       }
 
-      // Use the first match
-      const schoolInfo = response.data[0];
+      // Use the found school
       const school_name = schoolInfo.name;
-      const school_domain = schoolInfo.domains[0];
+      const school_domain = schoolInfo.domains[0]; // or domain, whichever you prefer
 
       // Generate 6-digit OTP
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -325,11 +318,11 @@ export const AuthController = {
         from: process.env.SENDGRID_FROM_EMAIL,
         subject: "Your Academiq OTP Code",
         html: `
-          <h2>Email Verification</h2>
-          <p>Your OTP is:</p>
-          <h1>${otp}</h1>
-          <p>Expires in 10 minutes</p>
-        `,
+        <h2>Email Verification</h2>
+        <p>Your OTP is:</p>
+        <h1>${otp}</h1>
+        <p>Expires in 10 minutes</p>
+      `,
       });
 
       // Return school info
@@ -340,6 +333,8 @@ export const AuthController = {
         school_name,
         school_domain,
       });
+
+      console.log(`OTP for ${email}: ${otp} (expires at ${expiresAt})`);
     } catch (err) {
       console.error("Send OTP Error:", err);
       res.status(500).json({ error: "Failed to send OTP" });
@@ -424,18 +419,16 @@ export const AuthController = {
       const rootDomain =
         domainParts.length > 2 ? domainParts.slice(-3).join(".") : domainPart;
 
-      // STEP 4 — Validate school and get school_id
-      const response = await axios.get(
-        `http://universities.hipolabs.com/search?domain=${rootDomain}`,
-      );
-      if (!response.data || response.data.length === 0) {
+      // STEP 4 — Validate school using local JSON
+      const schoolInfo = findSchoolByDomain(rootDomain);
+      if (!schoolInfo) {
         return res.status(400).json({
           title: "Invalid School Email",
           message:
             "The provided email domain is not recognized as a valid school.",
         });
       }
-      const schoolInfo = response.data[0];
+
       const schoolName = schoolInfo.name;
       const schoolDomain = rootDomain;
 
@@ -458,10 +451,10 @@ export const AuthController = {
       const user = await UserModel.create({
         email,
         password: hashedPassword,
-        name: upperName, // uppercase
+        name: upperName,
         school_id: school.id,
-        school: school.school_name, // store school name for easy access
-        onboarding_completed: false, // new user must do onboarding
+        school: school.school_name,
+        onboarding_completed: false,
       });
 
       // STEP 7 — Cleanup OTP
@@ -475,7 +468,7 @@ export const AuthController = {
         message: "Signup successful",
         user,
         token,
-        onboardingRequired: true, // new users must do onboarding
+        onboardingRequired: true,
       });
     } catch (err) {
       console.error("Complete Signup Error:", err);
