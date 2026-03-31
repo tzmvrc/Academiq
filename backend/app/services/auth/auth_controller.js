@@ -8,6 +8,7 @@ import axios from "axios";
 import sgMail from "@sendgrid/mail";
 import { title } from "process";
 import { findSchoolByDomain } from "../../services/school/schoolValidator.js";
+import { supabase } from "../../database/supabase.js";
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -35,6 +36,17 @@ const PERSONAL_EMAIL_DOMAINS = [
   "outlook.com",
   "live.com",
 ];
+
+const getInitials = (name) => {
+  if (!name) return "UN";
+  return name
+    .trim()
+    .split(/\s+/)
+    .map(part => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+};
 
 function getRootDomain(email) {
   const domainPart = email.split("@")[1]; // "mkt.ceu.edu.ph"
@@ -145,6 +157,61 @@ export const AuthController = {
     } catch (err) {
       console.error("Google Login Error:", err);
       res.status(401).json({ error: "Invalid Google login" });
+    }
+  },
+
+  // In auth_controller.js
+  async getUserById(req, res) {
+    try {
+      const { id } = req.params;
+      const user = await UserModel.findById(id);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      res.json({
+        id: user.id,
+        name: user.name,
+        profile_url: user.profile_url,
+        school: user.school,
+        bio: user.bio,
+        points: user.points || 0,
+        followers_count: user.followers_count || 0,
+        following_count: user.following_count || 0,
+      });
+    } catch (err) {
+      console.error("Get user by ID error:", err);
+      res.status(500).json({ error: "Failed to fetch user" });
+    }
+  },
+
+  // Add to AuthController object
+  async getAllUsers(req, res) {
+    try {
+      const userId = req.user.id;
+      const users = await UserModel.findAllExcept(userId);
+      res.json({ users });
+    } catch (err) {
+      console.error("Get all users error:", err);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  },
+
+  async getUserByName(req, res) {
+    try {
+      const { name } = req.params;
+      const user = await UserModel.findByName(name);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      res.json({
+        id: user.id,
+        name: user.name,
+        profile_url: user.profile_url,
+        school: user.school,
+        bio: user.bio,
+        points: user.points || 0,
+        followers_count: user.followers_count || 0,
+        following_count: user.following_count || 0,
+      });
+    } catch (err) {
+      console.error("Get user by name error:", err);
+      res.status(500).json({ error: "Failed to fetch user" });
     }
   },
 
@@ -480,4 +547,234 @@ export const AuthController = {
       res.status(500).json({ error: "Signup failed" });
     }
   },
+
+  // in your auth_controller.js or a new search_controller.js
+// Helper to get initials from name
+
+
+// =============================
+// Suggestions endpoint
+// =============================
+async getSuggestions(req, res) {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim().length < 2) {
+      return res.json({ suggestions: [] });
+    }
+    const searchTerm = `%${q.trim()}%`;
+
+    // Query forums (title)
+    const { data: forums, error: forumsErr } = await supabase
+      .from('forums')
+      .select('id, title')
+      .ilike('title', searchTerm)
+      .limit(5);
+    if (forumsErr) throw forumsErr;
+
+    // Query users (name)
+    const { data: users, error: usersErr } = await supabase
+      .from('users')
+      .select('id, name')
+      .ilike('name', searchTerm)
+      .limit(5);
+    if (usersErr) throw usersErr;
+
+    // Query subjects (name)
+    const { data: subjects, error: subjectsErr } = await supabase
+      .from('subjects')
+      .select('id, name')
+      .ilike('name', searchTerm)
+      .limit(5);
+    if (subjectsErr) throw subjectsErr;
+
+    // Query tags (name)
+    const { data: tags, error: tagsErr } = await supabase
+      .from('tags')
+      .select('id, name')
+      .ilike('name', searchTerm)
+      .limit(5);
+    if (tagsErr) throw tagsErr;
+
+    const suggestions = [
+      ...(forums || []).map(f => ({ type: 'forum', text: f.title, id: f.id })),
+      ...(users || []).map(u => ({ type: 'user', text: u.name, id: u.id })),
+      ...(subjects || []).map(s => ({ type: 'subject', text: s.name, id: s.id })),
+      ...(tags || []).map(t => ({ type: 'tag', text: t.name, id: t.id })),
+    ];
+
+    res.json({ suggestions });
+  } catch (err) {
+    console.error('Suggestion error:', err);
+    res.status(500).json({ error: 'Failed to get suggestions' });
+  }
+},
+
+// =============================
+// Full search endpoint
+// =============================
+async search(req, res) {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim().length < 2) {
+      return res.json({ users: [], forums: [], subjects: [], tags: [] });
+    }
+    const searchTerm = q.trim();
+    const currentUserId = req.user.id;
+
+    // ------------------------------
+    // 1. Users
+    // ------------------------------
+    const { data: users, error: usersErr } = await supabase
+      .from('users')
+      .select('id, name, profile_url, school, bio, points')
+      .ilike('name', `%${searchTerm}%`)
+      .limit(20);
+    if (usersErr) throw usersErr;
+
+    // Get follow status for each user
+    const usersWithFollow = await Promise.all((users || []).map(async (u) => {
+      const { data: follow } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', currentUserId)
+        .eq('following_id', u.id)
+        .single();
+      return { ...u, is_followed: !!follow };
+    }));
+
+    // ------------------------------
+    // 2. Forums (by title, content, or tags)
+    // ------------------------------
+    // First, find tags that match the search term
+    const { data: matchingTags } = await supabase
+      .from('tags')
+      .select('id')
+      .ilike('name', `%${searchTerm}%`);
+
+    const tagIds = (matchingTags || []).map(t => t.id);
+
+    // Build forum query: title or content match OR has any of the matching tags
+    let forumQuery = supabase
+      .from('forums')
+      .select(`
+        id, title, content, created_at, user_id, subject_id, is_ai_verified,
+        users:user_id (id, name, profile_url, school),
+        subject:subject_id (id, name),
+        upvotes_count, downvotes_count, comments_count
+      `)
+      .or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`)
+      .limit(30);
+
+    // If there are matching tags, also include forums that have those tags
+    if (tagIds.length > 0) {
+      // We need to union two sets: forums matching text, and forums matching tags.
+      // Supabase doesn't have UNION, so we'll get forums matching tags separately,
+      // then merge in JS.
+      const { data: tagForums } = await supabase
+        .from('forum_tags')
+        .select('forum_id')
+        .in('tag_id', tagIds);
+      const tagForumIds = (tagForums || []).map(ft => ft.forum_id);
+      
+      // Get forums by text
+      const { data: textForums } = await forumQuery;
+      const textForumIds = (textForums || []).map(f => f.id);
+
+      // Combine IDs
+      const allForumIds = [...new Set([...textForumIds, ...tagForumIds])];
+      if (allForumIds.length === 0) {
+        // no forums
+        forumQuery = null;
+      } else {
+        // Fetch all forums that are in the combined set
+        const { data: combinedForums } = await supabase
+          .from('forums')
+          .select(`
+            id, title, content, created_at, user_id, subject_id, is_ai_verified,
+            users:user_id (id, name, profile_url, school),
+            subject:subject_id (id, name),
+            upvotes_count, downvotes_count, comments_count
+          `)
+          .in('id', allForumIds);
+        forumQuery = combinedForums;
+      }
+    } else {
+      // only text match
+      const { data: forumsData } = await forumQuery;
+      forumQuery = forumsData;
+    }
+
+    const forumsData = forumQuery || [];
+
+    // Fetch tags for each forum (optional but nice)
+    const forumIds = forumsData.map(f => f.id);
+    let tagsByForum = {};
+    if (forumIds.length > 0) {
+      const { data: forumTags } = await supabase
+        .from('forum_tags')
+        .select('forum_id, tags(id, name)')
+        .in('forum_id', forumIds);
+      tagsByForum = forumTags.reduce((acc, ft) => {
+        if (!acc[ft.forum_id]) acc[ft.forum_id] = [];
+        acc[ft.forum_id].push(ft.tags);
+        return acc;
+      }, {});
+    }
+
+    // Format forums for frontend
+    const formattedForums = (forumsData || []).map(forum => ({
+      id: forum.id,
+      user_id: forum.user_id,
+      title: forum.title,
+      content: forum.content,
+      author: forum.users?.name || 'Unknown',
+      authorInitials: getInitials(forum.users?.name),
+      authorProfileUrl: forum.users?.profile_url,
+      authorSchool: forum.users?.school,
+      field: forum.subject?.name || 'General',
+      tags: tagsByForum[forum.id] || [],
+      upvotes: forum.upvotes_count || 0,
+      downvotes: forum.downvotes_count || 0,
+      comments: forum.comments_count || 0,
+      userVoteState: null, // we can fetch later if needed
+      isSaved: false,
+      isVerified: true,
+      isAiVerified: forum.is_ai_verified || false,
+      preview: (forum.content || '').substring(0, 150) + ((forum.content || '').length > 150 ? '...' : ''),
+      fullContent: forum.content || '',
+      created_at: forum.created_at,
+    }));
+
+    // ------------------------------
+    // 3. Subjects
+    // ------------------------------
+    const { data: subjects, error: subjectsErr } = await supabase
+      .from('subjects')
+      .select('id, name')
+      .ilike('name', `%${searchTerm}%`)
+      .limit(10);
+    if (subjectsErr) throw subjectsErr;
+
+    // ------------------------------
+    // 4. Tags
+    // ------------------------------
+    const { data: tags, error: tagsErr } = await supabase
+      .from('tags')
+      .select('id, name')
+      .ilike('name', `%${searchTerm}%`)
+      .limit(10);
+    if (tagsErr) throw tagsErr;
+
+    // Send results in priority order (already grouped)
+    res.json({
+      users: usersWithFollow,
+      forums: formattedForums,
+      subjects: subjects || [],
+      tags: tags || [],
+    });
+  } catch (err) {
+    console.error('Search error:', err);
+    res.status(500).json({ error: 'Search failed' });
+  }
+},
 };

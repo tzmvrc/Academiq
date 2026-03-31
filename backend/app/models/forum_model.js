@@ -8,25 +8,46 @@ export const ForumModel = {
   },
 
   async findById(id) {
-  const { data, error } = await supabase
-    .from("forums")
-    .select(`
+    const { data, error } = await supabase
+      .from("forums")
+      .select(
+        `
       *,
       user:user_id(id, name, profile_url, school),
       subject:subject_id(id, name),
       forum_tags(
         tag:tag_id(id, name, slug, usage_count)
       )
-    `)
-    .eq("id", id)
-    .single();
+    `,
+      )
+      .eq("id", id)
+      .single();
 
+    if (error) throw error;
+    // Transform tags
+    if (data) {
+      data.tags = (data.forum_tags || []).map((ft) => ft.tag).filter(Boolean);
+      delete data.forum_tags;
+    }
+    return { data, error: null };
+  },
+
+  async findByUserId(userId, limit = 10, offset = 0) {
+  const { data, error } = await supabase
+    .from("forums")
+    .select(`
+      id,
+      title,
+      content,
+      upvotes_count,
+      comments_count,
+      created_at,
+      subject:subject_id ( id, name )
+    `)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
   if (error) throw error;
-  // Transform tags
-  if (data) {
-    data.tags = (data.forum_tags || []).map(ft => ft.tag).filter(Boolean);
-    delete data.forum_tags;
-  }
   return { data, error: null };
 },
 
@@ -47,29 +68,31 @@ export const ForumModel = {
       .order("created_at", { ascending: false });
   },
 
- async findByUserId(userId) {
-  const { data, error } = await supabase
-    .from("forums")
-    .select(`
+  async findByUserId(userId) {
+    const { data, error } = await supabase
+      .from("forums")
+      .select(
+        `
       *,
       user:user_id(id, name, profile_url, school),
       subject:subject_id(id, name),
       forum_tags(
         tag:tag_id(id, name, slug, usage_count)
       )
-    `)
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+    `,
+      )
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
-  if (error) throw error;
-  // Transform tags for each forum
-  const transformed = data.map(forum => ({
-    ...forum,
-    tags: (forum.forum_tags || []).map(ft => ft.tag).filter(Boolean),
-    forum_tags: undefined,
-  }));
-  return { data: transformed, error: null };
-},
+    if (error) throw error;
+    // Transform tags for each forum
+    const transformed = data.map((forum) => ({
+      ...forum,
+      tags: (forum.forum_tags || []).map((ft) => ft.tag).filter(Boolean),
+      forum_tags: undefined,
+    }));
+    return { data: transformed, error: null };
+  },
 
   async update(id, updates) {
     return supabase.from(TABLE).update(updates).eq("id", id).select().single();

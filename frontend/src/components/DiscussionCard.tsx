@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowBigUp,
   ArrowBigDown,
@@ -257,27 +257,34 @@ const DiscussionCard = ({
       className="group rounded-xl border border-border bg-card p-4 sm:p-6 transition-all duration-300 hover:shadow-md hover:border-primary/10 w-full">
       {/* Author row */}
       <div className="flex items-center gap-2 sm:gap-3 mb-3">
-        <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-          {authorProfileUrl ? (
-            <img
-              src={authorProfileUrl}
-              alt={author}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span className="text-[10px] sm:text-xs font-semibold text-primary">
-              {authorInitials}
-            </span>
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-foreground truncate">
-            {author}
-          </p>
-          <p className="text-xs text-muted-foreground truncate">
-            {authorSchool || "No school"}
-          </p>
-        </div>
+        <Link
+          to={`/${encodeURIComponent(author)}`}
+          className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1"
+          onClick={(e) => e.stopPropagation()}>
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+            {authorProfileUrl ? (
+              <img
+                src={authorProfileUrl}
+                alt={author}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="text-[10px] sm:text-xs font-semibold text-primary">
+                {authorInitials}
+              </span>
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-foreground truncate">
+              {author}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              {authorSchool || "No school"}
+            </p>
+          </div>
+        </Link>
+
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {isVerified && isAiVerified && <AIBadge variant="verified" />}
           <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-medium whitespace-nowrap">
@@ -295,6 +302,7 @@ const DiscussionCard = ({
               className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
               <MoreHorizontal className="h-4 w-4" />
             </button>
+
             {showMenu && (
               <div className="absolute right-0 top-full mt-1 z-10 w-36 rounded-lg border border-border bg-card shadow-lg py-1">
                 <button

@@ -1,7 +1,9 @@
 import app from "./app/app.js";
 import dotenv from "dotenv";
 import http from "http";
+import './app/services/test/scheduler.js'; // after initSocket() is called
 import { initSocket } from "./app/middlewares/socket.js";
+
 
 dotenv.config();
 

@@ -1,19 +1,12 @@
 import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  Star,
-  MessageCircle,
-  ShieldCheck,
-  Bookmark,
-  Award,
-  UserPlus,
-  Check,
-} from "lucide-react";
+import { Star, MessageCircle, Bookmark, Award, ArrowBigUp } from "lucide-react";
 import AIBadge from "@/components/AIBadge";
 import axiosInstance from "@/integration/axiosInstance";
-import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 
+// Types
 interface User {
   id: string;
   name: string;
@@ -30,6 +23,7 @@ interface User {
 interface Forum {
   id: string;
   title: string;
+  content: string;
   subject: { name: string };
   upvotes_count: number;
   comments_count: number;
@@ -42,7 +36,11 @@ interface SavedForum extends Forum {
 
 interface Comment {
   id: string;
-  forum: { title: string };
+  forum: {
+    id: string;
+    title: string;
+    subject: { name: string };
+  };
   content: string;
   upvotes_count: number;
   created_at: string;
@@ -50,80 +48,137 @@ interface Comment {
 
 type Tab = "posts" | "saved" | "comments";
 
+const ITEMS_LIMIT = 5;
+
+const formatDate = (dateString: string) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
+
+const truncateText = (text: string, maxLength: number = 100): string => {
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength).trim() + "...";
+};
+
 const Profile = () => {
   const navigate = useNavigate();
+  const { userName } = useParams<{ userName: string }>();
   const [user, setUser] = useState<User | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [posts, setPosts] = useState<Forum[]>([]);
   const [savedPosts, setSavedPosts] = useState<SavedForum[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [activeTab, setActiveTab] = useState<Tab>("posts");
   const [loadingContent, setLoadingContent] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
-  // Fetch user data
+  // 1. Fetch current user to know who is logged in
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchCurrentUser = async () => {
       try {
-        const response = await axiosInstance.get("/auth/me");
-        setUser(response.data);
+        const res = await axiosInstance.get("/auth/me");
+        setCurrentUserId(res.data.id);
+      } catch (err) {
+        console.error("Failed to fetch current user:", err);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
+
+  // 2. Fetch the profile user by name from URL
+  useEffect(() => {
+    if (!userName) {
+      navigate("/feed");
+      return;
+    }
+
+    const fetchProfileUser = async () => {
+      setLoadingUser(true);
+      try {
+        const res = await axiosInstance.get(
+          `/auth/users/name/${encodeURIComponent(userName)}`,
+        );
+        setUser(res.data);
       } catch (err) {
         console.error("Failed to fetch user:", err);
-        toast({ title: "Failed to load profile", variant: "destructive" });
+        toast({ title: "User not found", variant: "destructive" });
+        navigate("/feed");
       } finally {
         setLoadingUser(false);
       }
     };
-    fetchUser();
-  }, []);
+    fetchProfileUser();
+  }, [userName, navigate]);
 
-  // Fetch posts when user is loaded
+  // 3. Determine if this is the current user's own profile (after both are loaded)
+  useEffect(() => {
+    if (user && currentUserId) {
+      setIsOwnProfile(user.id === currentUserId);
+    }
+  }, [user, currentUserId]);
+
+  // 4. Fetch content (posts, comments, and saved if own)
   useEffect(() => {
     if (!user) return;
-    const fetchPosts = async () => {
+
+    const fetchContent = async () => {
       setLoadingContent(true);
       try {
-        const res = await axiosInstance.get(
-          `/forums?userId=${user.id}&limit=10&sort=created_at`,
-        );
-        setPosts(res.data.forums || []);
+        const promises: Promise<any>[] = [
+          axiosInstance.get(`/forums/user?userId=${user.id}&limit=10`),
+          axiosInstance.get(`/forums/comments?userId=${user.id}&limit=10`),
+        ];
+        if (isOwnProfile) {
+          promises.push(axiosInstance.get("/forums/saved"));
+        }
+
+        const [postsRes, commentsRes, savedRes] =
+          await Promise.allSettled(promises);
+
+        if (postsRes.status === "fulfilled") {
+          setPosts(postsRes.value.data.forums || []);
+        } else {
+          console.error("Failed to fetch posts:", postsRes.reason);
+        }
+
+        if (commentsRes.status === "fulfilled") {
+          setComments(commentsRes.value.data.comments || []);
+        } else {
+          console.error("Failed to fetch comments:", commentsRes.reason);
+        }
+
+        if (isOwnProfile && savedRes && savedRes.status === "fulfilled") {
+          setSavedPosts(savedRes.value.data.saved || []);
+        }
       } catch (err) {
-        console.error("Failed to fetch posts:", err);
+        console.error("Error fetching content:", err);
       } finally {
         setLoadingContent(false);
       }
     };
-    fetchPosts();
-  }, [user]);
 
-  // Fetch saved posts (only if active tab is "saved")
-  useEffect(() => {
-    if (!user || activeTab !== "saved") return;
-    const fetchSaved = async () => {
-      try {
-        const res = await axiosInstance.get("/forums/saved");
-        setSavedPosts(res.data.saved || []);
-      } catch (err) {
-        console.error("Failed to fetch saved posts:", err);
-      }
-    };
-    fetchSaved();
-  }, [user, activeTab]);
+    fetchContent();
+  }, [user, isOwnProfile]);
 
-  // Fetch comments
+  // Reset expanded state when switching tabs
   useEffect(() => {
-    if (!user || activeTab !== "comments") return;
-    const fetchComments = async () => {
-      try {
-        const res = await axiosInstance.get(
-          `/comments?userId=${user.id}&limit=10`,
-        );
-        setComments(res.data.comments || []);
-      } catch (err) {
-        console.error("Failed to fetch comments:", err);
-      }
-    };
-    fetchComments();
-  }, [user, activeTab]);
+    setShowAll(false);
+  }, [activeTab]);
 
   if (loadingUser) {
     return (
@@ -155,21 +210,20 @@ const Profile = () => {
     .toUpperCase()
     .slice(0, 2);
 
-  // Stats from user data (points, followers, etc.) and computed from posts
   const totalPosts = posts.length;
   const totalComments = comments.length;
   const totalSaved = savedPosts.length;
-  // For now, we don't have verified posts count; we'll use a placeholder
-  const verifiedPosts = 0; // TODO: fetch from API if available
 
   const stats = [
-    { label: "Reputation", value: user.points.toLocaleString(), icon: Star },
-    { label: "Discussions", value: totalPosts.toString(), icon: MessageCircle },
+    { label: "Points", value: user.points.toLocaleString(), icon: Star },
+    { label: "Posts", value: totalPosts.toString(), icon: MessageCircle },
     { label: "Comments", value: totalComments.toString(), icon: MessageCircle },
-    { label: "Saved", value: totalSaved.toString(), icon: Bookmark },
+    ...(isOwnProfile
+      ? [{ label: "Saved", value: totalSaved.toString(), icon: Bookmark }]
+      : []),
   ];
 
-  // Achievements (static for now; can be dynamic later)
+  // Static achievements (could be dynamic later)
   const achievements = [
     {
       title: "First Verified Post",
@@ -188,10 +242,11 @@ const Profile = () => {
     },
   ];
 
+  // Tabs: only show "Saved" and "Comments" if viewing own profile
   const tabs: { key: Tab; label: string }[] = [
     { key: "posts", label: "Posts" },
-    { key: "saved", label: "Saved" },
-    { key: "comments", label: "Comments" },
+    ...(isOwnProfile ? [{ key: "saved", label: "Saved" }] : []),
+    ...(isOwnProfile ? [{ key: "comments", label: "Comments" }] : []),
   ];
 
   const handleForumClick = (id: string) => {
@@ -206,7 +261,8 @@ const Profile = () => {
     }
 
     switch (activeTab) {
-      case "posts":
+      case "posts": {
+        const displayPosts = showAll ? posts : posts.slice(0, ITEMS_LIMIT);
         if (posts.length === 0) {
           return (
             <div className="text-center py-8 text-muted-foreground">
@@ -215,34 +271,67 @@ const Profile = () => {
           );
         }
         return (
-          <div className="space-y-3">
-            {posts.map((p) => (
-              <div
-                key={p.id}
-                onClick={() => handleForumClick(p.id)}
-                className="flex items-center gap-3 sm:gap-4 rounded-xl border border-border bg-card p-3 sm:p-4 hover:shadow-md hover:border-primary/10 transition-all cursor-pointer">
-                <div className="flex-1 min-w-0">
-                  <p className="font-heading font-semibold text-foreground text-sm truncate sm:whitespace-normal">
-                    {p.title}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-medium">
-                      {p.subject.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {p.comments_count} comments
-                    </span>
+          <>
+            <div className="space-y-3">
+              {displayPosts.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => handleForumClick(p.id)}
+                  className="group rounded-xl border border-border bg-card p-4 hover:shadow-md hover:border-primary/20 transition-all cursor-pointer">
+                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-heading font-semibold text-primary text-base line-clamp-2">
+                        {p.title}
+                      </h3>
+                      {p.content && (
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          {truncateText(p.content, 120)}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-3 mt-2">
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          <span className="text-xs">{p.comments_count}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-end gap-2 md:flex-col md:items-end shrink-0">
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                        {p.subject?.name || "General"}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(p.created_at)}
+                        </span>
+                        <div className="flex items-center gap-1 text-green-600">
+                          <ArrowBigUp className="h-3.5 w-3.5" />
+                          <span className="text-sm font-semibold">
+                            {p.upvotes_count}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="text-sm font-semibold text-muted-foreground shrink-0">
-                  {p.upvotes_count} ↑
-                </div>
+              ))}
+            </div>
+            {posts.length > ITEMS_LIMIT && (
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={() => setShowAll(!showAll)}
+                  className="text-sm text-primary hover:underline transition-colors">
+                  {showAll ? "Show less" : "View more"}
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         );
+      }
 
-      case "saved":
+      case "saved": {
+        const displaySaved = showAll
+          ? savedPosts
+          : savedPosts.slice(0, ITEMS_LIMIT);
         if (savedPosts.length === 0) {
           return (
             <div className="text-center py-8 text-muted-foreground">
@@ -251,32 +340,64 @@ const Profile = () => {
           );
         }
         return (
-          <div className="space-y-3">
-            {savedPosts.map((p) => (
-              <div
-                key={p.id}
-                onClick={() => handleForumClick(p.id)}
-                className="flex items-center gap-3 sm:gap-4 rounded-xl border border-border bg-card p-3 sm:p-4 hover:shadow-md hover:border-primary/10 transition-all cursor-pointer">
-                <Bookmark className="h-4 w-4 text-primary fill-primary shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-heading font-semibold text-foreground text-sm truncate sm:whitespace-normal">
-                    {p.title}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-medium">
-                      {p.subject.name}
-                    </span>
+          <>
+            <div className="space-y-3">
+              {displaySaved.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => handleForumClick(p.id)}
+                  className="group rounded-xl border border-border bg-card p-4 hover:shadow-md hover:border-primary/20 transition-all cursor-pointer">
+                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Bookmark className="h-4 w-4 text-primary fill-primary shrink-0" />
+                        <h3 className="font-heading font-semibold text-primary text-base line-clamp-2">
+                          {p.title}
+                        </h3>
+                      </div>
+                      {p.content && (
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          {truncateText(p.content, 120)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center justify-end gap-2 md:flex-col md:items-end shrink-0">
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                        {p.subject?.name || "General"}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(p.saved_at || p.created_at)}
+                        </span>
+                        <div className="flex items-center gap-1 text-green-600">
+                          <ArrowBigUp className="h-3.5 w-3.5" />
+                          <span className="text-sm font-semibold">
+                            {p.upvotes_count}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="text-sm font-semibold text-muted-foreground shrink-0">
-                  {p.upvotes_count} ↑
-                </div>
+              ))}
+            </div>
+            {savedPosts.length > ITEMS_LIMIT && (
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={() => setShowAll(!showAll)}
+                  className="text-sm text-primary hover:underline transition-colors">
+                  {showAll ? "Show less" : "View more"}
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         );
+      }
 
-      case "comments":
+      case "comments": {
+        const displayComments = showAll
+          ? comments
+          : comments.slice(0, ITEMS_LIMIT);
         if (comments.length === 0) {
           return (
             <div className="text-center py-8 text-muted-foreground">
@@ -285,28 +406,59 @@ const Profile = () => {
           );
         }
         return (
-          <div className="space-y-3">
-            {comments.map((c) => (
-              <div
-                key={c.id}
-                onClick={() => handleForumClick(c.forum.id)}
-                className="rounded-xl border border-border bg-card p-3 sm:p-4 hover:shadow-md hover:border-primary/10 transition-all cursor-pointer">
-                <p className="text-xs text-muted-foreground mb-1">
-                  Commented on
-                </p>
-                <p className="font-heading font-semibold text-foreground text-sm mb-2">
-                  {c.forum.title}
-                </p>
-                <p className="text-sm text-foreground/80 leading-relaxed">
-                  "{c.content}"
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {c.upvotes_count} upvotes
-                </p>
+          <>
+            <div className="space-y-3">
+              {displayComments.map((c) => (
+                <div
+                  key={c.id}
+                  onClick={() => handleForumClick(c.forum.id)}
+                  className="group rounded-xl border border-border bg-card p-4 hover:shadow-md hover:border-primary/20 transition-all cursor-pointer">
+                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1 text-muted-foreground mb-1">
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        <span className="text-xs">Comment</span>
+                      </div>
+                      <p className="text-sm text-foreground">
+                        <span className="font-semibold text-primary">
+                          {c.forum.title}
+                        </span>
+                        {" — "}
+                        <span className="italic">"{c.content}"</span>
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-end gap-2 md:flex-col md:items-end shrink-0">
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                        {c.forum.subject?.name || "General"}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(c.created_at)}
+                        </span>
+                        <div className="flex items-center gap-1 text-green-600">
+                          <ArrowBigUp className="h-3.5 w-3.5" />
+                          <span className="text-sm font-semibold">
+                            {c.upvotes_count}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {comments.length > ITEMS_LIMIT && (
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={() => setShowAll(!showAll)}
+                  className="text-sm text-primary hover:underline transition-colors">
+                  {showAll ? "Show less" : "View more"}
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         );
+      }
 
       default:
         return null;
@@ -343,14 +495,14 @@ const Profile = () => {
           {user.school && (
             <p className="text-sm text-muted-foreground mt-1">{user.school}</p>
           )}
-          <div className="flex items-center gap-2 sm:gap-3 mt-3 flex-wrap">
-            <AIBadge variant="verified" size="md" />
-            <span className="text-xs text-muted-foreground">
-              Member since 2024
+          <div className="flex items-center gap-4 mt-3">
+            <span className="text-sm text-foreground">
+              <span className="font-semibold">{user.followers_count}</span>{" "}
+              <span className="text-muted-foreground">followers</span>
             </span>
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Star className="h-3 w-3 text-accent" />{" "}
-              {user.points.toLocaleString()} reputation
+            <span className="text-sm text-foreground">
+              <span className="font-semibold">{user.following_count}</span>{" "}
+              <span className="text-muted-foreground">following</span>
             </span>
           </div>
         </div>

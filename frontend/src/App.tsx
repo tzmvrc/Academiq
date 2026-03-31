@@ -20,6 +20,7 @@ import ProtectedRoute from "@/components/protectRoute/protectedRoute";
 import PublicRoute from "@/components/protectRoute/publicRoute";
 
 import Landing from "./pages/Landing";
+import SearchResults from "./pages/SearchResults";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Onboarding from "./pages/Onboarding";
@@ -31,7 +32,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import PostDetails from "./pages/PostDetails";
 import Notifications from "./pages/Notifications";
-import SecretChat from "./pages/SecretChat";
+import Open from "./pages/open";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -111,6 +112,16 @@ const AppRoutes = () => {
           }
         />
 
+         <Route
+          path="/search"
+          element={
+            <ProtectedRoute>
+              <SearchResults />
+            </ProtectedRoute>
+          }
+        />
+
+
         <Route
           path="/feed"
           element={
@@ -148,7 +159,7 @@ const AppRoutes = () => {
         />
 
         <Route
-          path="/profile"
+          path="/:userName"
           element={
             <ProtectedRoute>
               <Profile />
@@ -184,10 +195,10 @@ const AppRoutes = () => {
         />
 
         <Route
-          path="/open-forum"
+          path="/Open-forum"
           element={
             <ProtectedRoute>
-              <SecretChat />
+              <Open />
             </ProtectedRoute>
           }
         />

@@ -27,6 +27,12 @@ interface User {
   school: string | null;
 }
 
+interface Suggestion {
+  type: "forum" | "user" | "subject" | "tag";
+  text: string;
+  id?: string; // optional, for when clicking goes to a specific page
+}
+
 const navTabs = [
   { label: "Feed", path: "/feed" },
   { label: "Peers", path: "/peers" },
@@ -34,26 +40,17 @@ const navTabs = [
   { label: "Interests", path: "/interests" },
 ];
 
-// Dummy suggestions (replace with real data later)
-const searchSuggestions = [
-  { type: "topic", text: "Computer Science" },
-  { type: "topic", text: "Artificial Intelligence" },
-  { type: "topic", text: "Machine Learning" },
-  { type: "topic", text: "Engineering" },
-  { type: "topic", text: "Mathematics" },
-  { type: "post", text: "Attention Is All You Need — Revisited" },
-  { type: "post", text: "Bayesian Methods for Clinical Trials" },
-  { type: "post", text: "Formal Verification of Smart Contracts" },
-  { type: "user", text: "Dr. Emily Zhang" },
-  { type: "user", text: "Prof. Michael Torres" },
-  { type: "user", text: "Lina Kovacs" },
-  { type: "post", text: "Quantum Error Correction" },
-  { type: "topic", text: "Economics" },
-  { type: "topic", text: "Medicine" },
-  { type: "topic", text: "Business" },
-];
-
 type ThemeMode = "light" | "dark" | "system";
+
+// Simple debounce hook
+const useDebounce = <T,>(value: T, delay: number): T => {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+};
 
 const Navbar = () => {
   const location = useLocation();
@@ -72,18 +69,40 @@ const Navbar = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
+  // Search suggestions state
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const debouncedQuery = useDebounce(searchQuery, 300);
+
   const profileRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
 
-  const filteredSuggestions =
-    searchQuery.length > 0
-      ? searchSuggestions
-          .filter((s) =>
-            s.text.toLowerCase().includes(searchQuery.toLowerCase()),
-          )
-          .slice(0, 6)
-      : [];
+  // Fetch suggestions when debouncedQuery changes
+  useEffect(() => {
+    if (!debouncedQuery.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    const fetchSuggestions = async () => {
+      setLoadingSuggestions(true);
+      try {
+        const res = await axiosInstance.get(
+          `/search/suggestions?q=${encodeURIComponent(debouncedQuery)}`,
+        );
+        // Expecting { suggestions: Suggestion[] }
+        setSuggestions(res.data.suggestions || []);
+      } catch (err) {
+        console.error("Failed to fetch suggestions:", err);
+        setSuggestions([]);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    };
+
+    fetchSuggestions();
+  }, [debouncedQuery]);
 
   // Fetch current user
   useEffect(() => {
@@ -186,12 +205,32 @@ const Navbar = () => {
     });
   };
 
-  const handleSearchSelect = (s: { type: string; text: string }) => {
-    setSearchQuery(s.text);
+  // Navigate on suggestion click or search submit
+  const handleSearchSelect = (suggestion: Suggestion) => {
+    setSearchQuery(suggestion.text);
     setSearchFocused(false);
     setMobileSearchOpen(false);
-    if (s.type === "topic") {
-      navigate(`/feed?topic=${encodeURIComponent(s.text)}`);
+    // For forums, navigate to the forum page if we have an id
+    if (suggestion.type === "forum" && suggestion.id) {
+      navigate(`/post/${suggestion.id}`);
+    } else if (suggestion.type === "user" && suggestion.id) {
+      navigate(`/profile/${encodeURIComponent(suggestion.text)}`);
+    } else if (suggestion.type === "subject" && suggestion.id) {
+      navigate(`/feed?subjectId=${suggestion.id}`);
+    } else if (suggestion.type === "tag" && suggestion.id) {
+      navigate(`/feed?tagId=${suggestion.id}`);
+    } else {
+      // Fallback: go to search page
+      navigate(`/search?q=${encodeURIComponent(suggestion.text)}`);
+    }
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && searchQuery.trim()) {
+      e.preventDefault();
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+      setSearchFocused(false);
+      setMobileSearchOpen(false);
     }
   };
 
@@ -208,24 +247,41 @@ const Navbar = () => {
       .slice(0, 2);
   };
 
-  const SuggestionsList = () => (
-    <>
-      {filteredSuggestions.map((s, i) => (
-        <button
-          key={i}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            handleSearchSelect(s);
-          }}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-secondary/50 transition-colors">
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium w-10 shrink-0">
-            {s.type}
-          </span>
-          <span className="text-sm text-foreground truncate">{s.text}</span>
-        </button>
-      ))}
-    </>
-  );
+  // Suggestions list component (shared for desktop and mobile)
+  const SuggestionsList = () => {
+    if (loadingSuggestions) {
+      return (
+        <div className="px-4 py-3 text-sm text-muted-foreground">
+          Searching...
+        </div>
+      );
+    }
+    if (suggestions.length === 0 && debouncedQuery.trim()) {
+      return (
+        <div className="px-4 py-3 text-sm text-muted-foreground">
+          No suggestions found.
+        </div>
+      );
+    }
+    return (
+      <>
+        {suggestions.map((s, i) => (
+          <button
+            key={i}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              handleSearchSelect(s);
+            }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-secondary/50 transition-colors">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium w-10 shrink-0">
+              {s.type}
+            </span>
+            <span className="text-sm text-foreground truncate">{s.text}</span>
+          </button>
+        ))}
+      </>
+    );
+  };
 
   return (
     <>
@@ -283,26 +339,30 @@ const Navbar = () => {
             {/* Desktop search */}
             <div
               ref={searchRef}
-              className={`relative hidden sm:block transition-all duration-300 ${searchFocused ? "w-64 lg:w-72" : "w-40 lg:w-48"}`}>
+              className={`relative hidden sm:block transition-all duration-300 ${
+                searchFocused ? "w-64 lg:w-72" : "w-40 lg:w-48"
+              }`}>
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 className="w-full rounded-lg border border-border bg-secondary/50 py-1.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all font-body"
                 onFocus={() => setSearchFocused(true)}
               />
               <AnimatePresence>
-                {searchFocused && filteredSuggestions.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 4 }}
-                    className="absolute top-full left-0 right-0 mt-1 rounded-xl border border-border bg-card shadow-lg overflow-hidden z-50">
-                    <SuggestionsList />
-                  </motion.div>
-                )}
+                {searchFocused &&
+                  (suggestions.length > 0 || loadingSuggestions) && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 4 }}
+                      className="absolute top-full left-0 right-0 mt-1 rounded-xl border border-border bg-card shadow-lg overflow-hidden z-50">
+                      <SuggestionsList />
+                    </motion.div>
+                  )}
               </AnimatePresence>
             </div>
 
@@ -346,7 +406,9 @@ const Navbar = () => {
                     )}
                   </div>
                   <ChevronDown
-                    className={`h-3.5 w-3.5 text-muted-foreground hidden sm:block transition-transform ${profileOpen ? "rotate-180" : ""}`}
+                    className={`h-3.5 w-3.5 text-muted-foreground hidden sm:block transition-transform ${
+                      profileOpen ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
@@ -374,7 +436,7 @@ const Navbar = () => {
                             )}
                           </div>
                           <Link
-                            to="/profile"
+                            to={`/profile/${encodeURIComponent(user.name)}`}
                             onClick={() => setProfileOpen(false)}
                             className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors">
                             <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
@@ -394,7 +456,9 @@ const Navbar = () => {
                                 Theme
                               </span>
                               <ChevronDown
-                                className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${themeOpen ? "rotate-180" : ""}`}
+                                className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${
+                                  themeOpen ? "rotate-180" : ""
+                                }`}
                               />
                             </button>
                             <AnimatePresence>
@@ -495,11 +559,12 @@ const Navbar = () => {
                     placeholder="Search discussions, topics, users..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={handleSearchKeyDown}
                     autoFocus
                     className="w-full rounded-lg border border-border bg-secondary/50 py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 font-body"
                   />
                 </div>
-                {filteredSuggestions.length > 0 && (
+                {(suggestions.length > 0 || loadingSuggestions) && (
                   <div className="mt-2 rounded-xl border border-border bg-card overflow-hidden">
                     <SuggestionsList />
                   </div>

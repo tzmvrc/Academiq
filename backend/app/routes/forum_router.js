@@ -31,22 +31,19 @@ router.get("/subjects", authMiddleware, OnboardingController.getSubjects);
 router.get("/my-subjects", authMiddleware, OnboardingController.getMySubjects);
 router.post("/my-subjects", authMiddleware, OnboardingController.saveSubjects);
 
-// Optional: keep old topic routes for backward compatibility (or remove)
-// If you want to remove them, just delete these lines:
-// router.get("/topics", authMiddleware, OnboardingController.getTopics);
-// router.get("/my-topics", authMiddleware, OnboardingController.getMyTopics);
-// router.post("/my-topics", authMiddleware, OnboardingController.saveTopics);
-
 /* -----------------------
    Forums (Public)
 ------------------------ */
 router.get("/", ForumsController.getAllForums);
+router.get("/user", ForumsController.getUserForums); // NEW: get forums by user ID
+router.get("/comments", ForumsController.getUserComments); // NEW: get comments by user ID
 
 /* -----------------------
    Forums (Protected)
 ------------------------ */
 router.get("/users/me", authMiddleware, ForumsController.getMyForums);
 router.get("/saved/list", authMiddleware, ForumSavesController.getSavedForums);
+router.get("/saved", authMiddleware, ForumSavesController.getSavedForums); // NEW: alias for saved forums
 router.get("/:id/my-vote", authMiddleware, ForumsController.getMyVote);
 router.get("/:id/save", authMiddleware, ForumSavesController.getSaveStatus);
 

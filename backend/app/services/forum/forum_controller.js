@@ -1,5 +1,6 @@
 import path from "path";
 import { ForumModel } from "../../models/forum_model.js";
+import { CommentModel } from "../../models/comment_model.js";
 import { SubjectModel } from "../../models/subject_model.js";
 import { TagModel } from "../../models/tag_model.js";
 import { VotesModel } from "../../models/votes_model.js";
@@ -138,6 +139,45 @@ export const ForumsController = {
     } catch (err) {
       console.error("Get Forum Error:", err);
       res.status(404).json({ error: "Forum not found" });
+    }
+  },
+
+  async getUserForums(req, res) {
+    try {
+      const { userId, limit = 10, offset = 0 } = req.query;
+      if (!userId) {
+        return res.status(400).json({ error: "userId is required" });
+      }
+      const { data, error } = await ForumModel.findByUserId(
+        userId,
+        parseInt(limit),
+        parseInt(offset),
+      );
+      if (error) throw error;
+      res.json({ forums: data });
+    } catch (err) {
+      console.error("Error fetching user forums:", err);
+      res.status(500).json({ error: "Failed to fetch forums" });
+    }
+  },
+
+  // Get comments by userId (public)
+  async getUserComments(req, res) {
+    try {
+      const { userId, limit = 10, offset = 0 } = req.query;
+      if (!userId) {
+        return res.status(400).json({ error: "userId is required" });
+      }
+      const { data, error } = await CommentModel.findByUserId(
+        userId,
+        parseInt(limit),
+        parseInt(offset),
+      );
+      if (error) throw error;
+      res.json({ comments: data });
+    } catch (err) {
+      console.error("Error fetching user comments:", err);
+      res.status(500).json({ error: "Failed to fetch comments" });
     }
   },
 

@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import Icon from "@/components/ui/Icon.png";
 import { motion } from "framer-motion";
 import {
   UserPlus,
@@ -9,6 +10,7 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  Star,
 } from "lucide-react";
 import FeaturedSection from "@/components/FeaturedSection";
 import DiscussionCard from "@/components/DiscussionCard";
@@ -28,7 +30,19 @@ type TopicItem = {
   type: "subject" | "tag";
 };
 
-// Helper to get current user from localStorage (same as in PostDetails)
+interface PeerUser {
+  id: string;
+  name: string;
+  profile_url: string | null;
+  school: string | null;
+  bio: string | null;
+  points: number;
+  followers_count: number;
+  following_count: number;
+  is_followed?: boolean;
+}
+
+// Helper to get current user from localStorage
 const getCurrentUser = () => {
   try {
     const rawUser = localStorage.getItem("user");
@@ -71,10 +85,34 @@ const getCurrentUser = () => {
 
 const CURRENT_USER = getCurrentUser();
 
-// Suggested people data – keep as in your original code
-const suggestedPeople = [
-  // ... your array here ...
-];
+// Dummy forum that always appears at the end
+const DUMMY_FORUM: DiscussionCardProps = {
+  id: "open-forum-dummy",
+  title: "🌟 Open Forum",
+  author: "ACADEMIQ COMMUNITY",
+  authorSchool: "Open to all",
+  authorInitials: "OF",
+  authorProfileUrl: Icon,
+  field: "General",
+  tags: [
+    { id: "open-forum", name: "Open" },
+    { id: "announcements", name: "Academiq" },
+    { id: "community", name: "Community" },
+  ],
+  preview:
+    "Join the open forum for community discussions, announcements, and more.",
+  fullContent: "",
+  upvotes: 12,
+  downvotes: 0,
+  comments: 20,
+  userVoteState: null,
+  isSaved: false,
+  isVerified: true,
+  isAiVerified: true,
+  tag: "General",
+  aiSummary:
+    "A public space for all Academiq members to share ideas, ask questions, and connect outside of specific subjects.",
+};
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -83,7 +121,6 @@ const Index = () => {
   const subjectId = searchParams.get("subjectId");
   const tagId = searchParams.get("tagId");
 
-  const [followedPeople, setFollowedPeople] = useState<Set<string>>(new Set());
   const [followedTopics, setFollowedTopics] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -92,12 +129,23 @@ const Index = () => {
   const [error, setError] = useState<string | null>(null);
   const [filterName, setFilterName] = useState<string>("");
 
+  // Peers state
+  const [peers, setPeers] = useState<PeerUser[]>([]);
+  const [peersFollowingIds, setPeersFollowingIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [peersLoading, setPeersLoading] = useState(true);
+  const [followingUserId, setFollowingUserId] = useState<string | null>(null);
+
   // Edit/Delete state
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [selectedPostData, setSelectedPostData] =
     useState<DiscussionCardProps | null>(null);
+
+  // Combine real forums with the dummy forum (always last)
+  const allDiscussions = useMemo(() => [...forums, DUMMY_FORUM], [forums]);
 
   // Load forums – pass subjectId / tagId to backend
   useEffect(() => {
@@ -135,6 +183,43 @@ const Index = () => {
 
     loadForums();
   }, [subjectId, tagId]);
+
+  // Load peers data (similar to Peers component)
+  useEffect(() => {
+    const fetchPeers = async () => {
+      try {
+        setPeersLoading(true);
+        const usersRes = await axiosInstance.get("/peers/users");
+        const allUsers = usersRes.data.users || [];
+
+        const followingRes = await axiosInstance.get(
+          "/peers/users/me/following",
+        );
+        const following = followingRes.data.following || [];
+        const followingIdsSet = new Set(
+          following.map((f: any) => f.following.id),
+        );
+
+        const usersWithFollow = allUsers.map((user: PeerUser) => ({
+          ...user,
+          is_followed: followingIdsSet.has(user.id),
+        }));
+
+        setPeers(usersWithFollow);
+        setPeersFollowingIds(followingIdsSet);
+      } catch (err) {
+        console.error("Error fetching peers:", err);
+        toast({
+          title: "Failed to load people you may know",
+          variant: "destructive",
+        });
+      } finally {
+        setPeersLoading(false);
+      }
+    };
+
+    fetchPeers();
+  }, []);
 
   // Load subjects and popular tags for "Topics You May Like"
   useEffect(() => {
@@ -213,20 +298,6 @@ const Index = () => {
 
   const handleTagClick = (tagId: string) => {
     setSearchParams({ tagId });
-  };
-
-  const toggleFollowPerson = (name: string) => {
-    setFollowedPeople((prev) => {
-      const next = new Set(prev);
-      const isFollowing = next.has(name);
-      isFollowing ? next.delete(name) : next.add(name);
-
-      toast({
-        title: isFollowing ? `Unfollowed ${name}` : `Following ${name}`,
-      });
-
-      return next;
-    });
   };
 
   const handleTopicClick = (item: TopicItem) => {
@@ -439,8 +510,50 @@ const Index = () => {
     }
   };
 
-  const allDiscussions = forums;
+  // Peers follow/unfollow handler
+  const toggleFollowPeer = async (
+    userId: string,
+    name: string,
+    isFollowed: boolean,
+  ) => {
+    if (followingUserId === userId) return;
+    setFollowingUserId(userId);
+    try {
+      if (isFollowed) {
+        await axiosInstance.delete(`/peers/${userId}/unfollow`);
+        setPeers((prev) =>
+          prev.map((user) =>
+            user.id === userId ? { ...user, is_followed: false } : user,
+          ),
+        );
+        setPeersFollowingIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(userId);
+          return newSet;
+        });
+        toast({ title: `Unfollowed ${name}` });
+      } else {
+        await axiosInstance.post(`/peers/${userId}/follow`);
+        setPeers((prev) =>
+          prev.map((user) =>
+            user.id === userId ? { ...user, is_followed: true } : user,
+          ),
+        );
+        setPeersFollowingIds((prev) => new Set(prev).add(userId));
+        toast({ title: `Following ${name}` });
+      }
+    } catch (err: any) {
+      console.error("Follow/unfollow error:", err);
+      toast({
+        title: err?.response?.data?.error || "Action failed",
+        variant: "destructive",
+      });
+    } finally {
+      setFollowingUserId(null);
+    }
+  };
 
+  // Build the feed items array (posts interleaved with a people section)
   const feedItems: { type: "post" | "people"; index: number }[] = [];
   allDiscussions.forEach((_, i) => {
     feedItems.push({ type: "post", index: i });
@@ -481,70 +594,130 @@ const Index = () => {
     </div>
   );
 
-  const PeopleSection = () => (
-    <div className="rounded-xl border border-border bg-card p-4 sm:p-5 my-2">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-heading font-semibold text-foreground">
-          People You May Know
-        </h3>
-        <ScrollButtons scrollRef={peopleScrollRef} />
-      </div>
+  const PeopleSection = () => {
+    // Show only first 6 users (or all if fewer)
+    const visiblePeers = peers.slice(0, 6);
 
-      <div
-        ref={peopleScrollRef}
-        className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth"
-        style={{ scrollbarWidth: "thin" }}>
-        {suggestedPeople.map((person, i) => (
-          <div
-            key={i}
-            className="shrink-0 w-40 sm:w-44 rounded-xl border border-border bg-background p-3 sm:p-4 text-center hover:shadow-sm hover:border-primary/10 transition-all snap-start">
-            <div className="mx-auto mb-2.5 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-xs font-semibold text-primary">
-                {person.initials}
-              </span>
+    if (peersLoading) {
+      return (
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-5 my-2">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-heading font-semibold text-foreground">
+              People You May Know
+            </h3>
+            <div className="flex gap-1">
+              <div className="h-6 w-6 rounded-full bg-secondary animate-pulse" />
+              <div className="h-6 w-6 rounded-full bg-secondary animate-pulse" />
             </div>
-
-            <p className="text-xs font-medium text-foreground truncate">
-              {person.name}
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              {person.university}
-            </p>
-            <p className="text-[10px] text-accent font-medium mt-0.5">
-              {person.field}
-            </p>
-
-            <button
-              onClick={() => toggleFollowPerson(person.name)}
-              className={`mt-3 w-full flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-colors ${
-                followedPeople.has(person.name)
-                  ? "bg-secondary text-secondary-foreground"
-                  : "bg-primary text-primary-foreground hover:bg-primary/90"
-              }`}>
-              {followedPeople.has(person.name) ? (
-                <>
-                  <Check className="h-3 w-3" /> Following
-                </>
-              ) : (
-                <>
-                  <UserPlus className="h-3 w-3" /> Follow
-                </>
-              )}
-            </button>
           </div>
-        ))}
-
-        <button
-          onClick={() => navigate("/peers")}
-          className="shrink-0 w-40 sm:w-44 rounded-xl border border-dashed border-border bg-background p-3 sm:p-4 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-secondary/30 transition-all snap-start">
-          <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-secondary flex items-center justify-center">
-            <ArrowRight className="h-4 w-4" />
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="shrink-0 w-40 sm:w-44">
+                <div className="h-32 rounded-xl bg-secondary/50 animate-pulse" />
+              </div>
+            ))}
           </div>
-          <span className="text-xs font-medium">See More</span>
-        </button>
+        </div>
+      );
+    }
+
+    if (peers.length === 0) return null;
+
+    return (
+      <div className="rounded-xl border border-border bg-card p-4 sm:p-5 my-2">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-heading font-semibold text-foreground">
+            People You May Know
+          </h3>
+          <ScrollButtons scrollRef={peopleScrollRef} />
+        </div>
+
+        <div
+          ref={peopleScrollRef}
+          className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth"
+          style={{ scrollbarWidth: "thin" }}>
+          {visiblePeers.map((user) => {
+            const initials = user.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .toUpperCase()
+              .slice(0, 2);
+            const isFollowed = user.is_followed || false;
+            return (
+              <div
+                key={user.id}
+                className="shrink-0 w-40 sm:w-44 rounded-xl border border-border bg-background p-3 sm:p-4 text-center hover:shadow-sm hover:border-primary/10 transition-all snap-start">
+                <div className="mx-auto mb-2.5 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                  {user.profile_url ? (
+                    <img
+                      src={user.profile_url}
+                      alt={user.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-xs font-semibold text-primary">
+                      {initials}
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-xs font-medium text-foreground truncate">
+                  {user.name}
+                </p>
+                {user.school && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                    {user.school}
+                  </p>
+                )}
+                {user.bio && (
+                  <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">
+                    {user.bio}
+                  </p>
+                )}
+                <div className="flex items-center justify-center gap-1 mt-2 text-[10px] text-muted-foreground">
+                  <Star className="h-2.5 w-2.5 text-accent" />
+                  <span>{user.points?.toLocaleString() || 0} pts</span>
+                </div>
+
+                <button
+                  onClick={() =>
+                    toggleFollowPeer(user.id, user.name, isFollowed)
+                  }
+                  disabled={followingUserId === user.id}
+                  className={`mt-3 w-full flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
+                    isFollowed
+                      ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                      : "bg-primary text-primary-foreground hover:bg-primary/90"
+                  }`}>
+                  {followingUserId === user.id ? (
+                    "Following..."
+                  ) : isFollowed ? (
+                    <>
+                      <Check className="h-3 w-3" /> Following
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="h-3 w-3" /> Follow
+                    </>
+                  )}
+                </button>
+              </div>
+            );
+          })}
+
+          <button
+            onClick={() => navigate("/peers")}
+            className="shrink-0 w-40 sm:w-44 rounded-xl border border-dashed border-border bg-background p-3 sm:p-4 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-secondary/30 transition-all snap-start">
+            <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-secondary flex items-center justify-center">
+              <ArrowRight className="h-4 w-4" />
+            </div>
+            <span className="text-xs font-medium">See More</span>
+          </button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8">
@@ -650,14 +823,17 @@ const Index = () => {
                 const d = allDiscussions[item.index];
                 if (!d) return null;
 
-                const isAuthor = CURRENT_USER.id === d.user_id;
+                const isAuthor =
+                  d.id !== "open-forum-dummy" && CURRENT_USER.id === d.user_id;
+
+                // Navigate to /open-forum for dummy, otherwise to post details
+                const navigateTo =
+                  d.id === "open-forum-dummy" ? "/open-forum" : `/post/${d.id}`;
 
                 return (
                   <div
-                    onClick={() => navigate(`/post/${d.id}`)}
-                    onKeyDown={(e) =>
-                      e.key === "Enter" && navigate(`/post/${d.id}`)
-                    }
+                    onClick={() => navigate(navigateTo)}
+                    onKeyDown={(e) => e.key === "Enter" && navigate(navigateTo)}
                     role="link"
                     tabIndex={0}
                     key={d.id ?? idx}
@@ -667,17 +843,35 @@ const Index = () => {
                       isSaved={d.isSaved}
                       index={item.index}
                       isAuthor={isAuthor}
-                      onEdit={handleEditPost}
-                      onDelete={handleDeletePost}
-                      onVote={(voteType) => handleVoteForum(d.id!, voteType)}
-                      onUnvote={() => handleUnvoteForum(d.id!)}
-                      onSave={() => handleSaveForum(d.id!)}
+                      onEdit={
+                        d.id !== "open-forum-dummy" ? handleEditPost : undefined
+                      }
+                      onDelete={
+                        d.id !== "open-forum-dummy"
+                          ? handleDeletePost
+                          : undefined
+                      }
+                      onVote={
+                        d.id !== "open-forum-dummy"
+                          ? (voteType) => handleVoteForum(d.id!, voteType)
+                          : undefined
+                      }
+                      onUnvote={
+                        d.id !== "open-forum-dummy"
+                          ? () => handleUnvoteForum(d.id!)
+                          : undefined
+                      }
+                      onSave={
+                        d.id !== "open-forum-dummy"
+                          ? () => handleSaveForum(d.id!)
+                          : undefined
+                      }
                     />
                   </div>
                 );
               })}
 
-              {allDiscussions.length === 0 && !isLoading && (
+              {forums.length === 0 && !isLoading && (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">
                     {subjectId || tagId

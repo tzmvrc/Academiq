@@ -51,15 +51,15 @@ export const UserModel = {
   },
 
   // In UserModel, add:
-async findAllExcept(userId) {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select('id, name, profile_url, school, bio, points, followers_count, following_count')
-    .neq('id', userId)
-    .order('name', { ascending: true });
-  if (error) throw error;
-  return data;
-},
+  async findAllExcept(userId) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("id, name, profile_url, school")
+      .neq("id", userId)
+      .order("name", { ascending: true });
+    if (error) throw error;
+    return data;
+  },
 
   async findByGoogleId(google_id) {
     const { data, error } = await supabase
@@ -79,6 +79,16 @@ async findAllExcept(userId) {
       .eq("id", id)
       .single();
 
+    if (error) return null;
+    return data;
+  },
+
+  async findByName(name) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("*")
+      .ilike("name", name) // case‑insensitive match
+      .single();
     if (error) return null;
     return data;
   },
