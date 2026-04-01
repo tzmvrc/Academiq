@@ -27,7 +27,7 @@ export const useLogin = () => {
         if (res.data.onboardingRequired) {
           navigate("/onboarding", { replace: true });
         } else {
-          navigate("/dashboard", { replace: true });
+          navigate("/feed", { replace: true });
         }
       }
 

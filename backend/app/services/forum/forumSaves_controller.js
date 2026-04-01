@@ -63,13 +63,15 @@ export const ForumSavesController = {
       if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
       const { data, error } = await ForumSavesModel.findByUserId(userId);
-
       if (error) throw error;
 
-      // Extract forums from saves
-      const forums = data.map((save) => save.forums).filter(Boolean);
+      // Transform to match frontend expected format: { saved: [...] }
+      const saved = (data || []).map((save) => ({
+        ...save.forums,
+        saved_at: save.created_at,
+      }));
 
-      res.json({ forums });
+      res.json({ saved });
     } catch (err) {
       console.error("Get Saved Forums Error:", err);
       res.status(500).json({ error: "Failed to fetch saved forums" });

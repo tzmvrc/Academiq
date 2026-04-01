@@ -17,8 +17,9 @@ export const CommentModel = {
         id, user_id, forum_id, parent_comment_id,
         content,
         is_ai_verified,
+        upvotes_count, downvotes_count,
         created_at, updated_at,
-        users ( id, name, profile_url )
+        users!comments_user_id_fkey ( id, name, profile_url )
       `,
       )
       .eq("id", id)
@@ -34,21 +35,39 @@ export const CommentModel = {
         id, user_id, forum_id, parent_comment_id,
         content,
         is_ai_verified,
+        upvotes_count, downvotes_count,
         created_at, updated_at,
-        users ( id, name, profile_url )
+        users!comments_user_id_fkey ( id, name, profile_url )
       `,
       )
       .eq("forum_id", forumId)
       .order("created_at", { ascending: true });
   },
 
+  // Get forums by userId (public)
+
   // Find comments by user ID
-  async findByUserId(userId) {
-    return supabase
-      .from(TABLE)
-      .select("*")
+  async findByUserId(userId, limit = 10, offset = 0) {
+    const { data, error } = await supabase
+      .from("comments")
+      .select(
+        `
+      id,
+      content,
+      upvotes_count,
+      created_at,
+      forum:forum_id (
+        id,
+        title,
+        subject:subject_id ( name )
+      )
+    `,
+      )
       .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+    if (error) throw error;
+    return { data, error: null };
   },
 
   // Update comment by ID

@@ -1,7 +1,7 @@
-import { PostVoteModel } from "../../models/postVotes_model.js";
-import { ForumModel } from "../../models/forum_model.js"; // if you have this for fetching forum
+import { VotesModel } from "../../models/votes_model.js";
+import { ForumModel } from "../../models/forum_model.js";
 
-export const ForumsController = {
+export const PostVotesController = {
   // POST /api/forums/:id/vote
   async voteForum(req, res) {
     try {
@@ -15,20 +15,21 @@ export const ForumsController = {
         return res.status(400).json({ error: "voteType must be 1 or -1" });
       }
 
-      const { data: voteRow, error } = await PostVoteModel.setVote(
-        forumId,
+      const { data: voteRow, error } = await VotesModel.setVote(
         userId,
+        "forum",
+        forumId,
         voteType,
       );
 
       if (error) {
-        console.error("PostVoteModel.setVote error:", error);
+        console.error("VotesModel.setVote error:", error);
         return res
           .status(500)
           .json({ error: "Failed to save vote", details: error.message });
       }
 
-      // ✅ Return updated forum score from forums table (trigger-maintained)
+      // ✅ Return updated forum with vote counts
       const { data: forum, error: forumErr } =
         await ForumModel.findById(forumId);
       if (forumErr) {
@@ -40,9 +41,12 @@ export const ForumsController = {
 
       res.json({
         message: "Vote saved",
-        vote: voteRow, // includes vote_type
-        voteType: voteRow.vote_type, // convenient for frontend
-        voteCount: forum.vote_count, // net score after triggers
+        vote: voteRow,
+        voteType: voteRow.vote_type,
+        voteCount: {
+          upvotes: forum.upvotes_count,
+          downvotes: forum.downvotes_count,
+        },
       });
     } catch (err) {
       console.error("Vote Forum Error:", err);
@@ -60,15 +64,15 @@ export const ForumsController = {
 
       const forumId = req.params.id;
 
-      const { error } = await PostVoteModel.removeVote(forumId, userId);
+      const { error } = await VotesModel.removeVote(userId, "forum", forumId);
       if (error) {
-        console.error("PostVoteModel.removeVote error:", error);
+        console.error("VotesModel.removeVote error:", error);
         return res
           .status(500)
           .json({ error: "Failed to remove vote", details: error.message });
       }
 
-      // ✅ Return updated forum score (trigger-maintained)
+      // ✅ Return updated forum with vote counts
       const { data: forum, error: forumErr } =
         await ForumModel.findById(forumId);
       if (forumErr) {
@@ -81,7 +85,10 @@ export const ForumsController = {
       res.json({
         message: "Vote removed",
         voteType: null,
-        voteCount: forum.vote_count,
+        voteCount: {
+          upvotes: forum.upvotes_count,
+          downvotes: forum.downvotes_count,
+        },
       });
     } catch (err) {
       console.error("Unvote Forum Error:", err);
