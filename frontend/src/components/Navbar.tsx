@@ -182,6 +182,16 @@ const Navbar = () => {
     setMobileSearchOpen(false);
   }, [location.pathname]);
 
+  // Listen for clear search event from SearchResults page
+  useEffect(() => {
+    const handleClearSearch = () => {
+      setSearchQuery("");
+    };
+    window.addEventListener("clearNavbarSearch", handleClearSearch);
+    return () =>
+      window.removeEventListener("clearNavbarSearch", handleClearSearch);
+  }, []);
+
   const handleLogout = async () => {
     try {
       await axiosInstance.post("/auth/logout");
@@ -436,7 +446,7 @@ const Navbar = () => {
                             )}
                           </div>
                           <Link
-                            to={`/profile/${encodeURIComponent(user.name)}`}
+                            to={`/${encodeURIComponent(user.name)}`}
                             onClick={() => setProfileOpen(false)}
                             className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors">
                             <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">

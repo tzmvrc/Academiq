@@ -648,23 +648,28 @@ const Index = () => {
               <div
                 key={user.id}
                 className="shrink-0 w-40 sm:w-44 rounded-xl border border-border bg-background p-3 sm:p-4 text-center hover:shadow-sm hover:border-primary/10 transition-all snap-start">
-                <div className="mx-auto mb-2.5 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                  {user.profile_url ? (
-                    <img
-                      src={user.profile_url}
-                      alt={user.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-xs font-semibold text-primary">
-                      {initials}
-                    </span>
-                  )}
-                </div>
-
-                <p className="text-xs font-medium text-foreground truncate">
-                  {user.name}
-                </p>
+                {/* Clickable profile link */}
+                <Link
+                  to={`/${encodeURIComponent(user.name)}`}
+                  className="block"
+                  onClick={(e) => e.stopPropagation()}>
+                  <div className="mx-auto mb-2.5 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                    {user.profile_url ? (
+                      <img
+                        src={user.profile_url}
+                        alt={user.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xs font-semibold text-primary">
+                        {initials}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs font-medium text-foreground truncate">
+                    {user.name}
+                  </p>
+                </Link>
                 {user.school && (
                   <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
                     {user.school}

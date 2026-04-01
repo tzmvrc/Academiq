@@ -187,22 +187,27 @@ const Peers = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                   className="rounded-xl border border-border bg-card p-4 sm:p-5 text-center transition-all hover:shadow-md hover:border-primary/10">
-                  <div className="mx-auto mb-3 h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                    {user.profile_url ? (
-                      <img
-                        src={user.profile_url}
-                        alt={user.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-base sm:text-lg font-semibold text-primary">
-                        {initials}
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="font-heading font-semibold text-foreground text-sm">
-                    {user.name}
-                  </h3>
+                  <Link
+                    to={`/${encodeURIComponent(user.name)}`}
+                    className="block"
+                    onClick={(e) => e.stopPropagation()}>
+                    <div className="mx-auto mb-3 h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                      {user.profile_url ? (
+                        <img
+                          src={user.profile_url}
+                          alt={user.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-base sm:text-lg font-semibold text-primary">
+                          {initials}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-heading font-semibold text-foreground text-sm">
+                      {user.name}
+                    </h3>
+                  </Link>
                   {user.school && (
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {user.school}
