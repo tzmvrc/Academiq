@@ -28,13 +28,12 @@ export const useGoogleAuth = () => {
         if (onboardingRequired) {
           navigate("/onboarding", { replace: true });
         } else {
-          navigate("/dashboard", { replace: true });
+          navigate("/feed", { replace: true });
         }
 
         toast({
           title: "Login Successful",
           description: `Welcome ${user.name}!`,
-          variant: "success",
         });
       } catch (err: any) {
         console.error("Google auth failed:", err);

@@ -3,8 +3,8 @@ import { supabase } from "../database/supabase.js";
 const TABLE = "otp";
 
 export const OtpModel = {
-  // Create or replace OTP record (send otp step)
-  async upsert({ email, otp_hash, expires_at }) {
+  // Create OTP record (send otp step)
+  async create({ email, otp_hash, expires_at, purpose = "signup" }) {
     // delete old first (simpler than update logic)
     await supabase.from(TABLE).delete().eq("email", email);
 
@@ -15,6 +15,7 @@ export const OtpModel = {
           email,
           otp_hash,
           expires_at,
+          purpose,
           verified: false,
           attempts: 0,
         },
@@ -25,7 +26,7 @@ export const OtpModel = {
     return data[0];
   },
 
-  // Find verification by email
+  // Find OTP by email
   async findByEmail(email) {
     const { data, error } = await supabase
       .from(TABLE)
@@ -65,12 +66,21 @@ export const OtpModel = {
     return data[0];
   },
 
+  // Mark consumed (used)
+  async markConsumed(id) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update({ consumed_at: new Date().toISOString() })
+      .eq("id", id)
+      .select();
+
+    if (error) throw error;
+    return data[0];
+  },
+
   // Delete after successful signup
   async delete(email) {
-    const { error } = await supabase
-      .from(TABLE)
-      .delete()
-      .eq("email", email);
+    const { error } = await supabase.from(TABLE).delete().eq("email", email);
 
     if (error) throw error;
   },

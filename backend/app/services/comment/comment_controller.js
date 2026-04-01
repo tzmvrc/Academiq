@@ -1,5 +1,5 @@
 import { CommentModel } from "../../models/comment_model.js";
-import { CommentVoteModel } from "../../models/commentVotes_model.js";
+import { getIO } from "../../middlewares/socket.js";
 
 export const CommentsController = {
   // GET /api/forums/:id/comments
@@ -10,20 +10,8 @@ export const CommentsController = {
       const { data, error } = await CommentModel.findByForumId(forumId);
       if (error) throw error;
 
-      // Fetch vote count for each comment
-      const commentsWithVotes = await Promise.all(
-        data.map(async (comment) => {
-          const { data: voteCount } = await CommentVoteModel.getVoteCount(
-            comment.id,
-          );
-          return {
-            ...comment,
-            vote_count: voteCount || 0,
-          };
-        }),
-      );
-
-      res.json({ comments: commentsWithVotes });
+      // Comments now include upvotes_count and downvotes_count from the database
+      res.json({ comments: data });
     } catch (err) {
       console.error("Get Forum Comments Error:", err);
       res.status(500).json({ error: "Failed to fetch forum comments" });
@@ -38,10 +26,7 @@ export const CommentsController = {
       const { data, error } = await CommentModel.findById(id);
       if (error) throw error;
 
-      // Fetch vote count
-      const { data: voteCount } = await CommentVoteModel.getVoteCount(id);
-
-      res.json({ comment: { ...data, vote_count: voteCount || 0 } });
+      res.json({ comment: data });
     } catch (err) {
       console.error("Get Comment Error:", err);
       res.status(404).json({ error: "Comment not found" });
@@ -66,74 +51,90 @@ export const CommentsController = {
 
   // POST /api/forums/:id/comments
   async createComment(req, res) {
-    try {
-      const userId = req.user?.id;
-      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-      const forumId = req.params.id;
-      const { content, parent_comment_id = null } = req.body;
+    const forumId = req.params.id;
+    const { content, parent_comment_id = null } = req.body;
 
-      if (!content || !content.trim()) {
-        return res.status(400).json({ error: "Content is required" });
-      }
-
-      const payload = {
-        forum_id: forumId,
-        user_id: userId,
-        content: content.trim(),
-        parent_comment_id,
-      };
-
-      const { data: created, error } = await CommentModel.create(payload);
-      if (error) throw error;
-
-      // Fetch the created comment with user info
-      const { data: comment, error: fetchErr } = await CommentModel.findById(
-        created.id,
-      );
-      if (fetchErr) throw fetchErr;
-
-      // Fetch vote count (should be 0 for new comment)
-      const { data: voteCount } = await CommentVoteModel.getVoteCount(
-        created.id,
-      );
-
-      res.status(201).json({
-        comment: { ...comment, vote_count: voteCount || 0 },
-      });
-    } catch (err) {
-      console.error("Create Comment Error:", err);
-      res.status(500).json({ error: "Failed to create comment" });
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: "Content is required" });
     }
-  },
+
+    const payload = {
+      forum_id: forumId,
+      user_id: userId,
+      content: content.trim(),
+      parent_comment_id,
+    };
+
+    const { data: created, error } = await CommentModel.create(payload);
+    if (error) throw error;
+
+    // Fetch the created comment with user info
+    const { data: comment, error: fetchErr } = await CommentModel.findById(
+      created.id,
+    );
+    if (fetchErr) throw fetchErr;
+
+    // ---- Emit real-time event ----
+    const io = getIO();
+    io.to(`post:${forumId}`).emit('comment_created', comment);
+    // ------------------------------
+
+    res.status(201).json({ comment });
+  } catch (err) {
+    console.error("Create Comment Error:", err);
+    res.status(500).json({ error: "Failed to create comment" });
+  }
+},
 
   // PUT /api/comments/:id
-  async updateComment(req, res) {
-    try {
-      const { id } = req.params;
+async updateComment(req, res) {
+  try {
+    const { id } = req.params;
 
-      const { data, error } = await CommentModel.update(id, req.body);
-      if (error) throw error;
+    const { data, error } = await CommentModel.update(id, req.body);
+    if (error) throw error;
 
-      res.json({ comment: data });
-    } catch (err) {
-      console.error("Update Comment Error:", err);
-      res.status(500).json({ error: "Failed to update comment" });
-    }
-  },
+    // Fetch the updated comment to get the latest user info and forum_id
+    const { data: updatedComment, error: fetchErr } = await CommentModel.findById(id);
+    if (fetchErr) throw fetchErr;
+
+    // ---- Emit real-time event ----
+    const io = getIO();
+    io.to(`post:${updatedComment.forum_id}`).emit('comment_updated', updatedComment);
+    // ------------------------------
+
+    res.json({ comment: updatedComment });
+  } catch (err) {
+    console.error("Update Comment Error:", err);
+    res.status(500).json({ error: "Failed to update comment" });
+  }
+},
 
   // DELETE /api/comments/:id
   async deleteComment(req, res) {
-    try {
-      const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-      const { error } = await CommentModel.delete(id);
-      if (error) throw error;
+    // Fetch comment first to get forum_id
+    const { data: comment, error: fetchErr } = await CommentModel.findById(id);
+    if (fetchErr) throw fetchErr;
 
-      res.json({ message: "Comment deleted successfully" });
-    } catch (err) {
-      console.error("Delete Comment Error:", err);
-      res.status(500).json({ error: "Failed to delete comment" });
-    }
-  },
+    const { error } = await CommentModel.delete(id);
+    if (error) throw error;
+
+    // ---- Emit real-time event ----
+    const io = getIO();
+    io.to(`post:${comment.forum_id}`).emit('comment_deleted', { commentId: id, forumId: comment.forum_id });
+    // ------------------------------
+
+    res.json({ message: "Comment deleted successfully" });
+  } catch (err) {
+    console.error("Delete Comment Error:", err);
+    res.status(500).json({ error: "Failed to delete comment" });
+  }
+},
 };

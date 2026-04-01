@@ -1,9 +1,5 @@
 import { SubjectModel } from "../../models/subject_model.js";
 
-function generateSlug(text) {
-  return text.toLowerCase().replace(/\s+/g, "-");
-}
-
 export const SubjectsController = {
   // GET /api/subjects
   async getAllSubjects(req, res) {
@@ -18,20 +14,6 @@ export const SubjectsController = {
     }
   },
 
-  // GET /api/subjects/:topicId
-  async getSubjectsByTopic(req, res) {
-    try {
-      const { topicId } = req.params;
-
-      const subjects = await SubjectModel.getByTopic(topicId);
-
-      res.json({ subjects });
-    } catch (err) {
-      console.error("Get Subjects Error:", err);
-      res.status(500).json({ error: "Failed to fetch subjects" });
-    }
-  },
-
   // POST /api/subjects
   async createSubject(req, res) {
     try {
@@ -42,14 +24,19 @@ export const SubjectsController = {
       }
 
       // Check if exists by name
-      const { data: existingSubject } = await SubjectModel.findByName(name);
+      const { data: existingSubject, error: findErr } =
+        await SubjectModel.findByName(name);
+
+      if (findErr && findErr.code !== "PGRST116") {
+        throw findErr;
+      }
 
       if (existingSubject) {
         return res.json({ subject: existingSubject });
       }
 
       // Create new subject
-      const { data, error } = await SubjectModel.createSimple(name);
+      const { data, error } = await SubjectModel.create(name);
 
       if (error) throw error;
 

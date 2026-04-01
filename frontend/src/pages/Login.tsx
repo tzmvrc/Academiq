@@ -1,135 +1,84 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { BrutalButton } from "@/components/ui/BrutalButton";
-import { BrutalCard } from "@/components/ui/BrutalCard";
-import { BrutalInput } from "@/components/ui/BrutalInput";
-import { GraduationCap, Mail, Lock, ArrowLeft } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { useGoogleAuth } from "@/components/auth/useGoogleAuth";
 import { useLogin } from "@/components/auth/useLogin";
-import { toast } from "@/components/ui/use-toast";
+import Icon from "../components/ui/Icon.png";
 
-export const Login: React.FC = () => {
-  const navigate = useNavigate();
+const Login = () => {
+  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const { manualLogin, useloading } = useLogin();
   const { loginWithGoogle, loading } = useGoogleAuth();
 
-
-  // Manual login (currently placeholder)
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const result = await manualLogin(email, password);
+    if (!email.trim()) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  if (!result.success) {
-    // show your toast here if you use one
-    toast({
-      title: result.title || "Login Failed",
-      description: result.message,
-      variant: "destructive",
-    });
-  }
-};
+    if (!password.trim()) {
+      toast({
+        title: "Password required",
+        description: "Please enter your password.",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    const result = await manualLogin(email, password);
+
+    if (!result.success) {
+      toast({
+        title: result.title || "Login Failed",
+        description: result.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative blobs */}
-      <div className="absolute top-20 left-20 w-40 h-40 bg-yellow rounded-full border-[3px] border-foreground opacity-30" />
-      <div className="absolute bottom-20 right-10 w-32 h-32 bg-teal rounded-full border-[3px] border-foreground opacity-30" />
-      <div className="absolute top-1/2 right-1/4 w-20 h-20 bg-pink rounded-full border-[3px] border-foreground opacity-30" />
+    <div className="min-h-screen bg-background flex items-center justify-center px-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md"
+      >
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <img src={Icon} alt="Academiq Logo" className="h-15 w-15" />
+          <span className="text-2xl font-heading font-bold text-foreground">
+            Academiq
+          </span>
+        </div>
 
-      <div className="w-full max-w-md relative z-10">
-        {/* Back Link */}
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-foreground font-semibold mb-6 hover:underline"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
-        </Link>
-
-        <BrutalCard className="p-8">
-          {/* Logo */}
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="w-14 h-14 bg-primary rounded-xl border-[3px] border-foreground shadow-brutal flex items-center justify-center">
-              <GraduationCap className="w-8 h-8 text-primary-foreground" />
-            </div>
-            <span className="text-3xl font-bold">Academiq</span>
-          </div>
-
-          <h1 className="text-2xl font-bold text-center mb-2">Welcome Back!</h1>
-          <p className="text-muted-foreground text-center mb-8">
-            Sign in to continue your learning journey
+        <div className="rounded-xl border border-border bg-card p-8">
+          <h1 className="text-xl font-heading font-bold text-foreground text-center mb-1">
+            Welcome back
+          </h1>
+          <p className="text-sm text-muted-foreground text-center mb-6">
+            Sign in to your academic community
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <BrutalInput
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-12"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <BrutalInput
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pl-12"
-                required
-              />
-            </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 border-2 border-foreground rounded"
-                />
-                <span className="font-medium">Remember me</span>
-              </label>
-              <a
-                href="#"
-                className="font-semibold text-primary hover:underline"
-              >
-                Forgot password?
-              </a>
-            </div>
-
-            <BrutalButton type="submit" variant="primary" className="w-full">
-              Sign In
-            </BrutalButton>
-          </form>
-
-          {/* Divider */}
-          <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-[2px] bg-foreground/20" />
-            <span className="text-sm font-medium text-muted-foreground">
-              or
-            </span>
-            <div className="flex-1 h-[2px] bg-foreground/20" />
-          </div>
-
-          {/* Google OAuth */}
-          <BrutalButton
-            variant="outline"
-            className="w-full flex items-center justify-center gap-2"
+          <button
+            type="button"
             onClick={loginWithGoogle}
             disabled={loading}
+            className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 text-sm font-medium text-foreground hover:bg-secondary transition-colors mb-4 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+            <svg className="h-4 w-4" viewBox="0 0 24 24">
               <path
                 fill="currentColor"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
               />
               <path
                 fill="currentColor"
@@ -144,22 +93,92 @@ export const Login: React.FC = () => {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
+            {loading ? "Signing in..." : "Continue with Google"}
+          </button>
 
-            <span>{loading ? "Signing in..." : "Continue with Google"}</span>
-          </BrutalButton>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
 
-          {/* Sign Up Link */}
-          <p className="text-center mt-6 text-sm">
-            Don't have an account?{" "}
-            <Link
-              to="/signup"
-              className="font-bold text-primary hover:underline"
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@university.edu"
+                className="w-full rounded-lg border border-border bg-secondary/30 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 font-body"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full rounded-lg border border-border bg-secondary/30 px-3 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 font-body"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <input type="checkbox" className="rounded border-border" />
+                Remember me
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-sm text-primary hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
+            <button
+              type="submit"
+              disabled={useloading}
+              className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Sign up
-            </Link>
-          </p>
-        </BrutalCard>
-      </div>
+              {useloading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
+        </div>
+
+        <p className="text-sm text-muted-foreground text-center mt-6">
+          Don&apos;t have an account?{" "}
+          <Link
+            to="/signup"
+            className="text-primary hover:underline font-medium"
+          >
+            Sign up
+          </Link>
+        </p>
+      </motion.div>
     </div>
   );
 };
+
+export default Login;

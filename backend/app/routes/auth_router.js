@@ -18,5 +18,18 @@ router.post("/signup/complete", AuthController.completeSignup);
 // Protected route for current user
 router.get("/me", authMiddleware, AuthController.getMe);
 router.post("/logout", authMiddleware, AuthController.logout);
+// In auth_router.js
+router.get("/users", authMiddleware, AuthController.getAllUsers);
+// Get user by ID (must come after the specific /users route to avoid conflict)
+router.get("/users/:id", authMiddleware, AuthController.getUserById);
+router.get("/users/name/:name", authMiddleware, AuthController.getUserByName);
+
+// in auth_router.js (or a dedicated search router)
+router.get(
+  "/search/suggestions",
+  authMiddleware,
+  AuthController.getSuggestions,
+);
+router.get("/search", authMiddleware, AuthController.search);
 
 export default router;

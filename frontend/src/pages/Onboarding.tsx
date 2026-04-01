@@ -1,281 +1,243 @@
-import React, { useState, useEffect } from "react";
+/** @format */
+
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BrutalCard } from "@/components/ui/BrutalCard";
-import { BrutalButton } from "@/components/ui/BrutalButton";
-import { BrutalTag } from "@/components/ui/BrutalTag";
-import {
-  GraduationCap,
-  Sparkles,
-  ArrowRight,
-  Check,
-  Trash2,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { Sparkles, Check } from "lucide-react";
+import * as Icons from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useAuth } from "@/components/auth/useAuth";
 import axiosInstance from "@/integration/axiosInstance";
 
-
-interface Topic {
+type Subject = {
   id: string;
   name: string;
-  icon: string;
-  color: string;
-  category: string;
-}
+};
 
-export const Onboarding: React.FC = () => {
+const MAX_SUBJECTS_TO_SHOW = 18;
+
+// Helper: map subject name to an icon component
+const getIconForSubject = (name: string) => {
+  const lowerName = name.toLowerCase();
+  if (lowerName.includes("math")) return Icons.Calculator;
+  if (lowerName.includes("physic")) return Icons.Atom;
+  if (lowerName.includes("chem")) return Icons.FlaskConical;
+  if (lowerName.includes("biol")) return Icons.Dna;
+  if (lowerName.includes("comput") || lowerName.includes("program")) return Icons.Cpu;
+  if (lowerName.includes("engin")) return Icons.Cog;
+  if (lowerName.includes("busin") || lowerName.includes("econ")) return Icons.Briefcase;
+  if (lowerName.includes("medic")) return Icons.Heart;
+  if (lowerName.includes("psych")) return Icons.Brain;
+  if (lowerName.includes("law") || lowerName.includes("legal")) return Icons.Scale;
+  if (lowerName.includes("art") || lowerName.includes("design")) return Icons.Palette;
+  if (lowerName.includes("histor")) return Icons.BookOpen;
+  if (lowerName.includes("lang") || lowerName.includes("literature")) return Icons.Languages;
+  if (lowerName.includes("geog")) return Icons.Globe;
+  if (lowerName.includes("sociol") || lowerName.includes("anthro")) return Icons.Users;
+  if (lowerName.includes("philos")) return Icons.Brain;
+  if (lowerName.includes("educ")) return Icons.GraduationCap;
+  return Icons.BookOpen;
+};
+
+// Optional: generate a consistent pastel color for the icon background
+const getIconColor = (name: string) => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) - hash) + name.charCodeAt(i);
+    hash |= 0;
+  }
+  const hue = Math.abs(hash % 360);
+  return `hsl(${hue}, 70%, 85%)`;
+};
+
+const Onboarding = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
-  const [topics, setTopics] = useState<Topic[]>([]);
-  const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set());
+
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [filterCategory, setFilterCategory] = useState<string | null>(null);
 
-  // Fetch topics and user-selected topics
+  const visibleSubjects = subjects.slice(0, MAX_SUBJECTS_TO_SHOW);
+
+  const fetchSubjects = async () => {
+    try {
+      setLoading(true);
+      const res = await axiosInstance.get("/forums/subjects");
+      setSubjects(res.data.subjects || []);
+    } catch (error: any) {
+      console.error("Fetch subjects error:", error);
+      toast({
+        title: "Failed to load subjects",
+        description: error?.response?.data?.error || "Please refresh and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axiosInstance.get("/topics");
-        setTopics(res.data.topics || []);
-      } catch (err) {
-        console.error(err);
-        toast({ title: "Failed to load topics", variant: "destructive" });
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchSubjects();
+  }, []);
 
-    if (!authLoading && user) fetchData();
-  }, [authLoading, user]);
-
-  // Redirect if no user
-  useEffect(() => {
-    if (!authLoading && !user) navigate("/login");
-  }, [authLoading, user, navigate]);
-
-  const toggleTopic = (id: string) => {
-    setSelectedTopics((prev) => {
+  const toggle = (subjectId: string, subjectName: string) => {
+    setSelected((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      const isAdding = !next.has(subjectId);
+
+      if (isAdding) {
+        next.add(subjectId);
+        toast({
+          title: `Added ${subjectName}`,
+          description: "Subject added to your interests.",
+        });
+      } else {
+        next.delete(subjectId);
+      }
+
       return next;
     });
   };
 
-  // Save selected topics
   const handleContinue = async () => {
-    if (selectedTopics.size < 3) {
-      toast({ title: "Select at least 3 topics", variant: "destructive" });
+    if (selected.size < 3) {
+      toast({
+        title: "Select more subjects",
+        description: `Please select at least 3 subjects. You've selected ${selected.size}.`,
+        variant: "destructive",
+      });
       return;
     }
-    console.log("Selected topic IDs:", Array.from(selectedTopics));
 
-    setSaving(true);
     try {
-      const res = await axiosInstance.post("/topics/users/topics", {
-        topicIds: Array.from(selectedTopics),
+      setSaving(true);
+      await axiosInstance.post("/forums/my-subjects", {
+        subjectIds: Array.from(selected),
       });
-      toast({ title: res.data.message });
-      navigate("/dashboard");
-    } catch (err: any) {
-      console.error(err);
+
       toast({
-        title: err.response?.data?.error || "Failed to save topics",
+        title: "Welcome to Academiq! 🎓",
+        description: "Your feed has been personalized.",
+      });
+
+      navigate("/feed");
+    } catch (error: any) {
+      console.error("Save subjects error:", error);
+      toast({
+        title: "Failed to save subjects",
+        description: error?.response?.data?.error || "Please try again.",
         variant: "destructive",
       });
     } finally {
       setSaving(false);
     }
   };
-
-  // Clear all selected topics
-  const handleClearAll = () => {
-    setSaving(true);
-
-    try {
-      setSelectedTopics(new Set());
-    } catch (err) {
-      toast({
-        title: "Failed to clear topics",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const categories = [...new Set(topics.map((t) => t.category))];
-  const filteredTopics = filterCategory
-    ? topics.filter((t) => t.category === filterCategory)
-    : topics;
-
-  const colorMap: Record<
-    string,
-    "yellow" | "teal" | "pink" | "coral" | "violet" | "mint" | "default"
-  > = {
-    yellow: "yellow",
-    teal: "teal",
-    pink: "pink",
-    coral: "coral",
-    violet: "violet",
-    mint: "mint",
-    default: "default",
-  };
-
-  if (authLoading || loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
-      </div>
-    );
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      <div className="max-w-4xl mx-auto px-4 py-12 relative z-10">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-14 h-14 bg-primary rounded-xl border-[3px] border-foreground shadow-brutal flex items-center justify-center">
-              <GraduationCap className="w-8 h-8 text-primary-foreground" />
-            </div>
+    <div className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-4xl"
+      >
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+            <Sparkles className="h-5 w-5 text-primary-foreground" />
           </div>
-          <h1 className="text-4xl font-bold mb-3">
-            What are you interested in?
+          <span className="text-2xl font-heading font-bold text-foreground">
+            Academiq
+          </span>
+        </div>
+
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-heading font-bold text-foreground mb-2">
+            What subjects are you interested in?
           </h1>
-          <p className="text-muted-foreground text-lg max-w-md mx-auto">
-            Pick at least{" "}
-            <span className="font-bold text-foreground">3 topics</span> to
-            personalize your feed
+          <p className="text-muted-foreground">
+            Select at least{" "}
+            <span className="font-semibold text-foreground">3 subjects</span> to
+            personalize your feed.
           </p>
+
+          {!loading && subjects.length > MAX_SUBJECTS_TO_SHOW && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Showing {MAX_SUBJECTS_TO_SHOW} of {subjects.length} subjects
+            </p>
+          )}
         </div>
 
-        {/* AI Badge */}
-        <BrutalCard color="violet" className="p-4 mb-8 max-w-md mx-auto">
-          <div className="flex items-center justify-center gap-3">
-            <Sparkles className="w-5 h-5" />
-            <span className="font-semibold text-sm">
-              We'll use these to recommend discussions & peers
-            </span>
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <p className="text-muted-foreground text-sm">Loading subjects...</p>
           </div>
-        </BrutalCard>
-
-        {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-3 mb-8">
-          <BrutalTag
-            color={filterCategory === null ? "violet" : "default"}
-            onClick={() => setFilterCategory(null)}
-            className="cursor-pointer"
-          >
-            All
-          </BrutalTag>
-          {categories.map((cat) => (
-            <BrutalTag
-              key={cat}
-              color={filterCategory === cat ? "violet" : "default"}
-              onClick={() => setFilterCategory(cat)}
-              className="cursor-pointer"
-            >
-              {cat}
-            </BrutalTag>
-          ))}
-        </div>
-
-        {/* Topics Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-10">
-          <AnimatePresence mode="popLayout">
-            {filteredTopics.map((topic) => {
-              const isSelected = selectedTopics.has(topic.id);
-              const cardColor = colorMap[topic.color] || "default";
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+            {visibleSubjects.map((subject, i) => {
+              const isSelected = selected.has(subject.id);
+              const Icon = getIconForSubject(subject.name);
+              const iconBg = getIconColor(subject.name);
 
               return (
-                <motion.div
-                  key={topic.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.2 }}
+                <motion.button
+                  key={subject.id}
+                  type="button"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.03, duration: 0.3 }}
+                  onClick={() => toggle(subject.id, subject.name)}
+                  className={`relative flex cursor-pointer items-center justify-between rounded-xl border p-4 text-left transition-all duration-200 ${
+                    isSelected
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "border-border bg-card hover:shadow-md hover:border-primary/15"
+                  }`}
                 >
-                  <div onClick={() => toggleTopic(topic.id)}>
-                    <BrutalCard
-                      color={isSelected ? cardColor : "default"}
-                      className={`p-4 cursor-pointer relative transition-all duration-150 ${isSelected ? "ring-4 ring-foreground ring-offset-2 ring-offset-background" : "opacity-80 hover:opacity-100"}`}
-                      hoverEffect={!isSelected}
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: iconBg }}
                     >
-                      {isSelected && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute top-2 right-2 w-6 h-6 bg-foreground rounded-full flex items-center justify-center"
-                        >
-                          <Check className="w-4 h-4 text-background" />
-                        </motion.div>
-                      )}
-                      <div className="text-3xl mb-2">{topic.icon}</div>
-                      <h3 className="font-bold text-sm leading-tight">
-                        {topic.name}
-                      </h3>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {topic.category}
-                      </p>
-                    </BrutalCard>
+                      <Icon className="h-4 w-4 text-foreground" />
+                    </div>
+                    <span className="font-heading font-semibold text-foreground text-sm">
+                      {subject.name}
+                    </span>
                   </div>
-                </motion.div>
+
+                  {isSelected && (
+                    <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                      <Check className="h-3.5 w-3.5 text-primary-foreground" />
+                    </div>
+                  )}
+                </motion.button>
               );
             })}
-          </AnimatePresence>
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-background border-t-[3px] border-foreground p-4 z-20">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">
-                <span className="font-bold text-foreground text-lg">
-                  {selectedTopics.size}
-                </span>{" "}
-                selected
-                {selectedTopics.size < 3 && (
-                  <span className="text-muted-foreground"> (min 3)</span>
-                )}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <BrutalButton
-                variant="outline"
-                size="sm"
-                onClick={handleClearAll}
-                disabled={saving}
-              >
-                <div className="flex items-center gap-1">
-                  <Trash2 className="w-4 h-4" />
-                  <span>Clear All</span>
-                </div>
-              </BrutalButton>
-
-              <BrutalButton
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/dashboard")}
-              >
-                Skip for now
-              </BrutalButton>
-              <BrutalButton
-                variant="primary"
-                size="sm"
-                onClick={handleContinue}
-                disabled={saving || selectedTopics.size < 3}
-              >
-                <div className="flex items-center gap-2">
-                  <span>{saving ? "Saving..." : "Continue"}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </div>
-              </BrutalButton>
-            </div>
           </div>
+        )}
+
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">
+              {selected.size}
+            </span>{" "}
+            selected • minimum 3 required
+          </p>
+
+          <button
+            type="button"
+            onClick={handleContinue}
+            disabled={selected.size < 3 || saving || loading}
+            className={`rounded-lg px-6 py-2.5 text-sm font-medium transition-colors ${
+              selected.size >= 3 && !saving && !loading
+                ? "bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
+                : "bg-secondary text-muted-foreground cursor-not-allowed"
+            }`}
+          >
+            {saving ? "Saving..." : "Continue to Feed"}
+          </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
+
+export default Onboarding;

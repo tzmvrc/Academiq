@@ -4,17 +4,41 @@ const TABLE = "users";
 
 export const UserModel = {
   // Create new user
-  async create({ email, password = null, google_id = null, name, profile_url = null, school = null }) {
+  async create({
+    email,
+    password = null,
+    google_id = null,
+    name,
+    profile_url = null,
+    school_id = null,
+    school = null,
+    bio = null,
+    role = "user",
+    onboarding_completed = false,
+  }) {
     const { data, error } = await supabase
       .from(TABLE)
-      .insert([{ email, password, google_id, name, profile_url, school }])
-      .select();
+      .insert([
+        {
+          email,
+          password,
+          google_id,
+          name,
+          profile_url,
+          school_id,
+          school,
+          bio,
+          role,
+          onboarding_completed,
+        },
+      ])
+      .select()
+      .single();
 
     if (error) throw error;
-    return data[0];
+    return data;
   },
 
-  // Find user by email (manual login)
   async findByEmail(email) {
     const { data, error } = await supabase
       .from(TABLE)
@@ -26,7 +50,17 @@ export const UserModel = {
     return data;
   },
 
-  // Find user by Google ID
+  // In UserModel, add:
+  async findAllExcept(userId) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("id, name, profile_url, school")
+      .neq("id", userId)
+      .order("name", { ascending: true });
+    if (error) throw error;
+    return data;
+  },
+
   async findByGoogleId(google_id) {
     const { data, error } = await supabase
       .from(TABLE)
@@ -38,52 +72,97 @@ export const UserModel = {
     return data;
   },
 
-  // Update last login timestamp
+  async findById(id) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) return null;
+    return data;
+  },
+
+  async findByName(name) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("*")
+      .ilike("name", name) // case‑insensitive match
+      .single();
+    if (error) return null;
+    return data;
+  },
+
   async updateLastLogin(userId) {
     const { data, error } = await supabase
       .from(TABLE)
       .update({ last_login: new Date() })
       .eq("id", userId)
-      .select();
+      .select()
+      .single();
 
     if (error) throw error;
-    return data[0];
+    return data;
   },
 
-  async findById(id) {
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", id)
-    .single();
+  async updateGoogleId(userId, googleId) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update({ google_id: googleId })
+      .eq("id", userId)
+      .is("google_id", null)
+      .select()
+      .single();
 
-  if (error) return null;
-  return data;
-}, 
+    if (error) throw error;
+    return data;
+  },
 
+  async updateOnboardingStatus(userId, status) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update({ onboarding_completed: status })
+      .eq("id", userId)
+      .select()
+      .single();
 
-// Link Google account to existing manual user
-async updateGoogleId(userId, googleId) {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update({ google_id: googleId })
-    .eq("id", userId)
-    .is("google_id", null) // extra safety: only link if not already linked
-    .select()
-    .single();
+    if (error) throw error;
+    return data;
+  },
 
-  if (error) throw error;
-  return data;
-},
+  async updateProfile(userId, updates) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update(updates)
+      .eq("id", userId)
+      .select()
+      .single();
 
-async updateOnboardingStatus(userId, status) {
-  const { data, error } = await supabase
-    .from("users")
-    .update({ onboarding_completed: status })
-    .eq("id", userId);
+    if (error) throw error;
+    return data;
+  },
 
-  if (error) throw error;
-  return data;
-}
+  async updatePoints(userId, points) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update({ points })
+      .eq("id", userId)
+      .select()
+      .single();
 
+    if (error) throw error;
+    return data;
+  },
+
+  async deactivate(userId) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update({ is_active: false })
+      .eq("id", userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
 };

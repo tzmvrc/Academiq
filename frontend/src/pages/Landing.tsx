@@ -1,544 +1,656 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { BrutalButton } from '@/components/ui/BrutalButton';
-import { BrutalCard } from '@/components/ui/BrutalCard';
-import { 
-  GraduationCap, 
-  Sparkles, 
-  MessageCircle, 
-  Trophy, 
-  CheckCircle, 
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  Sparkles,
+  ShieldCheck,
+  MessageCircle,
+  BookOpen,
+  Compass,
   ArrowRight,
-  Zap,
+  ChevronRight,
+  Quote,
   Users,
+  FileText,
+  Search,
   Brain,
-  Quote
-} from 'lucide-react';
+  Upload,
+  UserPlus,
+  Heart,
+  Lightbulb,
+  GraduationCap,
+  MessagesSquare,
+  Share2,
+} from "lucide-react";
+import academiqLogo from "@/components/ui/Icon.png";
+import previewFeed from "@/components/ui/preview-feed.png";
+import previewCreatePost from "@/components/ui/preview-create-post.png";
+import previewProfile from "@/components/ui/preview-profile.png";
 
 const features = [
   {
-    icon: Sparkles,
-    title: 'AI-Powered Validation',
-    description: 'Every post and comment is analyzed by AI for accuracy and quality. Get instant feedback on your academic content.',
-    color: 'yellow' as const,
+    icon: MessagesSquare,
+    title: "Topic-Based Forums",
+    description:
+      "Engage in structured academic discussions organized by subject, field, and research area.",
+  },
+  {
+    icon: Brain,
+    title: "AI-Powered Tools",
+    description:
+      "Get AI-generated summaries, content validation, and smart recommendations for your research.",
+  },
+  {
+    icon: Upload,
+    title: "Notes & Reviewer Sharing",
+    description:
+      "Upload lecture notes, reviewers, and academic materials to share with your community.",
+  },
+  {
+    icon: Search,
+    title: "Smart Search",
+    description:
+      "Find discussions, peers, and resources with intelligent search and personalized recommendations.",
+  },
+  {
+    icon: Users,
+    title: "Community Driven",
+    description:
+      "Connect with students and professors, upvote quality content, and build your academic network.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Verified Content",
+    description:
+      "AI validates claims against academic databases ensuring high-quality, factual discourse.",
+  },
+];
+
+const steps = [
+  {
+    icon: UserPlus,
+    step: "01",
+    title: "Create an Account",
+    description:
+      "Sign up in seconds with your email or Google account to join the community.",
+  },
+  {
+    icon: Heart,
+    step: "02",
+    title: "Select Your Interests",
+    description:
+      "Choose academic topics and fields that match your studies and research focus.",
   },
   {
     icon: MessageCircle,
-    title: 'Smart Discussions',
-    description: 'Engage in meaningful academic debates. AI summarizes long threads and highlights key insights.',
-    color: 'teal' as const,
+    step: "03",
+    title: "Join Discussions",
+    description:
+      "Browse forums, ask questions, share insights, and engage with peers on topics you care about.",
   },
   {
-    icon: Trophy,
-    title: 'Earn Recognition',
-    description: 'Build your reputation through quality contributions. Climb the leaderboards and earn academic badges.',
-    color: 'pink' as const,
+    icon: Share2,
+    step: "04",
+    title: "Share & Collaborate",
+    description:
+      "Upload notes, share resources, and collaborate with students across disciplines.",
+  },
+];
+
+const sampleDiscussions = [
+  {
+    title: "Transformers vs. State Space Models: A Comprehensive Analysis",
+    author: "Dr. Sarah Chen",
+    field: "Machine Learning",
+    engagement: "324 upvotes · 89 comments",
   },
   {
-    icon: CheckCircle,
-    title: 'Verified Content',
-    description: 'Trust the knowledge. AI verification badges show which content has been fact-checked and validated.',
-    color: 'coral' as const,
+    title: "The Ethics of CRISPR Gene Editing in Human Embryos",
+    author: "Prof. James Rivera",
+    field: "Bioethics",
+    engagement: "256 upvotes · 134 comments",
+  },
+  {
+    title: "Quantum Error Correction: Bridging Theory and Practice",
+    author: "Dr. Anika Patel",
+    field: "Quantum Computing",
+    engagement: "198 upvotes · 67 comments",
+  },
+];
+
+const appPreviews = [
+  {
+    image: previewFeed,
+    caption: "Topic-Based Discussion Feed",
+    description:
+      "Browse and engage with academic discussions organized by field and topic.",
+  },
+  {
+    image: previewCreatePost,
+    caption: "Create Academic Forum Posts",
+    description:
+      "Publish discussions with rich content, categories, and optional file attachments.",
+  },
+  {
+    image: previewProfile,
+    caption: "Academic Profile & Activity",
+    description:
+      "Track your contributions, manage interests, and build your academic reputation.",
   },
 ];
 
 const developers = [
   {
-    name: 'Marc Aspa',
-    role: 'Lead Developer & AI Architect',
-    quote: 'We built Academiq to democratize knowledge validation and make academic discourse accessible to everyone.',
-    avatar: 'MA',
-    color: 'yellow' as const,
+    name: "Marc Aspa",
+    initials: "MA",
+    role: "Lead Developer & AI Architect",
+    quote:
+      "Building bridges between AI and academia, one line of code at a time.",
   },
   {
-    name: 'Samantha Paradero',
-    role: 'Fullstack Developer',
-    quote: 'Design should get out of the way of learning. Our goal is intuitive, delightful experiences.',
-    avatar: 'SP',
-    color: 'teal' as const,
+    name: "Samantha Paradero",
+    initials: "SP",
+    role: "Fullstack Developer",
+    quote: "Design should get out of the way of learning. Our goal is intuitive, delightful experiences.",
   },
   {
-    name: 'Lawrence De Guia',
-    role: 'Backend AI Engineer',
-    quote: 'Every line of code we write is in service of helping students learn better and faster.',
-    avatar: 'LDG',
-    color: 'pink' as const,
+    name: "Lawrence De Guia",
+    initials: "LD",
+    role: "Backend AI Engineer",
+    quote:
+      "Every line of code we write is in service of helping students learn better and faster.",
   },
 ];
 
-const topics = [
-  'Computer Science', 'Physics', 'Mathematics', 'Biology', 'Chemistry',
-  'Philosophy', 'Economics', 'Psychology', 'Engineering', 'Medicine',
-  'Data Science', 'Machine Learning', 'Algorithm', 'Environmental Science',
-  'Graphic Design', 'Genetics', 'Sociology', 'Literature', 'History', 'Art',
-];
+const fadeUp = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+};
 
-export const Landing: React.FC = () => {
+const Landing = () => {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="border-b-[4px] border-foreground bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-10 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-background overflow-x-hidden">
+      {/* Navbar */}
+      <nav className="border-b border-border bg-card/80 backdrop-blur-xl sticky top-0 z-50">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+          <div className="flex items-center gap-2.5">
+            <img
+              src={academiqLogo}
+              alt="Academiq"
+              className="h-10 w-10 object-contain"
+            />
+            <span className="text-xl font-heading font-bold text-foreground tracking-tight">
+              Academiq
+            </span>
+          </div>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-primary rounded-xl border-[3px] border-foreground shadow-brutal flex items-center justify-center">
-              <GraduationCap className="w-7 h-7 text-primary-foreground" />
-            </div>
-            <span className="text-2xl font-bold">Academiq</span>
-          </div>
-          <div className="hidden md:flex items-center gap-20">
-            <a href="#features" className="font-medium hover:text-primary transition-colors">Features</a>
-            <a href="#showcase" className="font-medium hover:text-primary transition-colors">How It Works</a>
-            <a href="#team" className="font-medium hover:text-primary transition-colors">Team</a>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link to="/login">
-              <BrutalButton variant="outline">Login</BrutalButton>
+            <Link
+              to="/login"
+              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Login
             </Link>
-            <Link to="/signup">
-              <BrutalButton variant="primary">
-                Get Started
-               
-              </BrutalButton>
+            <Link
+              to="/signup"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Get Started
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="py-20 px-30 relative overflow-hidden">
-        {/* Decorative blobs */}
-        <div className="absolute top-20 left-10 w-32 h-32 bg-yellow rounded-full border-[3px] border-foreground opacity-50 animate-float" />
-        <div className="absolute bottom-40 left-1/4 w-24 h-24 bg-teal rounded-full border-[3px] border-foreground opacity-50 animate-float" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-60 left-20 w-16 h-16 bg-pink rounded-full border-[3px] border-foreground opacity-50 animate-float" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-20 left-360 w-24 h-24 bg-pink rounded-full border-[3px] border-foreground opacity-50 animate-float" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-80 left-380 w-32 h-32 bg-yellow rounded-full border-[3px] border-foreground opacity-50 animate-float" />
-        <div className="absolute bottom-40 left-350 w-24 h-24 bg-teal rounded-full border-[3px] border-foreground opacity-50 animate-float" style={{ animationDelay: '1s' }} />
+      {/* Hero with background logo */}
+      <section className="relative mx-auto max-w-4xl px-6 pt-20 sm:pt-28 pb-20 text-center overflow-hidden">
+        {/* Background logo watermark */}
+        <img
+          src={academiqLogo}
+          alt=""
+          aria-hidden="true"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] object-contain opacity-[0.07] pointer-events-none select-none"
+        />
 
-
-        <div className="container mx-auto relative z-10">
-          <div className="grid lg:grid-cols-2 items-center">
-            {/* Left side - Text content */}
-            <div className="text-left ml-15">
-              <BrutalCard color="violet" className="inline-flex items-center gap-2 px-4 py-2 mb-8">
-                <Zap className="w-4 h-4" />
-                <span className="font-bold">AI-Powered Academic Forum</span>
-              </BrutalCard>
-
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-                Where{' '}
-                <span className="inline-block bg-violet text-primary-foreground px-3 py-1 border-[4px] border-foreground shadow-brutal rotate-[-2deg]">
-                  knowledge
-                </span>
-                <br />
-                gets{' '}
-                <span className="inline-block bg-yellow px-3 py-1 border-[4px] border-foreground shadow-brutal rotate-[2deg] mt-2">
-                  smarter
-                </span>
-              </h1>
-
-              <p className="text-lg text-muted-foreground max-w-xl mb-8">
-                Join the academic community where AI validates content, summarizes discussions, 
-                and helps you earn recognition for quality contributions.
-              </p>
-
-              <div className="flex items-center gap-4 flex-wrap">
-                <Link to="/signup">
-                  <BrutalButton variant="primary" size="lg">
-                    Get Started
-                    
-                  </BrutalButton>
-                </Link>
-                <Link to="/login">
-                  <BrutalButton variant="outline" size="lg">
-                    Login
-                  </BrutalButton>
-                </Link>
-              </div>
-            </div>
-
-            {/* Right side - Forum Detail Preview */}
-            <div className="relative hidden md:flex items-center justify-center">
-              <BrutalCard className="w-full max-w-lg p-5 bg-card rotate-2 shadow-brutal-lg">
-                {/* Post Header */}
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="w-10 h-10 bg-violet rounded-full border-[2px] border-foreground flex items-center justify-center text-primary-foreground font-bold">
-                    JD
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold">John Doe</span>
-                      <BrutalCard color="teal" className="px-2 py-0.5 text-xs font-bold" hoverEffect={false}>Physics</BrutalCard>
-                      <BrutalCard color="mint" className="px-2 py-0.5 text-xs font-bold flex items-center gap-1" hoverEffect={false}>
-                        <Sparkles className="w-3 h-3" />
-                        AI Verified
-                      </BrutalCard>
-                    </div>
-                    <span className="text-sm text-muted-foreground">2 hours ago</span>
-                  </div>
-                </div>
-
-                {/* Post Title */}
-                <h3 className="text-lg font-bold mb-2">Understanding Quantum Entanglement</h3>
-                <p className="text-sm text-muted-foreground mb-4">Can someone explain how quantum entanglement works in simple terms? I'm struggling with the concept...</p>
-
-                {/* AI Summary */}
-                <BrutalCard color="yellow" className="p-3 mb-4" hoverEffect={false}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Brain className="w-4 h-4" />
-                    <span className="font-bold text-sm">AI Summary</span>
-                  </div>
-                  <p className="text-xs">Quantum entanglement is a phenomenon where particles become connected and share states instantly...</p>
-                </BrutalCard>
-
-                {/* Comments Preview */}
-                <div className="space-y-3 border-t-[2px] border-foreground pt-4">
-                  <div className="flex items-start gap-2">
-                    <div className="w-8 h-8 bg-pink rounded-full border-[2px] border-foreground flex items-center justify-center text-sm font-bold">
-                      SC
-                    </div>
-                    <div className="flex-1 bg-muted rounded-lg border-[2px] border-foreground p-2">
-                      <span className="font-bold text-sm">Sarah Chen</span>
-                      <p className="text-xs text-muted-foreground">Great question! Think of it like two coins that always land on opposite sides...</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2 ml-6">
-                    <div className="w-7 h-7 bg-teal rounded-full border-[2px] border-foreground flex items-center justify-center text-xs font-bold">
-                      MW
-                    </div>
-                    <div className="flex-1 bg-muted rounded-lg border-[2px] border-foreground p-2">
-                      <span className="font-bold text-sm">Mike Wilson</span>
-                      <p className="text-xs text-muted-foreground">This analogy really helped me understand!</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer Stats */}
-                <div className="flex items-center gap-4 mt-4 pt-3 border-t-[2px] border-foreground">
-                  <div className="flex items-center gap-1 text-sm">
-                    <MessageCircle className="w-4 h-4" />
-                    <span className="font-bold">24</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    <Trophy className="w-4 h-4 text-yellow" />
-                    <span className="font-bold">156</span>
-                  </div>
-                </div>
-              </BrutalCard>
-            </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative z-10"
+        >
+          <div className="inline-flex items-center gap-2 rounded-full bg-ai-subtle px-4 py-1.5 text-sm text-ai font-medium mb-6">
+            <Sparkles className="h-3.5 w-3.5" />
+            AI-Powered Academic Community
           </div>
-
-          {/* Stats - moved below hero */}
-          <div className="flex items-center justify-center gap-8 mt-16 flex-wrap">
-            <BrutalCard className="px-6 py-4">
-              <div className="flex items-center gap-3">
-                <Users className="w-6 h-6 text-primary" />
-                <div className="text-left">
-                  <div className="text-2xl font-bold">50K+</div>
-                  <div className="text-sm text-muted-foreground">Students</div>
-                </div>
-              </div>
-            </BrutalCard>
-            <BrutalCard className="px-6 py-4">
-              <div className="flex items-center gap-3">
-                <MessageCircle className="w-6 h-6 text-teal" />
-                <div className="text-left">
-                  <div className="text-2xl font-bold">1M+</div>
-                  <div className="text-sm text-muted-foreground">Discussions</div>
-                </div>
-              </div>
-            </BrutalCard>
-            <BrutalCard className="px-6 py-4">
-              <div className="flex items-center gap-3">
-                <Brain className="w-6 h-6 text-pink" />
-                <div className="text-left">
-                  <div className="text-2xl font-bold">99%</div>
-                  <div className="text-sm text-muted-foreground">AI Accuracy</div>
-                </div>
-              </div>
-            </BrutalCard>
-          </div>
-        </div>
-      </section>
-
-      {/* Topic Marquee - 2 Layers with Cards */}
-      <section className="py-8 bg-muted border-y-[2px] border-foreground overflow-hidden space-y-4">
-        {/* First row - scrolling left */}
-        <div className="animate-marquee flex whitespace-nowrap">
-          {[...topics.slice(0, 10), ...topics.slice(0, 10)].map((topic, index) => (
-            <BrutalCard 
-              key={`row1-${index}`} 
-              color={(['yellow', 'teal', 'pink', 'coral', 'violet', 'mint'] as const)[index % 6]}
-              className="mx-3 px-4 py-2 flex-shrink-0"
-              hoverEffect={true}
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-bold text-foreground leading-tight mb-6">
+            Where Academic Minds
+            <br />
+            <span className="text-primary">Connect & Discover</span>
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+            Join a community of students and professors discussing research,
+            sharing knowledge, and receiving AI-powered insights to elevate
+            academic discourse.
+          </p>
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            <Link
+              to="/signup"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors shadow-md hover:shadow-lg"
             >
-              <span className="font-bold text-sm whitespace-nowrap">{topic}</span>
-            </BrutalCard>
-          ))}
-        </div>
-        
-        {/* Second row - scrolling right */}
-        <div className="animate-marquee-reverse flex whitespace-nowrap">
-          {[...topics.slice(10), ...topics.slice(10)].map((topic, index) => (
-            <BrutalCard 
-              key={`row2-${index}`} 
-              color={(['coral', 'mint', 'violet', 'pink', 'teal', 'yellow'] as const)[index % 6]}
-              className="mx-3 px-4 py-2 flex-shrink-0"
-              hoverEffect={true}
+              Get Started <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-border bg-card text-foreground font-medium hover:bg-secondary transition-colors"
             >
-              <span className="font-bold text-sm whitespace-nowrap">{topic}</span>
-            </BrutalCard>
-          ))}
-        </div>
+              <svg className="h-4 w-4" viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
+              </svg>
+              Continue with Google
+            </Link>
+          </div>
+        </motion.div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-20 bg-muted border-b-[4px] border-foreground">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Why Academiq?</h2>
-            <p className="text-xl text-muted-foreground">
-              Built for students and educators who demand quality
-            </p>
+      {/* Platform Overview */}
+      <section className="relative mx-auto max-w-5xl px-6 py-20">
+        <img
+          src={academiqLogo}
+          alt=""
+          aria-hidden="true"
+          className="absolute top-0 right-0 w-[350px] h-[350px] object-contain opacity-[0.05] pointer-events-none select-none translate-x-1/4 -translate-y-1/4"
+        />
+        <motion.div
+          {...fadeUp}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-14 relative z-10"
+        >
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm text-primary font-medium mb-4">
+            <GraduationCap className="h-3.5 w-3.5" />
+            Platform Overview
           </div>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold text-foreground mb-4">
+            What is Academiq?
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Academiq is an AI-powered academic platform designed for students
+            and educators. Engage in topic-based discussions, share lecture
+            notes and reviewers, collaborate across disciplines, and leverage AI
+            tools to enhance the quality of academic discourse.
+          </p>
+        </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {features.map((feature) => {
-              const Icon = feature.icon;
-              return (
-                <BrutalCard 
-                  key={feature.title} 
-                  color={feature.color}
-                  className="p-6"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-14 h-14 bg-background rounded-xl border-[3px] border-foreground shadow-brutal flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-7 h-7" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                      <p className="text-foreground/80">{feature.description}</p>
-                    </div>
-                  </div>
-                </BrutalCard>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Dashboard Showcase Section */}
-      <section id="showcase" className="py-20 px-50 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <BrutalCard color="teal" className="inline-flex items-center gap-2 px-3 py-1 mb-4">
-                <Sparkles className="w-4 h-4" />
-                <span className="font-bold text-sm">Platform Preview</span>
-              </BrutalCard>
-              <h2 className="text-4xl font-bold mb-6">
-                Connect with peers
-                <br />
-                <span className="text-primary">easily and efficiently</span>
-              </h2>
-              <p className="text-lg text-muted-foreground mb-8">
-                Our intuitive dashboard gives you everything you need: real-time discussions, 
-                AI-verified content, leaderboards, and personalized feeds all in one place.
-              </p>
-              
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-yellow rounded-lg border-[2px] border-foreground flex items-center justify-center flex-shrink-0">
-                    <MessageCircle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold">Realtime Conversations</h4>
-                    <p className="text-sm text-muted-foreground">Engage in discussions with students worldwide instantly</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-pink rounded-lg border-[2px] border-foreground flex items-center justify-center flex-shrink-0">
-                    <Brain className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold">AI-Powered Insights</h4>
-                    <p className="text-sm text-muted-foreground">Get smart summaries and content validation automatically</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-teal rounded-lg border-[2px] border-foreground flex items-center justify-center flex-shrink-0">
-                    <Trophy className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold">Track Your Progress</h4>
-                    <p className="text-sm text-muted-foreground">See your ranking and earn badges for contributions</p>
-                  </div>
-                </div>
-              </div>
-
-              <Link to="/signup" className="inline-block mt-8">
-                <BrutalButton variant="primary">
-                  Explore Dashboard
-                  
-                </BrutalButton>
-              </Link>
-            </div>
-
-            {/* Dashboard Preview Mock */}
-            <div className="relative">
-              <BrutalCard className="p-4 bg-background">
-                <div className="bg-muted rounded-lg border-[2px] border-foreground p-4">
-                  {/* Mock Dashboard Header */}
-                  <div className="flex items-center gap-3 mb-4 pb-3 border-b-[2px] border-foreground/20">
-                    <div className="w-8 h-8 bg-primary rounded-lg border-[2px] border-foreground flex items-center justify-center">
-                      <GraduationCap className="w-4 h-4 text-primary-foreground" />
-                    </div>
-                    <span className="font-bold">Academiq Dashboard</span>
-                  </div>
-                  
-                  {/* Mock Content */}
-                  <div className="space-y-3">
-                    <div className="bg-yellow rounded-lg border-[2px] border-foreground p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-6 h-6 bg-background rounded-full border-[2px] border-foreground"></div>
-                        <span className="font-bold text-sm">New Discussion</span>
-                        <span className="ml-auto text-xs bg-background px-2 py-0.5 rounded border border-foreground">AI Verified</span>
-                      </div>
-                      <div className="h-2 bg-foreground/20 rounded w-3/4"></div>
-                    </div>
-                    <div className="bg-teal rounded-lg border-[2px] border-foreground p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-6 h-6 bg-background rounded-full border-[2px] border-foreground"></div>
-                        <span className="font-bold text-sm">Trending Topic</span>
-                      </div>
-                      <div className="h-2 bg-foreground/20 rounded w-1/2"></div>
-                    </div>
-                    <div className="bg-pink rounded-lg border-[2px] border-foreground p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Trophy className="w-4 h-4" />
-                        <span className="font-bold text-sm">You earned 50 points!</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </BrutalCard>
-              
-              {/* Floating elements */}
-              <div className="absolute -top-4 -right-4 w-16 h-16 bg-coral rounded-xl border-[3px] border-foreground shadow-brutal rotate-12 flex items-center justify-center">
-                <Zap className="w-8 h-8" />
-              </div>
-              <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-violet rounded-lg border-[3px] border-foreground shadow-brutal -rotate-6 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-primary-foreground" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Marquee */}
-      <section className="py-6 bg-yellow border-y-[4px] border-foreground overflow-hidden">
-        <div className="animate-marquee-reverse flex whitespace-nowrap">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 relative z-10">
           {[
-            "Absolutely fantastic platform!",
-            "It's intuitive and very easy to use!",
-            "Great platform for learning online",
-            "This product is absolutely fantastic",
-            "Revolutionary for academic discourse",
-            "Best study companion ever!",
-            "Changed how I learn forever",
-          ].map((text, index) => (
-            <span key={index} className="mx-6 font-medium flex items-center gap-2">
-              <span className="w-6 h-6 bg-background rounded-full border-[2px] border-foreground flex items-center justify-center text-xs">⭐</span>
-              {text}
-            </span>
-          ))}
-          {[
-            "Absolutely fantastic platform!",
-            "It's intuitive and very easy to use!",
-            "Great platform for learning online",
-            "This product is absolutely fantastic",
-            "Revolutionary for academic discourse",
-            "Best study companion ever!",
-            "Changed how I learn forever",
-          ].map((text, index) => (
-            <span key={`dup-${index}`} className="mx-6 font-medium flex items-center gap-2">
-              <span className="w-6 h-6 bg-background rounded-full border-[2px] border-foreground flex items-center justify-center text-xs">⭐</span>
-              {text}
-            </span>
+            {
+              icon: MessagesSquare,
+              label: "Academic Discussions",
+              desc: "Structured forums by topic and field",
+            },
+            {
+              icon: FileText,
+              label: "Share Notes",
+              desc: "Upload and access study materials",
+            },
+            {
+              icon: Compass,
+              label: "Topic Forums",
+              desc: "Organized by subject and interest",
+            },
+            {
+              icon: Users,
+              label: "Collaboration",
+              desc: "Connect with peers and mentors",
+            },
+          ].map((item, i) => (
+            <motion.div
+              key={i}
+              {...fadeUp}
+              transition={{ delay: i * 0.08, duration: 0.5 }}
+              className="rounded-xl border border-border bg-card p-5 text-center hover:shadow-md hover:border-primary/15 transition-all group"
+            >
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/15 transition-colors">
+                <item.icon className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-heading font-semibold text-foreground text-sm mb-1">
+                {item.label}
+              </h3>
+              <p className="text-xs text-muted-foreground">{item.desc}</p>
+            </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Developer Team Section */}
-      <section id="team" className="py-20 bg-muted border-b-[4px] border-foreground">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <BrutalCard color="coral" className="inline-flex items-center gap-2 px-3 py-1 mb-4">
-              <Users className="w-4 h-4" />
-              <span className="font-bold text-sm">Meet The Team</span>
-            </BrutalCard>
-            <h2 className="text-4xl font-bold mb-4">Built by Passionate Developers</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Our team combines expertise in AI, education, and design to create 
-              the best academic platform possible.
+      {/* Key Features */}
+      <section className="bg-secondary/30">
+        <div className="mx-auto max-w-5xl px-6 py-20">
+          <motion.div
+            {...fadeUp}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-14"
+          >
+            <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-4 py-1.5 text-sm text-accent font-medium mb-4">
+              <Lightbulb className="h-3.5 w-3.5" />
+              Key Features
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold text-foreground mb-4">
+              Everything You Need for Academic Success
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Powerful tools designed to make learning, sharing, and
+              collaborating more effective.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {developers.map((dev) => (
-              <BrutalCard key={dev.name} color={dev.color} className="p-6 relative">
-                <Quote className="absolute top-4 right-4 w-8 h-8 opacity-30" />
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-background rounded-xl border-[3px] border-foreground shadow-brutal flex items-center justify-center text-xl font-bold">
-                    {dev.avatar}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg">{dev.name}</h3>
-                    <p className="text-sm opacity-80">{dev.role}</p>
-                  </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((f, i) => (
+              <motion.div
+                key={i}
+                {...fadeUp}
+                transition={{ delay: i * 0.07, duration: 0.5 }}
+                className="rounded-xl border border-border bg-card p-6 hover:shadow-lg hover:border-primary/10 transition-all group"
+              >
+                <div className="h-11 w-11 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors">
+                  <f.icon className="h-5 w-5 text-primary" />
                 </div>
-                <p className="text-foreground/90 italic">"{dev.quote}"</p>
-              </BrutalCard>
+                <h3 className="font-heading font-semibold text-foreground mb-2">
+                  {f.title}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {f.description}
+                </p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <BrutalCard color="violet" className="p-12 text-center max-w-3xl mx-auto">
-            <Sparkles className="w-16 h-16 mx-auto mb-6" />
-            <h2 className="text-4xl font-bold mb-4">Ready to Level Up?</h2>
-            <p className="text-xl opacity-90 mb-8">
-              Join thousands of students and educators already using Academiq 
-              to enhance their academic journey.
-            </p>
-            <Link to="/signup">
-              <BrutalButton variant="secondary" size="lg">
-                Create Free Account
-                
-              </BrutalButton>
-            </Link>
-          </BrutalCard>
+      {/* How It Works */}
+      <section className="mx-auto max-w-5xl px-6 py-20">
+        <motion.div
+          {...fadeUp}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-14"
+        >
+          <div
+            className="inline-flex items-center gap-2 rounded-full bg-success/10 px-4 py-1.5 text-sm font-medium mb-4"
+            style={{ color: "hsl(150, 50%, 45%)" }}
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            How It Works
+          </div>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold text-foreground mb-4">
+            Get Started in 4 Simple Steps
+          </h2>
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            From sign-up to collaboration — it only takes a few minutes to join
+            the community.
+          </p>
+        </motion.div>
+
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {steps.map((s, i) => (
+            <motion.div
+              key={i}
+              {...fadeUp}
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+              className="relative text-center group"
+            >
+              {i < steps.length - 1 && (
+                <div className="hidden lg:block absolute top-10 left-[60%] w-[80%] h-px border-t-2 border-dashed border-border" />
+              )}
+              <div className="relative z-10 mx-auto mb-4">
+                <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto group-hover:bg-primary/15 transition-colors">
+                  <s.icon className="h-7 w-7 text-primary" />
+                </div>
+                <span className="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-md">
+                  {s.step}
+                </span>
+              </div>
+              <h3 className="font-heading font-semibold text-foreground mb-2">
+                {s.title}
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {s.description}
+              </p>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t-[4px] border-foreground bg-card py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary rounded-lg border-[2px] border-foreground shadow-brutal-sm flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="font-bold">Academiq</span>
+      {/* App Preview */}
+      <section className="bg-secondary/30">
+        <div className="mx-auto max-w-6xl px-6 py-20">
+          <motion.div
+            {...fadeUp}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-14"
+          >
+            <div className="inline-flex items-center gap-2 rounded-full bg-ai-subtle px-4 py-1.5 text-sm text-ai font-medium mb-4">
+              <Sparkles className="h-3.5 w-3.5" />
+              App Preview
             </div>
-            <p className="text-sm text-muted-foreground">
-              © 2025 Academiq. Built for learners, by learners.
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-bold text-foreground mb-4">
+              See Academiq in Action
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Take a look at the platform interface and discover what awaits you
+              inside.
             </p>
+          </motion.div>
+
+          <div className="grid gap-8 md:grid-cols-3">
+            {appPreviews.map((preview, i) => (
+              <motion.div
+                key={i}
+                {...fadeUp}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                className="rounded-xl border border-border bg-card overflow-hidden hover:shadow-xl transition-all group"
+              >
+                <div className="overflow-hidden">
+                  <img
+                    src={preview.image}
+                    alt={preview.caption}
+                    className="w-full h-48 sm:h-56 object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-5">
+                  <h3 className="font-heading font-semibold text-foreground mb-1.5">
+                    {preview.caption}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {preview.description}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Community / Sample Discussions */}
+      <section className="mx-auto max-w-5xl px-6 py-20">
+        <motion.div
+          {...fadeUp}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-10"
+        >
+          <h2 className="text-2xl sm:text-3xl font-heading font-bold text-foreground mb-3">
+            Join the Conversation
+          </h2>
+          <p className="text-muted-foreground">
+            See what researchers are discussing right now.
+          </p>
+        </motion.div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {sampleDiscussions.map((d, i) => (
+            <motion.div
+              key={i}
+              {...fadeUp}
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+              className="rounded-xl border border-border bg-card p-5 hover:shadow-md hover:border-primary/10 transition-all"
+            >
+              <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium">
+                {d.field}
+              </span>
+              <h3 className="font-heading font-semibold text-foreground text-sm mt-3 mb-2 leading-snug">
+                {d.title}
+              </h3>
+              <p className="text-xs text-muted-foreground">{d.author}</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                {d.engagement}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* About the Developers */}
+      <section className="bg-secondary/30">
+        <div className="mx-auto max-w-5xl px-6 py-20">
+          <motion.div
+            {...fadeUp}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-2xl sm:text-3xl font-heading font-bold text-foreground mb-3">
+              Meet the Team
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              We're a small team of builders passionate about transforming
+              academic collaboration through technology.
+            </p>
+          </motion.div>
+
+          <div className="grid gap-6 sm:grid-cols-3">
+            {developers.map((dev, i) => (
+              <motion.div
+                key={dev.name}
+                {...fadeUp}
+                transition={{ delay: i * 0.12, duration: 0.5 }}
+                className="rounded-xl border border-border bg-card p-6 text-center hover:shadow-md hover:border-primary/10 transition-all"
+              >
+                <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-lg font-bold text-primary">
+                    {dev.initials}
+                  </span>
+                </div>
+                <h3 className="font-heading font-semibold text-foreground mb-1">
+                  {dev.name}
+                </h3>
+                <p className="text-xs text-accent font-medium mb-4">
+                  {dev.role}
+                </p>
+                <div className="relative">
+                  <Quote className="h-4 w-4 text-muted-foreground/30 absolute -top-1 -left-1" />
+                  <p className="text-sm text-muted-foreground italic leading-relaxed pl-4">
+                    "{dev.quote}"
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="mx-auto max-w-3xl px-6 py-20 text-center">
+        <motion.div
+          {...fadeUp}
+          transition={{ duration: 0.5 }}
+          className="relative rounded-2xl border border-border bg-card p-10 sm:p-14 overflow-hidden"
+        >
+          <img
+            src={academiqLogo}
+            alt=""
+            aria-hidden="true"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] object-contain opacity-[0.07] pointer-events-none select-none"
+          />
+          <div className="relative z-10">
+            <h2 className="text-2xl sm:text-3xl font-heading font-bold text-foreground mb-4">
+              Ready to Join Academiq?
+            </h2>
+            <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
+              Start contributing to academic discussions, connect with peers,
+              and leverage AI to enhance your research journey.
+            </p>
+            <div className="flex items-center justify-center gap-4 flex-wrap">
+              <Link
+                to="/signup"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors shadow-md"
+              >
+                Create Account <ChevronRight className="h-4 w-4" />
+              </Link>
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-border bg-card text-foreground font-medium hover:bg-secondary transition-colors"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24">
+                  <path
+                    fill="currentColor"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  />
+                </svg>
+                Continue with Google
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border py-8">
+        <div className="mx-auto max-w-6xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <img
+              src={academiqLogo}
+              alt="Academiq"
+              className="h-8 w-8 object-contain"
+            />
+            <span>© 2026 Academiq. Built for learners. By learners</span>
+          </div>
+          <div className="flex gap-4">
+            <a href="#" className="hover:text-foreground transition-colors">
+              Privacy
+            </a>
+            <a href="#" className="hover:text-foreground transition-colors">
+              Terms
+            </a>
+            <a href="#" className="hover:text-foreground transition-colors">
+              Contact
+            </a>
           </div>
         </div>
       </footer>
     </div>
   );
 };
+
+export default Landing;
