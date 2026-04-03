@@ -694,11 +694,6 @@ const SearchResults = () => {
                 <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground">
                   Discussions
                 </h2>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors">
-                  <Plus className="h-4 w-4" /> New Post
-                </button>
               </div>
 
               {forums.map((forum) => {

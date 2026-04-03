@@ -165,4 +165,54 @@ export const UserModel = {
     if (error) throw error;
     return data;
   },
+
+  // Add these functions inside the existing UserModel object
+
+  // Get paginated leaderboard (ordered by points DESC)
+  // user_model.js (only the changed method)
+
+  async getLeaderboard(limit, offset, school = null) {
+    let query = supabase
+      .from(TABLE)
+      .select("id, name, profile_url, school, points")
+      .order("points", { ascending: false, nullsLast: true });
+
+    if (school) {
+      query = query.eq("school", school);
+    }
+
+    const { data, error } = await query.range(offset, offset + limit - 1);
+    if (error) throw error;
+
+    return data.map((user, idx) => ({ ...user, rank: offset + idx + 1 }));
+  },
+
+  // Get current user's rank (1-based)
+  async getUserRank(userId) {
+    const { data: user } = await supabase
+      .from(TABLE)
+      .select("points")
+      .eq("id", userId)
+      .single();
+    if (!user) return null;
+
+    const { count } = await supabase
+      .from(TABLE)
+      .select("*", { count: "exact", head: true })
+      .gt("points", user.points || 0);
+
+    return (count || 0) + 1;
+  },
+
+  // Get points of the 100th ranked user (or 0 if less than 100 users)
+  async getTop100Threshold() {
+    const { data } = await supabase
+      .from(TABLE)
+      .select("points")
+      .order("points", { ascending: false })
+      .range(99, 99); // 100th user (0‑based index)
+
+    if (!data || data.length === 0) return 0;
+    return data[0].points;
+  },
 };
