@@ -215,4 +215,43 @@ export const UserModel = {
     if (!data || data.length === 0) return 0;
     return data[0].points;
   },
+
+  async incrementFollowingCount(userId, delta = 1) {
+    // Fetch current count
+    const { data: user, error: fetchError } = await supabase
+      .from(TABLE)
+      .select("following_count")
+      .eq("id", userId)
+      .single();
+    if (fetchError) throw fetchError;
+
+    const newCount = (user?.following_count || 0) + delta;
+    const { error: updateError } = await supabase
+      .from(TABLE)
+      .update({ following_count: newCount })
+      .eq("id", userId);
+    if (updateError) throw updateError;
+    return newCount;
+  },
+
+  // Increment followers count for a user
+  async incrementFollowersCount(userId, delta = 1) {
+    // Fetch current count
+    const { data: user, error: fetchError } = await supabase
+      .from(TABLE)
+      .select("followers_count")
+      .eq("id", userId)
+      .single();
+    if (fetchError) throw fetchError;
+
+    const newCount = (user?.followers_count || 0) + delta;
+    const { error: updateError } = await supabase
+      .from(TABLE)
+      .update({ followers_count: newCount })
+      .eq("id", userId);
+    if (updateError) throw updateError;
+    return newCount;
+  },
+
+  
 };

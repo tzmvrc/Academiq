@@ -273,6 +273,33 @@ const CommentComponent = ({
 
   // ... existing handlers (handleReplySubmit, handleSaveEdit) unchanged ...
 
+  const handleReplySubmit = async () => {
+    if (isSubmittingReply) return;
+
+    if (!replyText.trim()) {
+      toast({ title: "Reply cannot be empty", variant: "destructive" });
+      return;
+    }
+
+    try {
+      setIsSubmittingReply(true);
+      await onReply(comment.id, replyText.trim());
+      setReplyText("");
+      setShowReplyBox(false);
+    } finally {
+      setIsSubmittingReply(false);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (!editText.trim()) {
+      toast({ title: "Comment cannot be empty", variant: "destructive" });
+      return;
+    }
+    onEdit(comment.id, editText.trim());
+    setEditing(false);
+  };
+
   return (
     <div
       className={`${depth > 0 ? "ml-4 sm:ml-6 pl-3 sm:pl-4 border-l-2 border-border" : ""}`}>

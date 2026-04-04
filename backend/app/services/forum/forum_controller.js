@@ -1,9 +1,11 @@
 import path from "path";
 import { ForumModel } from "../../models/forum_model.js";
+import { NotificationService } from "../../services/notification/notification_service.js";
 import { CommentModel } from "../../models/comment_model.js";
 import { SubjectModel } from "../../models/subject_model.js";
 import { TagModel } from "../../models/tag_model.js";
 import { VotesModel } from "../../models/votes_model.js";
+import { UserModel } from "../../models/user_model.js";
 import { supabase } from "../../database/supabase.js";
 
 const POST_DOCUMENT_BUCKET = "post_document";
@@ -369,7 +371,6 @@ export const ForumsController = {
     }
   },
 
-  // POST /api/forums/:id/vote
   async voteForum(req, res) {
     try {
       const userId = req.user?.id;
@@ -390,8 +391,29 @@ export const ForumsController = {
       );
       if (error) throw error;
 
+      // Fetch forum details to get owner and title
       const { data: forum, error: fErr } = await ForumModel.findById(forumId);
       if (fErr) throw fErr;
+
+      // --- Notification: when someone votes on your forum (and not yourself) ---
+      if (forum && forum.user_id !== userId) {
+        // Fetch voter's name from database
+        const voter = await UserModel.findById(userId);
+        const voterName = voter?.name || "someone";
+        const voteText = voteTypeNum === 1 ? "upvoted" : "downvoted";
+        const message = `${voterName} ${voteText} your forum "${forum.title.substring(0, 50)}"`;
+        await NotificationService.createNotification({
+          userId: forum.user_id,
+          type: voteTypeNum === 1 ? "upvote" : "downvote",
+          referenceId: forumId,
+          message,
+          metadata: {
+            forumTitle: forum.title,
+            voterName,
+            forumId,
+          },
+        });
+      }
 
       res.json({
         voteType: voteRow.vote_type,

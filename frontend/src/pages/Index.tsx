@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import FeaturedSection from "@/components/FeaturedSection";
 import DiscussionCard from "@/components/DiscussionCard";
+import AISuggestionPanel from "@/components/AISuggestionPanel"; // Make sure this component exists
 import CreatePostModal from "@/components/CreatePostModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { toast } from "@/hooks/use-toast";
@@ -748,15 +749,15 @@ const Index = () => {
       )}
 
       {!subjectId && !tagId && (
-        <section className="mb-8 sm:mb-10">
+        <section className="mb-8 sm:mb-12">
           <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground mb-4">
             Topics You May Like
           </h2>
-
+          {/* 
           <div className="flex items-center justify-between mb-2">
             <div />
             <ScrollButtons scrollRef={topicsScrollRef} />
-          </div>
+          </div> */}
 
           <div
             ref={topicsScrollRef}
@@ -793,7 +794,9 @@ const Index = () => {
         </section>
       )}
 
-      <div className="max-w-3xl mx-auto">
+      {/* Two‑column layout */}
+      <div className="grid gap-6 lg:gap-8 lg:grid-cols-[1fr_280px]">
+        {/* Left column – discussions */}
         <div className="space-y-4 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground">
@@ -895,16 +898,22 @@ const Index = () => {
             </>
           )}
         </div>
+
+        {/* Right column – AI suggestions (sticky) */}
+        <div className="hidden lg:block">
+          <div className="sticky top-24">
+            <AISuggestionPanel />
+          </div>
+        </div>
       </div>
 
-      {/* Create Post Modal */}
+      {/* Modals */}
       <CreatePostModal
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreatePost}
       />
 
-      {/* Edit Post Modal */}
       <CreatePostModal
         key={selectedPostId || "create"}
         open={editModalOpen}
@@ -925,7 +934,6 @@ const Index = () => {
         onSuccess={handlePostUpdated}
       />
 
-      {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         open={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}

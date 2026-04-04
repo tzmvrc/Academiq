@@ -1,4 +1,6 @@
 import { UserFollowModel } from "../../models/peers_model.js";
+import { UserModel } from "../../models/user_model.js";
+import { NotificationService } from "../../services/notification/notification_service.js";
 
 export const UserFollowsController = {
   // GET /api/users/:id/followers
@@ -31,20 +33,19 @@ export const UserFollowsController = {
     }
   },
 
-
   // In UserFollowsController, add:
-async getAllUsers(req, res) {
-  try {
-    const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  async getAllUsers(req, res) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    const users = await UserFollowModel.getAllUsersWithFollowStatus(userId);
-    res.json({ users });
-  } catch (err) {
-    console.error('Get All Users Error:', err);
-    res.status(500).json({ error: 'Failed to fetch users' });
-  }
-},
+      const users = await UserFollowModel.getAllUsersWithFollowStatus(userId);
+      res.json({ users });
+    } catch (err) {
+      console.error("Get All Users Error:", err);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  },
 
   // GET /api/users/me/following
   async getMyFollowing(req, res) {
@@ -97,7 +98,29 @@ async getAllUsers(req, res) {
       const { data, error } = await UserFollowModel.followUser(payload);
       if (error) throw error;
 
-      res.status(201).json({ message: "User followed successfully", follow: data });
+      // --- Notification to the followed user ---
+      const followerUser = await UserModel.findById(followerId);
+      if (followerUser && followingId !== followerId) {
+        await NotificationService.createNotification({
+          userId: followingId,
+          type: "follow",
+          referenceId: followerId,
+          message: `${followerUser.name} started following you`,
+          metadata: {
+            followerName: followerUser.name,
+            followerId,
+            profile_url: followerUser.profile_url,
+          },
+        });
+      }
+
+      // Update counts (add these methods to UserModel if not present)
+      await UserModel.incrementFollowingCount(followerId, 1);
+      await UserModel.incrementFollowersCount(followingId, 1);
+
+      res
+        .status(201)
+        .json({ message: "User followed successfully", follow: data });
     } catch (err) {
       console.error("Follow User Error:", err);
       res.status(500).json({ error: "Failed to follow user" });

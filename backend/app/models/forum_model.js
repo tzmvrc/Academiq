@@ -33,9 +33,10 @@ export const ForumModel = {
   },
 
   async findByUserId(userId, limit = 10, offset = 0) {
-  const { data, error } = await supabase
-    .from("forums")
-    .select(`
+    const { data, error } = await supabase
+      .from("forums")
+      .select(
+        `
       id,
       title,
       content,
@@ -43,13 +44,14 @@ export const ForumModel = {
       comments_count,
       created_at,
       subject:subject_id ( id, name )
-    `)
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
-  if (error) throw error;
-  return { data, error: null };
-},
+    `,
+      )
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+    if (error) throw error;
+    return { data, error: null };
+  },
 
   async findAll() {
     return supabase

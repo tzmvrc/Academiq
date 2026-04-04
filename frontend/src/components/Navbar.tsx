@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import Icon from "@/components/ui/Icon.png";
+import { useSocket } from "@/components/SocketContext";
 
 interface User {
   id: string;
@@ -30,7 +31,7 @@ interface User {
 interface Suggestion {
   type: "forum" | "user" | "subject" | "tag";
   text: string;
-  id?: string; // optional, for when clicking goes to a specific page
+  id?: string;
 }
 
 const navTabs = [
@@ -42,7 +43,6 @@ const navTabs = [
 
 type ThemeMode = "light" | "dark" | "system";
 
-// Simple debounce hook
 const useDebounce = <T,>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
   useEffect(() => {
@@ -54,6 +54,7 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 
 const Navbar = () => {
   const location = useLocation();
+  const { socket } = useSocket();
   const navigate = useNavigate();
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,33 +66,84 @@ const Navbar = () => {
   const [theme, setTheme] = useState<ThemeMode>(() => {
     return (localStorage.getItem("academiq-theme") as ThemeMode) || "light";
   });
-  // User state
   const [user, setUser] = useState<User | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
-
-  // Search suggestions state
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const debouncedQuery = useDebounce(searchQuery, 300);
 
   const profileRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
 
+  // ----- Notification real‑time logic -----
+  // Listen for new notifications via WebSocket
+  useEffect(() => {
+    if (!socket || !user) return;
+
+    const handleNewNotification = (notification) => {
+      setUnreadCount((prev) => prev + 1);
+      toast({
+        title: "New notification",
+        description: notification.message,
+        duration: 5000,
+        // action removed – clicking the toast or bell will navigate
+      });
+    };
+
+    socket.on("notification:new", handleNewNotification);
+    return () => {
+      socket.off("notification:new", handleNewNotification);
+    };
+  }, [socket, user, navigate]);
+
+  // Join user room (back‑end already joins on connection, but safe to keep)
+  useEffect(() => {
+    if (socket && user) {
+      socket.emit("join", user.id);
+    }
+  }, [socket, user]);
+
+  // Fetch initial unread count once when user is loaded
+  useEffect(() => {
+    const fetchInitialUnreadCount = async () => {
+      try {
+        const res = await axiosInstance.get("/notifications/unread-count");
+        setUnreadCount(res.data.count);
+      } catch (err) {
+        console.error("Failed to fetch unread count", err);
+      }
+    };
+    if (user) fetchInitialUnreadCount();
+  }, [user]);
+  // ----- End notification logic -----
+
+  useEffect(() => {
+    const handleNotificationsRead = async () => {
+      try {
+        const res = await axiosInstance.get("/notifications/unread-count");
+        setUnreadCount(res.data.count);
+      } catch (err) {
+        console.error("Failed to refresh unread count", err);
+      }
+    };
+    window.addEventListener("notificationsRead", handleNotificationsRead);
+    return () =>
+      window.removeEventListener("notificationsRead", handleNotificationsRead);
+  }, []);
   // Fetch suggestions when debouncedQuery changes
   useEffect(() => {
     if (!debouncedQuery.trim()) {
       setSuggestions([]);
       return;
     }
-
     const fetchSuggestions = async () => {
       setLoadingSuggestions(true);
       try {
         const res = await axiosInstance.get(
           `/search/suggestions?q=${encodeURIComponent(debouncedQuery)}`,
         );
-        // Expecting { suggestions: Suggestion[] }
         setSuggestions(res.data.suggestions || []);
       } catch (err) {
         console.error("Failed to fetch suggestions:", err);
@@ -100,32 +152,25 @@ const Navbar = () => {
         setLoadingSuggestions(false);
       }
     };
-
     fetchSuggestions();
   }, [debouncedQuery]);
 
   // Fetch current user
   useEffect(() => {
     const fetchUser = async () => {
-      // Try multiple possible token keys
       let token = localStorage.getItem("userToken");
       if (!token) token = localStorage.getItem("user");
       if (!token) token = localStorage.getItem("jwt");
-
-      console.log("Token found:", !!token);
       if (!token) {
         setUser(null);
         setLoadingUser(false);
         return;
       }
-
       try {
         const response = await axiosInstance.get("/auth/me");
-        console.log("User fetch response:", response.data);
         setUser(response.data);
       } catch (err: any) {
         console.error("Failed to fetch user:", err);
-        // If the error is 401, token is invalid – clear it
         if (err.response?.status === 401) {
           clearAuth();
         }
@@ -153,6 +198,7 @@ const Navbar = () => {
     }
   }, [theme]);
 
+  // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (
@@ -182,7 +228,7 @@ const Navbar = () => {
     setMobileSearchOpen(false);
   }, [location.pathname]);
 
-  // Listen for clear search event from SearchResults page
+  // Clear search when "clear" event is triggered from search page
   useEffect(() => {
     const handleClearSearch = () => {
       setSearchQuery("");
@@ -215,12 +261,10 @@ const Navbar = () => {
     });
   };
 
-  // Navigate on suggestion click or search submit
   const handleSearchSelect = (suggestion: Suggestion) => {
     setSearchQuery(suggestion.text);
     setSearchFocused(false);
     setMobileSearchOpen(false);
-    // For forums, navigate to the forum page if we have an id
     if (suggestion.type === "forum" && suggestion.id) {
       navigate(`/post/${suggestion.id}`);
     } else if (suggestion.type === "user" && suggestion.id) {
@@ -230,7 +274,6 @@ const Navbar = () => {
     } else if (suggestion.type === "tag" && suggestion.id) {
       navigate(`/feed?tagId=${suggestion.id}`);
     } else {
-      // Fallback: go to search page
       navigate(`/search?q=${encodeURIComponent(suggestion.text)}`);
     }
   };
@@ -257,7 +300,6 @@ const Navbar = () => {
       .slice(0, 2);
   };
 
-  // Suggestions list component (shared for desktop and mobile)
   const SuggestionsList = () => {
     if (loadingSuggestions) {
       return (
@@ -313,7 +355,7 @@ const Navbar = () => {
             </span>
           </Link>
 
-          {/* Center Tabs - hidden on mobile */}
+          {/* Center Tabs */}
           <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
             {navTabs.map((tab) => {
               const isActive = location.pathname === tab.path;
@@ -383,11 +425,16 @@ const Navbar = () => {
               <Search className="h-5 w-5" />
             </button>
 
+            {/* Notifications Bell with Unread Badge */}
             <Link
               to="/notifications"
               className="relative p-1.5 sm:p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
               <Bell className="h-5 w-5" />
-              <span className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 h-2 w-2 rounded-full bg-accent" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </Link>
 
             {/* Profile / Login */}
