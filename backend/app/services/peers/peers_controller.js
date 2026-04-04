@@ -1,6 +1,8 @@
 import { UserFollowModel } from "../../models/peers_model.js";
 import { UserModel } from "../../models/user_model.js";
 import { NotificationService } from "../../services/notification/notification_service.js";
+import { supabase } from "../../database/supabase.js";
+import { getIO } from "../../middlewares/socket.js";
 
 export const UserFollowsController = {
   // GET /api/users/:id/followers
@@ -11,7 +13,15 @@ export const UserFollowsController = {
       const { data, error } = await UserFollowModel.findFollowers(id);
       if (error) throw error;
 
-      res.json({ followers: data });
+      // Ensure we return user objects with proper structure
+      const followers = (data || []).map((f) => ({
+        id: f.id || f.follower?.id,
+        name: f.name || f.follower?.name,
+        profile_url: f.profile_url || f.follower?.profile_url,
+        school: f.school || f.follower?.school,
+      }));
+
+      res.json({ followers });
     } catch (err) {
       console.error("Get Followers Error:", err);
       res.status(500).json({ error: "Failed to fetch followers" });
@@ -26,7 +36,15 @@ export const UserFollowsController = {
       const { data, error } = await UserFollowModel.findFollowing(id);
       if (error) throw error;
 
-      res.json({ following: data });
+      // Ensure we return user objects with proper structure
+      const following = (data || []).map((f) => ({
+        id: f.id || f.following?.id,
+        name: f.name || f.following?.name,
+        profile_url: f.profile_url || f.following?.profile_url,
+        school: f.school || f.following?.school,
+      }));
+
+      res.json({ following });
     } catch (err) {
       console.error("Get Following Error:", err);
       res.status(500).json({ error: "Failed to fetch following" });
@@ -114,9 +132,22 @@ export const UserFollowsController = {
         });
       }
 
-      // Update counts (add these methods to UserModel if not present)
-      await UserModel.incrementFollowingCount(followerId, 1);
-      await UserModel.incrementFollowersCount(followingId, 1);
+      // --- Emit real-time follow event to both users ---
+      const io = getIO();
+      if (io) {
+        // Notify the followed user of updated counts
+        io.to(`user:${followingId}`).emit("follow_stats_updated", {
+          userId: followingId,
+          followers_count: (await getUserFollowStatsData(followingId))
+            .followers_count,
+        });
+        // Notify the follower of updated counts
+        io.to(`user:${followerId}`).emit("follow_stats_updated", {
+          userId: followerId,
+          following_count: (await getUserFollowStatsData(followerId))
+            .following_count,
+        });
+      }
 
       res
         .status(201)
@@ -127,6 +158,7 @@ export const UserFollowsController = {
     }
   },
 
+  // DELETE /api/users/:id/unfollow
   // DELETE /api/users/:id/unfollow
   async unfollowUser(req, res) {
     try {
@@ -155,10 +187,60 @@ export const UserFollowsController = {
       );
       if (error) throw error;
 
+      // --- Emit real-time unfollow event to both users ---
+      const io = getIO();
+      if (io) {
+        // Notify the unfollowed user of updated counts
+        io.to(`user:${followingId}`).emit("follow_stats_updated", {
+          userId: followingId,
+          followers_count: (await getUserFollowStatsData(followingId))
+            .followers_count,
+        });
+        // Notify the unfollower of updated counts
+        io.to(`user:${followerId}`).emit("follow_stats_updated", {
+          userId: followerId,
+          following_count: (await getUserFollowStatsData(followerId))
+            .following_count,
+        });
+      }
+
       res.json({ message: "User unfollowed successfully" });
     } catch (err) {
       console.error("Unfollow User Error:", err);
       res.status(500).json({ error: "Failed to unfollow user" });
     }
   },
+  // GET /api/peers/:id/stats - Get follower/following counts from database
+  async getUserFollowStats(req, res) {
+    try {
+      const { id } = req.params;
+      const stats = await getUserFollowStatsData(id);
+      res.json(stats);
+    } catch (err) {
+      console.error("Get Follow Stats Error:", err);
+      res.status(500).json({ error: "Failed to fetch follow stats" });
+    }
+  },
 };
+
+// Helper function to get follow stats directly from database
+async function getUserFollowStatsData(userId) {
+  // Get followers count (users following this user)
+  const { count: followersCount, error: followersError } = await supabase
+    .from("user_follows")
+    .select("*", { count: "exact", head: true })
+    .eq("following_id", userId);
+  if (followersError) throw followersError;
+
+  // Get following count (users this user is following)
+  const { count: followingCount, error: followingError } = await supabase
+    .from("user_follows")
+    .select("*", { count: "exact", head: true })
+    .eq("follower_id", userId);
+  if (followingError) throw followingError;
+
+  return {
+    followers_count: followersCount || 0,
+    following_count: followingCount || 0,
+  };
+}

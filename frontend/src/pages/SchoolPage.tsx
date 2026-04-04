@@ -139,6 +139,31 @@ const SchoolPage = () => {
 
   const LIMIT = 20;
   const currentUser = getCurrentUser();
+  // Inside SchoolPage component, after state declarations
+  const [fetchedLogo, setFetchedLogo] = useState<string | null>(null);
+  const [loadingLogo, setLoadingLogo] = useState(false);
+
+  useEffect(() => {
+    if (schoolLogoFromState) {
+      setFetchedLogo(schoolLogoFromState);
+      return;
+    }
+    const fetchSchoolLogo = async () => {
+      setLoadingLogo(true);
+      try {
+        const res = await axiosInstance.get(
+          `/leaderboard/school-logo/${encodeURIComponent(decodedSchool)}`,
+        );
+        setFetchedLogo(res.data.logo);
+      } catch (err) {
+        console.error("Failed to fetch school logo:", err);
+        setFetchedLogo(null);
+      } finally {
+        setLoadingLogo(false);
+      }
+    };
+    fetchSchoolLogo();
+  }, [decodedSchool, schoolLogoFromState]);
 
   const fetchUsers = async (reset = true) => {
     if (reset) {
@@ -422,9 +447,9 @@ const SchoolPage = () => {
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
       <div className="flex items-center gap-3 mb-6 mt-5">
-        {schoolLogoFromState ? (
+        {!loadingLogo && (fetchedLogo || schoolLogoFromState) ? (
           <img
-            src={schoolLogoFromState}
+            src={fetchedLogo || schoolLogoFromState}
             alt={decodedSchool}
             className="h-15 w-auto max-w-15 object-contain"
             onError={(e) => {

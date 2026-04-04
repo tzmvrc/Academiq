@@ -10,8 +10,12 @@ const router = express.Router();
  */
 
 // Protected - get users the authenticated user is following
-router.get("/users/me/following", authMiddleware, UserFollowsController.getMyFollowing);
-router.get('/users', authMiddleware, UserFollowsController.getAllUsers);
+router.get(
+  "/users/me/following",
+  authMiddleware,
+  UserFollowsController.getMyFollowing,
+);
+router.get("/users", authMiddleware, UserFollowsController.getAllUsers);
 
 // Public - get all followers of a user
 router.get("/users/:id/followers", UserFollowsController.getFollowers);
@@ -23,6 +27,13 @@ router.get("/users/:id/following", UserFollowsController.getFollowing);
 router.post("/:id/follow", authMiddleware, UserFollowsController.followUser);
 
 // Protected - unfollow a user
-router.delete("/:id/unfollow", authMiddleware, UserFollowsController.unfollowUser);
+router.delete(
+  "/:id/unfollow",
+  authMiddleware,
+  UserFollowsController.unfollowUser,
+);
+
+// Public - get follower/following counts for a user
+router.get("/:id/stats", UserFollowsController.getUserFollowStats);
 
 export default router;

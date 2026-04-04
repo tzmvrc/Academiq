@@ -10,5 +10,7 @@ router.get('/top', authMiddleware, LeaderboardController.getTopSchools);
 router.get('/:schoolName/users', authMiddleware, LeaderboardController.getSchoolUsers);
 router.get('/:schoolName/forums', authMiddleware, LeaderboardController.getSchoolForums);
 
+// GET /api/leaderboard/school-logo/:schoolName
+router.get('/school-logo/:schoolName', authMiddleware, LeaderboardController.getSchoolLogo);
 
 export default router;

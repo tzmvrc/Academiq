@@ -1,10 +1,22 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Star, MessageCircle, Bookmark, Award, ArrowBigUp } from "lucide-react";
-import AIBadge from "@/components/AIBadge";
+import { motion, AnimatePresence } from "framer-motion";
+import EditProfileModal from "@/components/EdittProfileModal";
+import {
+  Star,
+  MessageCircle,
+  Bookmark,
+  Award,
+  ArrowBigUp,
+  UserPlus,
+  Check,
+  Edit3,
+  X,
+  Search,
+} from "lucide-react";
 import axiosInstance from "@/integration/axiosInstance";
 import { toast } from "@/hooks/use-toast";
+import { useSocket } from "@/components/SocketContext";
 
 // Types
 interface User {
@@ -18,6 +30,15 @@ interface User {
   followers_count: number;
   following_count: number;
   bio: string | null;
+  privacy?: "public" | "private";
+}
+
+interface FollowerUser {
+  id: string;
+  name: string;
+  profile_url: string | null;
+  school: string | null;
+  is_followed?: boolean;
 }
 
 interface Forum {
@@ -73,12 +94,24 @@ const truncateText = (text: string, maxLength: number = 100): string => {
   return text.substring(0, maxLength).trim() + "...";
 };
 
+const getInitials = (name: string) => {
+  if (!name) return "??";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+};
+
 const Profile = () => {
   const navigate = useNavigate();
   const { userName } = useParams<{ userName: string }>();
+  const { socket } = useSocket();
   const [user, setUser] = useState<User | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
+  const [loadingFollowStatus, setLoadingFollowStatus] = useState(true);
   const [posts, setPosts] = useState<Forum[]>([]);
   const [savedPosts, setSavedPosts] = useState<SavedForum[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -86,8 +119,54 @@ const Profile = () => {
   const [loadingContent, setLoadingContent] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [loadingFollow, setLoadingFollow] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
-  // 1. Fetch current user to know who is logged in
+  // Followers/Following modal state
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [followersList, setFollowersList] = useState<FollowerUser[]>([]);
+  const [followingList, setFollowingList] = useState<FollowerUser[]>([]);
+  const [loadingFollowers, setLoadingFollowers] = useState(false);
+  const [loadingFollowing, setLoadingFollowing] = useState(false);
+  const [followModalLoading, setFollowModalLoading] = useState<string | null>(
+    null,
+  );
+  const [followersSearchTerm, setFollowersSearchTerm] = useState("");
+  const [followingSearchTerm, setFollowingSearchTerm] = useState("");
+
+  // Determine if current user can view the profile's followers/following lists
+  // Can view if: own profile OR profile is public OR is following the user
+  const canViewFollowLists =
+    isOwnProfile || user?.privacy !== "private" || isFollowing;
+
+  const handleFollowersClick = () => {
+    if (canViewFollowLists) {
+      setShowFollowersModal(true);
+    } else {
+      toast({
+        title: "This profile is private",
+        description: "Follow to see their followers.",
+        variant: "default",
+      });
+    }
+  };
+
+  const handleFollowingClick = () => {
+    if (canViewFollowLists) {
+      setShowFollowingModal(true);
+    } else {
+      toast({
+        title: "This profile is private",
+        description: "Follow to see who they follow.",
+        variant: "default",
+      });
+    }
+  };
+
+  // Fetch current user
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -100,7 +179,7 @@ const Profile = () => {
     fetchCurrentUser();
   }, []);
 
-  // 2. Fetch the profile user by name from URL
+  // Fetch profile user by name
   useEffect(() => {
     if (!userName) {
       navigate("/feed");
@@ -109,11 +188,24 @@ const Profile = () => {
 
     const fetchProfileUser = async () => {
       setLoadingUser(true);
+      setLoadingFollowStatus(true);
       try {
         const res = await axiosInstance.get(
           `/auth/users/name/${encodeURIComponent(userName)}`,
         );
-        setUser(res.data);
+        const userData = res.data;
+
+        // Fetch privacy settings from profile endpoint
+        const profileRes = await axiosInstance.get(`/profile/${userData.id}`);
+        const profileData = profileRes.data.data || {};
+
+        // Merge user data with privacy
+        const userWithPrivacy = {
+          ...userData,
+          privacy: profileData.privacy || "public",
+        };
+
+        setUser(userWithPrivacy);
       } catch (err) {
         console.error("Failed to fetch user:", err);
         toast({ title: "User not found", variant: "destructive" });
@@ -125,14 +217,36 @@ const Profile = () => {
     fetchProfileUser();
   }, [userName, navigate]);
 
-  // 3. Determine if this is the current user's own profile (after both are loaded)
+  // Determine if own profile and fetch follow status
   useEffect(() => {
     if (user && currentUserId) {
-      setIsOwnProfile(user.id === currentUserId);
+      const own = user.id === currentUserId;
+      setIsOwnProfile(own);
+      if (!own && currentUserId) {
+        const checkFollowStatus = async () => {
+          try {
+            const followingRes = await axiosInstance.get(
+              "/peers/users/me/following",
+            );
+            const following = followingRes.data.following || [];
+            const followingIds = new Set(
+              following.map((f: any) => f.following.id),
+            );
+            setIsFollowing(followingIds.has(user.id));
+          } catch (err) {
+            console.error("Failed to fetch follow status:", err);
+          } finally {
+            setLoadingFollowStatus(false);
+          }
+        };
+        checkFollowStatus();
+      } else {
+        setLoadingFollowStatus(false);
+      }
     }
   }, [user, currentUserId]);
 
-  // 4. Fetch content (posts, comments, and saved if own)
+  // Fetch content (posts, comments, saved)
   useEffect(() => {
     if (!user) return;
 
@@ -180,12 +294,232 @@ const Profile = () => {
     setShowAll(false);
   }, [activeTab]);
 
-  if (loadingUser) {
+  // Listen to real-time follow stats updates
+  useEffect(() => {
+    if (!socket || !user) return;
+
+    const handleStatsUpdate = (data: {
+      userId: string;
+      followers_count?: number;
+      following_count?: number;
+    }) => {
+      if (data.userId === user.id) {
+        setUser((prevUser) => {
+          if (!prevUser) return prevUser;
+          return {
+            ...prevUser,
+            followers_count:
+              data.followers_count !== undefined
+                ? data.followers_count
+                : prevUser.followers_count,
+            following_count:
+              data.following_count !== undefined
+                ? data.following_count
+                : prevUser.following_count,
+          };
+        });
+      }
+    };
+
+    socket.on("follow_stats_updated", handleStatsUpdate);
+    return () => {
+      socket.off("follow_stats_updated", handleStatsUpdate);
+    };
+  }, [socket, user?.id]);
+
+  // Fetch followers when modal opens
+  useEffect(() => {
+    if (showFollowersModal && user) {
+      const fetchFollowers = async () => {
+        setLoadingFollowers(true);
+        try {
+          const res = await axiosInstance.get(
+            `/peers/users/${user.id}/followers`,
+          );
+          let followers = res.data.followers || [];
+          if (currentUserId) {
+            const followingRes = await axiosInstance.get(
+              "/peers/users/me/following",
+            );
+            const followingList = followingRes.data.following || [];
+            const followingIds = new Set(
+              followingList.map((f: any) => f.following?.id || f.id),
+            );
+            followers = followers.map((f: any) => ({
+              ...f,
+              is_followed: followingIds.has(f.id),
+            }));
+          }
+          setFollowersList(followers);
+          setFollowersSearchTerm(""); // reset search when modal opens
+        } catch (err) {
+          console.error("Failed to fetch followers:", err);
+          toast({ title: "Failed to load followers", variant: "destructive" });
+        } finally {
+          setLoadingFollowers(false);
+        }
+      };
+      fetchFollowers();
+    }
+  }, [showFollowersModal, user, currentUserId]);
+
+  // Fetch following when modal opens
+  useEffect(() => {
+    if (showFollowingModal && user) {
+      const fetchFollowing = async () => {
+        setLoadingFollowing(true);
+        try {
+          const res = await axiosInstance.get(
+            `/peers/users/${user.id}/following`,
+          );
+          let following = res.data.following || [];
+          if (currentUserId) {
+            const followingRes = await axiosInstance.get(
+              "/peers/users/me/following",
+            );
+            const followingList = followingRes.data.following || [];
+            const followingIds = new Set(
+              followingList.map((f: any) => f.following?.id || f.id),
+            );
+            following = following.map((f: any) => ({
+              ...f,
+              is_followed: followingIds.has(f.id),
+            }));
+          }
+          setFollowingList(following);
+          setFollowingSearchTerm(""); // reset search when modal opens
+        } catch (err) {
+          console.error("Failed to fetch following:", err);
+          toast({ title: "Failed to load following", variant: "destructive" });
+        } finally {
+          setLoadingFollowing(false);
+        }
+      };
+      fetchFollowing();
+    }
+  }, [showFollowingModal, user, currentUserId]);
+
+  const refetchFollowStatus = async () => {
+    if (!user || !currentUserId) return;
+    try {
+      const followingRes = await axiosInstance.get("/peers/users/me/following");
+      const following = followingRes.data.following || [];
+      const followingIds = new Set(
+        following.map((f: any) => f.following?.id || f.id),
+      );
+      setIsFollowing(followingIds.has(user.id));
+    } catch (err) {
+      console.error("Failed to refetch follow status:", err);
+    }
+  };
+
+  // Refresh user data including privacy from backend
+  const refreshUserData = async () => {
+    if (!user) return;
+    try {
+      // Fetch privacy from profile endpoint
+      const profileRes = await axiosInstance.get(`/profile/${user.id}`);
+      const profileData = profileRes.data.data || {};
+
+      setUser((prevUser) => {
+        if (!prevUser) return prevUser;
+        return {
+          ...prevUser,
+          privacy: profileData.privacy || "public",
+          bio: profileData.bio || prevUser.bio,
+          profile_url: profileData.profile_url || prevUser.profile_url,
+        };
+      });
+    } catch (err) {
+      console.error("Failed to refresh user data:", err);
+    }
+  };
+
+  const handleFollowToggle = async () => {
+    if (!user || !currentUserId) return;
+    setLoadingFollow(true);
+    try {
+      if (isFollowing) {
+        await axiosInstance.delete(`/peers/${user.id}/unfollow`);
+        setIsFollowing(false);
+      } else {
+        await axiosInstance.post(`/peers/${user.id}/follow`);
+        setIsFollowing(true);
+      }
+      toast({
+        title: isFollowing
+          ? `Unfollowed ${user.name}`
+          : `Following ${user.name}`,
+      });
+    } catch (err: any) {
+      console.error("Follow/unfollow error:", err);
+      // Revert the state change on error
+      setIsFollowing(!isFollowing);
+      toast({
+        title: err?.response?.data?.error || "Action failed",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingFollow(false);
+    }
+  };
+
+  const handleFollowInModal = async (
+    targetUserId: string,
+    targetName: string,
+    isCurrentlyFollowed: boolean,
+    setList: React.Dispatch<React.SetStateAction<FollowerUser[]>>,
+  ) => {
+    if (followModalLoading === targetUserId) return;
+    setFollowModalLoading(targetUserId);
+    try {
+      if (isCurrentlyFollowed) {
+        await axiosInstance.delete(`/peers/${targetUserId}/unfollow`);
+        setList((prev) =>
+          prev.map((u) =>
+            u.id === targetUserId ? { ...u, is_followed: false } : u,
+          ),
+        );
+        toast({ title: `Unfollowed ${targetName}` });
+      } else {
+        await axiosInstance.post(`/peers/${targetUserId}/follow`);
+        setList((prev) =>
+          prev.map((u) =>
+            u.id === targetUserId ? { ...u, is_followed: true } : u,
+          ),
+        );
+        toast({ title: `Following ${targetName}` });
+      }
+    } catch (err: any) {
+      console.error("Follow error:", err);
+      toast({ title: "Action failed", variant: "destructive" });
+    } finally {
+      setFollowModalLoading(null);
+    }
+  };
+
+  const handleSchoolClick = () => {
+    if (user?.school) {
+      navigate(`/school/${encodeURIComponent(user.school)}`);
+    }
+  };
+
+  // Loading skeleton while user or follow status is still being fetched
+  const isLoadingHeader = loadingUser || (!isOwnProfile && loadingFollowStatus);
+
+  if (isLoadingHeader) {
     return (
       <div className="mx-auto max-w-4xl px-4 sm:px-6 py-6 sm:py-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-20 bg-secondary rounded-xl" />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="flex gap-4 sm:gap-6">
+            <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-secondary" />
+            <div className="flex-1 space-y-2">
+              <div className="h-6 w-48 bg-secondary rounded" />
+              <div className="h-4 w-64 bg-secondary rounded" />
+              <div className="h-4 w-32 bg-secondary rounded" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="h-24 bg-secondary rounded-xl" />
             ))}
@@ -203,13 +537,6 @@ const Profile = () => {
     );
   }
 
-  const initials = user.name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
   const totalPosts = posts.length;
   const totalComments = comments.length;
   const totalSaved = savedPosts.length;
@@ -223,7 +550,6 @@ const Profile = () => {
       : []),
   ];
 
-  // Static achievements (could be dynamic later)
   const achievements = [
     {
       title: "First Verified Post",
@@ -242,7 +568,6 @@ const Profile = () => {
     },
   ];
 
-  // Tabs: only show "Saved" and "Comments" if viewing own profile
   const tabs: { key: Tab; label: string }[] = [
     { key: "posts", label: "Posts" },
     ...(isOwnProfile ? [{ key: "saved", label: "Saved" }] : []),
@@ -319,7 +644,7 @@ const Profile = () => {
               <div className="flex justify-center mt-4">
                 <button
                   onClick={() => setShowAll(!showAll)}
-                  className="text-sm text-primary hover:underline transition-colors">
+                  className="text-sm text-primary hover:underline">
                   {showAll ? "Show less" : "View more"}
                 </button>
               </div>
@@ -385,7 +710,7 @@ const Profile = () => {
               <div className="flex justify-center mt-4">
                 <button
                   onClick={() => setShowAll(!showAll)}
-                  className="text-sm text-primary hover:underline transition-colors">
+                  className="text-sm text-primary hover:underline">
                   {showAll ? "Show less" : "View more"}
                 </button>
               </div>
@@ -451,7 +776,7 @@ const Profile = () => {
               <div className="flex justify-center mt-4">
                 <button
                   onClick={() => setShowAll(!showAll)}
-                  className="text-sm text-primary hover:underline transition-colors">
+                  className="text-sm text-primary hover:underline">
                   {showAll ? "Show less" : "View more"}
                 </button>
               </div>
@@ -472,7 +797,10 @@ const Profile = () => {
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+        {/* Profile picture with click preview */}
+        <div
+          onClick={() => user.profile_url && setShowImageModal(true)}
+          className={`h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden ${user.profile_url ? "cursor-pointer" : ""}`}>
           {user.profile_url ? (
             <img
               src={user.profile_url}
@@ -481,7 +809,7 @@ const Profile = () => {
             />
           ) : (
             <span className="text-xl sm:text-2xl font-bold text-primary">
-              {initials}
+              {getInitials(user.name)}
             </span>
           )}
         </div>
@@ -493,29 +821,72 @@ const Profile = () => {
             {user.bio || "No bio yet."}
           </p>
           {user.school && (
-            <p className="text-sm text-muted-foreground mt-1">{user.school}</p>
+            <button
+              onClick={handleSchoolClick}
+              className="text-sm text-primary hover:underline mt-1 cursor-pointer">
+              {user.school}
+            </button>
           )}
-          <div className="flex items-center gap-4 mt-3">
-            <span className="text-sm text-foreground">
+          <div className="flex flex-wrap items-center gap-4 mt-3">
+            <span
+              onClick={handleFollowersClick}
+              className={`text-sm text-foreground ${canViewFollowLists ? "cursor-pointer hover:text-primary transition-colors" : "cursor-default"}`}>
               <span className="font-semibold">{user.followers_count}</span>{" "}
               <span className="text-muted-foreground">followers</span>
             </span>
-            <span className="text-sm text-foreground">
+            <span
+              onClick={handleFollowingClick}
+              className={`text-sm text-foreground ${canViewFollowLists ? "cursor-pointer hover:text-primary transition-colors" : "cursor-default"}`}>
               <span className="font-semibold">{user.following_count}</span>{" "}
               <span className="text-muted-foreground">following</span>
             </span>
+            {!isOwnProfile ? (
+              <button
+                onClick={handleFollowToggle}
+                disabled={loadingFollow}
+                className={`flex items-center gap-2 px-5 py-1 rounded-md text-sm font-medium transition-colors ml-7 ${
+                  isFollowing
+                    ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
+                }`}>
+                {loadingFollow ? (
+                  "Loading..."
+                ) : isFollowing ? (
+                  <>
+                    <Check className="h-4 w-4" /> Following
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4" /> Follow
+                  </>
+                )}
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors">
+                  <Edit3 className="h-4 w-4" /> Edit Profile
+                </button>
+                {/* <span className="text-xs text-muted-foreground ml-2">
+                  {user?.privacy === "private" ? "🔒 Private" : "🌐 Public"}
+                </span> */}
+              </>
+            )}
           </div>
         </div>
       </motion.div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        {stats.map((s, i) => (
+        {stats.map((s) => (
           <motion.div
-            key={i}
+            key={s.label}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
+            transition={{
+              delay: stats.findIndex((item) => item.label === s.label) * 0.05,
+            }}
             className="rounded-xl border border-border bg-card p-3 sm:p-4 text-center">
             <s.icon className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-accent mb-1.5 sm:mb-2" />
             <p className="text-lg sm:text-xl font-heading font-bold text-foreground">
@@ -533,12 +904,16 @@ const Profile = () => {
         <Award className="h-5 w-5 text-accent" /> Achievements
       </h2>
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-3 mb-6 sm:mb-8">
-        {achievements.map((a, i) => (
+        {achievements.map((a) => (
           <motion.div
-            key={i}
+            key={a.title}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 + i * 0.05 }}
+            transition={{
+              delay:
+                0.2 +
+                achievements.findIndex((item) => item.title === a.title) * 0.05,
+            }}
             className="rounded-xl border border-border bg-card p-3 sm:p-4">
             <div className="text-2xl mb-2">{a.icon}</div>
             <p className="font-heading font-semibold text-foreground text-sm">
@@ -575,6 +950,288 @@ const Profile = () => {
       </div>
 
       {renderContent()}
+
+      {/* Followers Modal */}
+      <AnimatePresence>
+        {showFollowersModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowFollowersModal(false)}>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-md max-h-[80vh] bg-card rounded-xl shadow-xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <h3 className="text-lg font-heading font-semibold text-foreground">
+                  Followers
+                </h3>
+                <button
+                  onClick={() => setShowFollowersModal(false)}
+                  className="p-1 rounded-lg hover:bg-secondary">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="p-3 border-b border-border">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search followers..."
+                    value={followersSearchTerm}
+                    onChange={(e) => setFollowersSearchTerm(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div className="overflow-y-auto p-2 max-h-[calc(80vh-110px)]">
+                {loadingFollowers ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Loading...
+                  </div>
+                ) : followersList.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No followers yet.
+                  </div>
+                ) : (
+                  followersList
+                    .filter((f) =>
+                      f.name
+                        .toLowerCase()
+                        .includes(followersSearchTerm.toLowerCase()),
+                    )
+                    .map((f, idx) => (
+                      <div
+                        key={f.id || `follower-${idx}`}
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-colors">
+                        <div
+                          className="flex items-center gap-3 cursor-pointer"
+                          onClick={() => {
+                            navigate(`/${encodeURIComponent(f.name)}`);
+                            setShowFollowersModal(false);
+                          }}>
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                            {f.profile_url ? (
+                              <img
+                                src={f.profile_url}
+                                alt={f.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-sm font-semibold text-primary">
+                                {getInitials(f.name)}
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              {f.name}
+                            </p>
+                            {f.school && (
+                              <p className="text-xs text-muted-foreground">
+                                {f.school}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {currentUserId && f.id !== currentUserId && (
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              await handleFollowInModal(
+                                f.id,
+                                f.name,
+                                !!f.is_followed,
+                                setFollowersList,
+                              );
+                            }}
+                            disabled={followModalLoading === f.id}
+                            className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                              f.is_followed
+                                ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                                : "bg-primary text-primary-foreground hover:bg-primary/90"
+                            }`}>
+                            {followModalLoading === f.id
+                              ? "..."
+                              : f.is_followed
+                                ? "Following"
+                                : "Follow"}
+                          </button>
+                        )}
+                      </div>
+                    ))
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Following Modal */}
+      <AnimatePresence>
+        {showFollowingModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowFollowingModal(false)}>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-md max-h-[80vh] bg-card rounded-xl shadow-xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <h3 className="text-lg font-heading font-semibold text-foreground">
+                  Following
+                </h3>
+                <button
+                  onClick={() => setShowFollowingModal(false)}
+                  className="p-1 rounded-lg hover:bg-secondary">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="p-3 border-b border-border">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search following..."
+                    value={followingSearchTerm}
+                    onChange={(e) => setFollowingSearchTerm(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div className="overflow-y-auto p-2 max-h-[calc(80vh-110px)]">
+                {loadingFollowing ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Loading...
+                  </div>
+                ) : followingList.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Not following anyone yet.
+                  </div>
+                ) : (
+                  followingList
+                    .filter((f) =>
+                      f.name
+                        .toLowerCase()
+                        .includes(followingSearchTerm.toLowerCase()),
+                    )
+                    .map((f, idx) => (
+                      <div
+                        key={f.id || `following-${idx}`}
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-colors">
+                        <div
+                          className="flex items-center gap-3 cursor-pointer"
+                          onClick={() => {
+                            navigate(`/${encodeURIComponent(f.name)}`);
+                            setShowFollowingModal(false);
+                          }}>
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                            {f.profile_url ? (
+                              <img
+                                src={f.profile_url}
+                                alt={f.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-sm font-semibold text-primary">
+                                {getInitials(f.name)}
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              {f.name}
+                            </p>
+                            {f.school && (
+                              <p className="text-xs text-muted-foreground">
+                                {f.school}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {currentUserId && f.id !== currentUserId && (
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              await handleFollowInModal(
+                                f.id,
+                                f.name,
+                                !!f.is_followed,
+                                setFollowingList,
+                              );
+                            }}
+                            disabled={followModalLoading === f.id}
+                            className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                              f.is_followed
+                                ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                                : "bg-primary text-primary-foreground hover:bg-primary/90"
+                            }`}>
+                            {followModalLoading === f.id
+                              ? "..."
+                              : f.is_followed
+                                ? "Following"
+                                : "Follow"}
+                          </button>
+                        )}
+                      </div>
+                    ))
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <EditProfileModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        user={{
+          id: user.id,
+          name: user.name,
+          bio: user.bio,
+          profile_url: user.profile_url,
+          privacy: user.privacy || "public",
+        }}
+        onUpdate={(updatedUser) => {
+          setUser(updatedUser);
+          // Refresh privacy and other data from backend to ensure they're in sync
+          refreshUserData();
+        }}
+      />
+
+      {/* Image Preview Modal */}
+      <AnimatePresence>
+        {showImageModal && user.profile_url && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+            onClick={() => setShowImageModal(false)}>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-[90vw] max-h-[90vh]"
+              onClick={(e) => e.stopPropagation()}>
+              <img
+                src={user.profile_url}
+                alt={user.name}
+                className="w-auto h-auto max-w-full max-h-[90vh] rounded-xl object-contain"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

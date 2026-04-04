@@ -93,4 +93,16 @@ export const LeaderboardController = {
       res.status(500).json({ error: "Failed to fetch school forums" });
     }
   },
+
+  async getSchoolLogo(req, res) {
+    try {
+      const { schoolName } = req.params;
+      const decoded = decodeURIComponent(schoolName);
+      const logo = getSchoolLogo(decoded);
+      res.json({ logo });
+    } catch (err) {
+      console.error("Get school logo error:", err);
+      res.status(500).json({ error: "Failed to fetch school logo" });
+    }
+  },
 };
