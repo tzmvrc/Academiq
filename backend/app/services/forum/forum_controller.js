@@ -475,4 +475,16 @@ export const ForumsController = {
       res.status(500).json({ error: "Failed to fetch vote state" });
     }
   },
+
+  // controllers/forum_controller.js
+  async getTrendingAcademicForums(req, res) {
+    try {
+      const limit = parseInt(req.query.limit) || 3;
+      const forums = await ForumModel.getTrendingAcademicForums(limit);
+      res.json({ forums });
+    } catch (err) {
+      console.error("Error fetching trending academic forums:", err);
+      res.status(500).json({ error: "Failed to fetch trending discussions" });
+    }
+  },
 };
