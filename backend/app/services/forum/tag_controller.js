@@ -5,7 +5,9 @@ export const TagController = {
   async getAllTags(req, res) {
     try {
       const { sort } = req.query; // 'popular' or any other
-      const { data, error } = await TagModel.findAll(sort === "popular" ? "popular" : "name");
+      const { data, error } = await TagModel.findAll(
+        sort === "popular" ? "popular" : "name",
+      );
       if (error) throw error;
       res.json({ tags: data });
     } catch (err) {
@@ -36,10 +38,14 @@ export const TagController = {
 
       // Check if exists
       const { data: existing } = await TagModel.findByName(name);
-      if (existing) return res.status(409).json({ error: "Tag already exists" });
+      if (existing)
+        return res.status(409).json({ error: "Tag already exists" });
 
       // Generate slug
-      const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const slug = name
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-");
       const { data, error } = await TagModel.create(name, slug);
       if (error) throw error;
       res.status(201).json({ tag: data });
@@ -76,6 +82,19 @@ export const TagController = {
     } catch (err) {
       console.error("Delete tag error:", err);
       res.status(500).json({ error: "Failed to delete tag" });
+    }
+  },
+
+  // In TagsController
+  // services/forum/tag_controller.js
+  async getTagsWithCount(req, res) {
+    try {
+      const limit = parseInt(req.query.limit) || 15;
+      const tags = await TagModel.findAllWithCount(limit);
+      res.json({ tags });
+    } catch (err) {
+      console.error("Error fetching tags with count:", err);
+      res.status(500).json({ error: "Failed to fetch tags" });
     }
   },
 };

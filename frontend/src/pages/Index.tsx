@@ -224,36 +224,17 @@ const Index = () => {
 
   // Load subjects and popular tags for "Topics You May Like"
   useEffect(() => {
-    const loadTopics = async () => {
+    const loadTrendingTopics = async () => {
       try {
-        // Fetch subjects (all)
-        const subjectsRes = await axiosInstance.get("/subjects");
-        const subjects = subjectsRes.data.subjects || [];
-
-        // Fetch popular tags (limit 10)
-        const tagsRes = await axiosInstance.get("/tags?sort=popular&limit=10");
-        const tags = tagsRes.data.tags || [];
-
-        // Combine: subjects first, then tags with "#" prefix
-        const combined: TopicItem[] = [
-          ...subjects.map((s: any) => ({
-            id: s.id,
-            name: s.name,
-            type: "subject" as const,
-          })),
-          ...tags.map((t: any) => ({
-            id: t.id,
-            name: t.name,
-            type: "tag" as const,
-          })),
-        ];
-        setTopics(combined);
+        const res = await axiosInstance.get("/subjects/trending?limit=18");
+        const trendingTopics = res.data.topics; // array of { id, name, type, discussionCount }
+        setTopics(trendingTopics);
       } catch (err) {
-        console.error("Error loading topics:", err);
+        console.error("Error loading trending topics:", err);
+        // Fallback to old method if needed
       }
     };
-
-    loadTopics();
+    loadTrendingTopics();
   }, []);
 
   // Update filter name when subjectId/tagId changes or topics load
@@ -777,17 +758,20 @@ const Index = () => {
                 }`}>
                 {item.type === "tag" && "#"}
                 {item.name}
+                <span className="text-xs text-muted-foreground ml-1">
+                  {item.discussionCount} posts
+                </span>
 
                 {followedTopics.has(item.name) && (
                   <Check className="h-3.5 w-3.5" />
                 )}
 
-                <span
+                {/* <span
                   role="button"
                   onClick={(e) => toggleFollowTopic(item.name, e)}
                   className="ml-1 text-xs text-muted-foreground hover:text-primary transition-colors">
                   {followedTopics.has(item.name) ? "✓" : "+"}
-                </span>
+                </span> */}
               </motion.button>
             ))}
           </div>
