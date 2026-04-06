@@ -24,13 +24,14 @@ type ForumItem = {
   document_url?: string | null;
 };
 
-const getVoteColor = (votes: number) => {
-  if (votes >= 200) return "pink";
-  if (votes >= 150) return "yellow";
-  if (votes >= 100) return "teal";
-  if (votes >= 50) return "coral";
-  return "mint";
-};
+// Vote color helper - kept for potential future use
+// const getVoteColor = (votes: number) => {
+//   if (votes >= 200) return "pink";
+//   if (votes >= 150) return "yellow";
+//   if (votes >= 100) return "teal";
+//   if (votes >= 50) return "coral";
+//   return "mint";
+// };
 
 export const FeedTab: React.FC = () => {
   const navigate = useNavigate();
@@ -166,15 +167,15 @@ export const FeedTab: React.FC = () => {
 
   const voteColors = ["yellow", "teal", "pink", "coral", "mint"] as const;
 
-const getRandomColorFromId = (id: string) => {
-  let hash = 0;
+  const getRandomColorFromId = (id: string) => {
+    let hash = 0;
 
-  for (let i = 0; i < id.length; i++) {
-    hash = id.charCodeAt(i) + ((hash << 5) - hash);
-  }
+    for (let i = 0; i < id.length; i++) {
+      hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    }
 
-  return voteColors[Math.abs(hash) % voteColors.length];
-};
+    return voteColors[Math.abs(hash) % voteColors.length];
+  };
 
   const handleCreateForum = async (postData: {
     title: string;
@@ -241,18 +242,15 @@ const getRandomColorFromId = (id: string) => {
           <BrutalButton
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
-          >
+            className="flex items-center gap-2">
             <Filter className="w-4 h-4" />
             <span>Filter</span>
           </BrutalButton>
 
           <BrutalButton
-            variant="primary"
             size="sm"
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2"
-          >
+            className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
             <span>New Post</span>
           </BrutalButton>
@@ -282,8 +280,7 @@ const getRandomColorFromId = (id: string) => {
               <div
                 key={forum.id}
                 onClick={() => handlePostClick(forum.id)}
-                className="cursor-pointer"
-              >
+                className="cursor-pointer">
                 <ForumCard
                   id={forum.id}
                   title={forum.title}
@@ -301,7 +298,6 @@ const getRandomColorFromId = (id: string) => {
                   onUpvote={handleUpvote}
                   onDownvote={handleDownvote}
                   onSave={handleSave}
-                  
                 />
               </div>
             );

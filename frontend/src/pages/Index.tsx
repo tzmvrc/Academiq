@@ -108,9 +108,9 @@ const DUMMY_FORUM: DiscussionCardProps = {
   comments: 20,
   userVoteState: null,
   isSaved: false,
-  isVerified: true,
   isAiVerified: true,
   tag: "General",
+  isOwn: false,
   aiSummary:
     "A public space for all Academiq members to share ideas, ask questions, and connect outside of specific subjects.",
 };
@@ -197,7 +197,7 @@ const Index = () => {
           "/peers/users/me/following",
         );
         const following = followingRes.data.following || [];
-        const followingIdsSet = new Set(
+        const followingIdsSet: Set<string> = new Set(
           following.map((f: any) => f.following.id),
         );
 

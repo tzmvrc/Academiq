@@ -44,7 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onNotificationsClick,
   notificationCount = 0,
 }) => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -71,8 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         className={cn(
           "h-screen sticky top-0 bg-sidebar border-r-[4px] border-foreground shadow-brutal flex flex-col transition-all duration-300",
           isCollapsed ? "w-20" : "w-64",
-        )}
-      >
+        )}>
         {/* Logo */}
         <div className="p-4 border-b-[3px] border-sidebar-border">
           <div className="flex items-center gap-3">
@@ -97,8 +96,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 "text-sidebar-foreground border-[2px] border-transparent",
                 "hover:border-foreground hover:shadow-brutal-sm hover:bg-sidebar-accent",
                 isCollapsed && "justify-center px-2",
-              )}
-            >
+              )}>
               <Bell className="w-5 h-5 flex-shrink-0" />
               {!isCollapsed && <span>Notifications</span>}
               {notificationCount > 0 && (
@@ -128,8 +126,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   !isActive &&
                     "text-sidebar-foreground border-transparent hover:border-foreground hover:shadow-brutal-sm hover:bg-sidebar-accent",
                   isCollapsed && "justify-center px-2",
-                )}
-              >
+                )}>
                 <Icon className="w-5 h-5 flex-shrink-0" />
                 {!isCollapsed && <span>{item.label}</span>}
               </button>
@@ -146,8 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               "text-sidebar-foreground border-[2px] border-transparent",
               "hover:border-foreground hover:shadow-brutal-sm hover:bg-destructive hover:text-destructive-foreground",
               isCollapsed && "justify-center px-2",
-            )}
-          >
+            )}>
             <LogOut className="w-5 h-5 flex-shrink-0" />
             {!isCollapsed && <span>Logout</span>}
           </button>
@@ -156,8 +152,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Toggle */}
         <button
           onClick={onToggle}
-          className="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-secondary border-[3px] border-foreground rounded-full shadow-brutal-sm flex items-center justify-center hover:bg-yellow transition-colors"
-        >
+          className="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-secondary border-[3px] border-foreground rounded-full shadow-brutal-sm flex items-center justify-center hover:bg-yellow transition-colors">
           {isCollapsed ? (
             <ChevronRight className="w-4 h-4" />
           ) : (
@@ -182,8 +177,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 onClick={() => !loggingOut && setShowLogoutConfirm(false)}
                 className="w-10 h-10 bg-background border-[2px] border-foreground rounded-lg shadow-brutal-sm flex items-center justify-center hover:bg-muted transition-colors"
-                aria-label="Close"
-              >
+                aria-label="Close">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -201,15 +195,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <BrutalButton
                 variant="outline"
                 onClick={() => setShowLogoutConfirm(false)}
-                disabled={loggingOut}
-              >
+                disabled={loggingOut}>
                 Cancel
               </BrutalButton>
               <BrutalButton
                 variant="primary"
                 onClick={handleLogout}
-                disabled={loggingOut}
-              >
+                disabled={loggingOut}>
                 {loggingOut ? "Logging out..." : "Yes, Logout"}
               </BrutalButton>
             </div>

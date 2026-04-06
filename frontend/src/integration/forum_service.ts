@@ -38,6 +38,7 @@ export interface Tag {
 
 export interface DiscussionCardProps {
   id?: string;
+  user_id?: string;
   title: string;
   author: string;
   authorInitials: string;

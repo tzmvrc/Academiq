@@ -44,11 +44,12 @@ interface DiscussionCardProps {
   isAiVerified?: boolean;
   tag: string; // legacy, subject name
   index?: number;
+  isOwn?: boolean; // whether current user is the author (for forum_service compatibility)
+  isAuthor?: boolean; // whether current user is the author
   onVote?: (voteType: 1 | -1) => Promise<void>;
   onUnvote?: () => Promise<void>;
   onSave?: () => Promise<boolean | void>;
   onTagClick?: (tagId: string) => void; // optional tag click handler
-  isAuthor?: boolean; // whether current user is the author
   onEdit?: (postData: DiscussionCardProps) => void;
   onDelete?: (postId: string) => void;
 }

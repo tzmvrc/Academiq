@@ -72,8 +72,7 @@ export const InterestTab: React.FC = () => {
           <BrutalCard key={rec.id} className="p-5">
             <div className="flex items-start gap-4">
               <div
-                className={`w-12 h-12 bg-${rec.color} rounded-lg border-[2px] border-foreground shadow-brutal-sm flex items-center justify-center flex-shrink-0`}
-              >
+                className={`w-12 h-12 bg-${rec.color} rounded-lg border-[2px] border-foreground shadow-brutal-sm flex items-center justify-center flex-shrink-0`}>
                 <BookOpen className="w-6 h-6" />
               </div>
               <div className="flex-1">
@@ -116,9 +115,8 @@ export const InterestTab: React.FC = () => {
                   </p>
                 </div>
                 <BrutalButton
-                  variant={topic.isFollowing ? "teal" : "outline"}
-                  size="sm"
-                >
+                  variant={topic.isFollowing ? "secondary" : "outline"}
+                  size="sm">
                   {topic.isFollowing ? "Following" : "Follow"}
                 </BrutalButton>
               </div>

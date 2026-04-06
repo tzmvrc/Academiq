@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "@/integration/axiosInstance";
-import { Title } from "@radix-ui/react-toast";
 
 export const useSignup = () => {
   const navigate = useNavigate();
@@ -16,10 +15,17 @@ export const useSignup = () => {
       const res = await axiosInstance.post("/auth/signup/send-otp", { email });
       setMessage(res.data.message);
 
-      return { success: true, title: res.data.title, message: res.data.message };
-      
+      return {
+        success: true,
+        title: res.data.title,
+        message: res.data.message,
+      };
     } catch (err: any) {
-      return { success: false, title: err.response?.data?.title, message: err.response?.data?.message };
+      return {
+        success: false,
+        title: err.response?.data?.title,
+        message: err.response?.data?.message,
+      };
     } finally {
       setLoading(false);
     }
@@ -30,24 +36,42 @@ export const useSignup = () => {
     try {
       setLoading(true);
 
-      const res = await axiosInstance.post("/auth/signup/verify-otp", { email, otp });
+      const res = await axiosInstance.post("/auth/signup/verify-otp", {
+        email,
+        otp,
+      });
       setMessage(res.data.message);
 
-      return { success: true, message: res.data.message, title: res.data.title };
+      return {
+        success: true,
+        message: res.data.message,
+        title: res.data.title,
+      };
     } catch (err: any) {
-
-      return { success: false, message: err.response?.data?.message, title: err.response?.data?.title };
+      return {
+        success: false,
+        message: err.response?.data?.message,
+        title: err.response?.data?.title,
+      };
     } finally {
       setLoading(false);
     }
   };
 
   // 3️⃣ Complete Signup
-  const completeSignup = async (email: string, name: string, password: string) => {
+  const completeSignup = async (
+    email: string,
+    name: string,
+    password: string,
+  ) => {
     try {
       setLoading(true);
 
-      const res = await axiosInstance.post("/auth/signup/complete", { email, name, password });
+      const res = await axiosInstance.post("/auth/signup/complete", {
+        email,
+        name,
+        password,
+      });
       setMessage(res.data.message);
 
       // ✅ store token and user
