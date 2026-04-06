@@ -232,7 +232,11 @@
     "country": "India"
   },
   {
-    "web_pages": ["https://www.cstj.qc.ca", "https://ccmt.cstj.qc.ca", "https://ccml.cstj.qc.ca"],
+    "web_pages": [
+      "https://www.cstj.qc.ca",
+      "https://ccmt.cstj.qc.ca",
+      "https://ccml.cstj.qc.ca"
+    ],
     "name": "Cégep de Saint-Jérôme",
     "alpha_two_code": "CA",
     "state-province": "Quebec",
@@ -2256,7 +2260,10 @@
     "country": "United States"
   },
   {
-    "web_pages": ["http://www.capella.edu/", "http://www.capellauniversity.edu/"],
+    "web_pages": [
+      "http://www.capella.edu/",
+      "http://www.capellauniversity.edu/"
+    ],
     "name": "Capella University",
     "alpha_two_code": "US",
     "state-province": null,
@@ -7217,7 +7224,12 @@
     "name": "State University of New York at Stony Brook",
     "alpha_two_code": "US",
     "state-province": null,
-    "domains": ["stonybrook.edu", "fsl.cs.sunysb.edu", "cs.sunysb.edu", "lmc.cs.sunysb.edu"],
+    "domains": [
+      "stonybrook.edu",
+      "fsl.cs.sunysb.edu",
+      "cs.sunysb.edu",
+      "lmc.cs.sunysb.edu"
+    ],
     "country": "United States"
   },
   {
@@ -12309,11 +12321,18 @@
     "country": "Australia"
   },
   {
-    "web_pages": ["https://www.southmetrotafe.wa.edu.au/", "https://www.tafe.wa.edu.au/"],
+    "web_pages": [
+      "https://www.southmetrotafe.wa.edu.au/",
+      "https://www.tafe.wa.edu.au/"
+    ],
     "name": "South Metropolitan TAFE",
     "alpha_two_code": "AU",
     "state-province": "Western Australia",
-    "domains": ["smtafe.wa.edu.au", "southmetrotafe.wa.edu.au", "tafe.wa.edu.au"],
+    "domains": [
+      "smtafe.wa.edu.au",
+      "southmetrotafe.wa.edu.au",
+      "tafe.wa.edu.au"
+    ],
     "country": "Australia"
   },
   {
@@ -14229,7 +14248,10 @@
     "country": "Belgium"
   },
   {
-    "web_pages": ["https://www.kuleuven.be/kuleuven/", "https://www.kuleuven.be/english/kuleuven/"],
+    "web_pages": [
+      "https://www.kuleuven.be/kuleuven/",
+      "https://www.kuleuven.be/english/kuleuven/"
+    ],
     "name": "Katholieke Universiteit Leuven",
     "alpha_two_code": "BE",
     "state-province": null,
@@ -26683,7 +26705,10 @@
     "country": "France"
   },
   {
-    "web_pages": ["http://www.polytechnique.fr/", "https://www.polytechnique.edu/"],
+    "web_pages": [
+      "http://www.polytechnique.fr/",
+      "https://www.polytechnique.edu/"
+    ],
     "name": "École Polytechnique",
     "alpha_two_code": "FR",
     "state-province": null,
@@ -28868,7 +28893,12 @@
     "name": "Hochschule Mittweida, University of Applied Sciences",
     "alpha_two_code": "DE",
     "state-province": null,
-    "domains": ["htwm.de", "hs-mittweida.de", "campus-m-university.de", "campusm21.de"],
+    "domains": [
+      "htwm.de",
+      "hs-mittweida.de",
+      "campus-m-university.de",
+      "campusm21.de"
+    ],
     "country": "Germany"
   },
   {
@@ -32316,7 +32346,12 @@
     "name": "Indian Institute of Technology, Guwahati",
     "alpha_two_code": "IN",
     "state-province": "Assam",
-    "domains": ["iitg.ernet.in", "iitg.ac.in", "op.iitg.ac.in", "rnd.iitg.ac.in"],
+    "domains": [
+      "iitg.ernet.in",
+      "iitg.ac.in",
+      "op.iitg.ac.in",
+      "rnd.iitg.ac.in"
+    ],
     "country": "India"
   },
   {
@@ -47168,7 +47203,12 @@
     "name": "St.Cyril and Methodius University",
     "alpha_two_code": "MK",
     "state-province": null,
-    "domains": ["ukim.edu.mk", "ukim.mk", "finki.ukim.mk", "students.finki.ukim.mk"],
+    "domains": [
+      "ukim.edu.mk",
+      "ukim.mk",
+      "finki.ukim.mk",
+      "students.finki.ukim.mk"
+    ],
     "country": "North Macedonia"
   },
   {
@@ -50716,7 +50756,10 @@
     "country": "Netherlands"
   },
   {
-    "web_pages": ["http://www.tilburguniversity.nl/", "http://www.tilburguniversity.edu/"],
+    "web_pages": [
+      "http://www.tilburguniversity.nl/",
+      "http://www.tilburguniversity.edu/"
+    ],
     "name": "Tilburg University",
     "alpha_two_code": "NL",
     "state-province": null,
@@ -50748,7 +50791,10 @@
     "country": "Netherlands"
   },
   {
-    "web_pages": ["http://www.unimaas.nl/", "https://www.maastrichtuniversity.nl/"],
+    "web_pages": [
+      "http://www.unimaas.nl/",
+      "https://www.maastrichtuniversity.nl/"
+    ],
     "name": "Maastricht University",
     "alpha_two_code": "NL",
     "state-province": null,
@@ -54257,6 +54303,7 @@
     "alpha_two_code": "PH",
     "state-province": null,
     "domains": ["adamson.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/d/d0/Adamson_University_Official_Seal.png",
     "country": "Philippines"
   },
   {
@@ -54305,6 +54352,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["aims.edu.ph"],
+    "logo": "https://www.aims.edu.ph/img/AIMS%20LOGO%20EMBOSE-WHITE%20BG.png",
     "country": "Philippines"
   },
   {
@@ -54313,6 +54361,7 @@
     "alpha_two_code": "PH",
     "state-province": "Davao del Sur",
     "domains": ["addu.edu.ph"],
+    "logo": "https://www.ateneo.edu/sites/default/files/inline-images/251px-Ateneo_de_Manila_University_seal.svg_.png",
     "country": "Philippines"
   },
   {
@@ -54321,6 +54370,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["adnu.edu.ph"],
+    "logo": "https://www.ateneo.edu/sites/default/files/inline-images/251px-Ateneo_de_Manila_University_seal.svg_.png",
     "country": "Philippines"
   },
   {
@@ -54329,6 +54379,7 @@
     "alpha_two_code": "PH",
     "state-province": "Zamboanga del Sur",
     "domains": ["adzu.edu.ph"],
+    "logo": "https://www.ateneo.edu/sites/default/files/inline-images/251px-Ateneo_de_Manila_University_seal.svg_.png",
     "country": "Philippines"
   },
   {
@@ -54337,6 +54388,7 @@
     "alpha_two_code": "PH",
     "state-province": "Cordillera Administrative Region",
     "domains": ["bsu.edu.ph"],
+    "logo": "https://bsu.international/wp-content/uploads/2023/06/Approved-BSU-logo-2020.png.webp",
     "country": "Philippines"
   },
   {
@@ -54353,6 +54405,7 @@
     "alpha_two_code": "PH",
     "state-province": "Central Luzon",
     "domains": ["bulsu.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/7/7e/Bulacan_State_University_logo.png",
     "country": "Philippines"
   },
   {
@@ -54369,6 +54422,7 @@
     "alpha_two_code": "PH",
     "state-province": "Calabarzon",
     "domains": ["cvsu.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/d/d2/Cavite_State_University_%28CvSU%29.png/250px-Cavite_State_University_%28CvSU%29.png",
     "country": "Philippines"
   },
   {
@@ -54401,6 +54455,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["ceu.edu.ph"],
+    "logo": "http://guidancengoph.org/ce_pub/images/logo_ceu.png",
     "country": "Philippines"
   },
   {
@@ -54433,6 +54488,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["dlsu.edu.ph"],
+    "logo": "https://old.dlsu.edu.ph/wp-content/uploads/2026/02/dlsu-logo.png",
     "country": "Philippines"
   },
   {
@@ -54473,6 +54529,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["earist.edu.ph"],
+    "logo": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSXZaQIoUBSdmCyDIx-Cylft52P1F5wMIGZ_w&s",
     "country": "Philippines"
   },
   {
@@ -54481,6 +54538,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["feu.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/d/d7/Far_Easter_University_Logo.svg/250px-Far_Easter_University_Logo.svg.png",
     "country": "Philippines"
   },
   {
@@ -54537,6 +54595,7 @@
     "alpha_two_code": "PH",
     "state-province": "Calabarzon",
     "domains": ["lspu.edu.ph"],
+    "logo": "https://ucarecdn.com/eaa6c79b-4dea-47d0-96f5-448fc0806446/-/preview/",
     "country": "Philippines"
   },
   {
@@ -54769,6 +54828,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["pnumanila.com.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/d/df/PNU_Official_Seal.png",
     "country": "Philippines"
   },
   {
@@ -54777,6 +54837,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["pwu.edu"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/3/3d/Philippine_Womens_University.png",
     "country": "Philippines"
   },
   {
@@ -54785,6 +54846,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["pup.edu.ph"],
+    "logo": "https://www.pup.edu.ph/about/images/PUPLogo.png",
     "country": "Philippines"
   },
   {
@@ -54793,6 +54855,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["rtu.edu.ph"],
+    "logo": "https://www.rtu.edu.ph/card/wp-content/uploads/2021/10/Rizal_Technological_University.png",
     "country": "Philippines"
   },
   {
@@ -54889,6 +54952,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["sti.edu.ph"],
+    "logo": "https://one.sti.edu/images/sti_logo.png",
     "country": "Philippines"
   },
   {
@@ -54905,6 +54969,7 @@
     "alpha_two_code": "PH",
     "state-province": "Western Visayas",
     "domains": ["tup.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/c/c8/Technological_University_of_the_Philippines_Seal.svg/250px-Technological_University_of_the_Philippines_Seal.svg.png",
     "country": "Philippines"
   },
   {
@@ -55001,6 +55066,15 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["um.edu.ph"],
+    "country": "Philippines"
+  },
+  {
+    "web_pages": ["http://www.univman.edu.ph/"],
+    "name": "University of Makati",
+    "alpha_two_code": "PH",
+    "state-province": "National Capital Region",
+    "domains": ["umak.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/UMak_Logo_Registered.png/1280px-UMak_Logo_Registered.png",
     "country": "Philippines"
   },
   {
@@ -55113,6 +55187,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["ust.edu.ph"],
+    "logo": "https://static.wikia.nocookie.net/logopedia/images/1/14/UST.png/revision/latest/scale-to-width-down/230?cb=20200419095611",
     "country": "Philippines"
   },
   {
@@ -55145,6 +55220,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["ue.edu.ph"],
+    "logo": "https://www.ue.edu.ph/mla/wp-content/uploads/2020/12/UE_RED_SEAL_09.png",
     "country": "Philippines"
   },
   {
@@ -55161,6 +55237,7 @@
     "alpha_two_code": "PH",
     "state-province": "Cordillera Administrative Region",
     "domains": ["upb.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/3/3d/University_of_The_Philippines_seal.svg/250px-University_of_The_Philippines_seal.svg.png",
     "country": "Philippines"
   },
   {
@@ -55169,6 +55246,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["upd.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/3/3d/University_of_The_Philippines_seal.svg/250px-University_of_The_Philippines_seal.svg.png",
     "country": "Philippines"
   },
   {
@@ -55177,6 +55255,7 @@
     "alpha_two_code": "PH",
     "state-province": "Calabarzon",
     "domains": ["uplb.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/3/3d/University_of_The_Philippines_seal.svg/250px-University_of_The_Philippines_seal.svg.png",
     "country": "Philippines"
   },
   {
@@ -55185,6 +55264,7 @@
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["upm.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/3/3d/University_of_The_Philippines_seal.svg/250px-University_of_The_Philippines_seal.svg.png",
     "country": "Philippines"
   },
   {
@@ -55193,6 +55273,7 @@
     "alpha_two_code": "PH",
     "state-province": "Davao",
     "domains": ["upmin.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/3/3d/University_of_The_Philippines_seal.svg/250px-University_of_The_Philippines_seal.svg.png",
     "country": "Philippines"
   },
   {
@@ -55209,6 +55290,7 @@
     "alpha_two_code": "PH",
     "state-province": null,
     "domains": ["upv.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/3/3d/University_of_The_Philippines_seal.svg/250px-University_of_The_Philippines_seal.svg.png",
     "country": "Philippines"
   },
   {
@@ -60772,7 +60854,11 @@
     "country": "Serbia"
   },
   {
-    "web_pages": ["http://www.megatrend-edu.net/", "http://megatrend.edu.rs/", "http://xz.edu.rs/"],
+    "web_pages": [
+      "http://www.megatrend-edu.net/",
+      "http://megatrend.edu.rs/",
+      "http://xz.edu.rs/"
+    ],
     "name": "Megatrend University of Applied Sciences",
     "alpha_two_code": "RS",
     "state-province": null,
@@ -66028,7 +66114,10 @@
     "country": "Turkiye"
   },
   {
-    "web_pages": ["http://www.sabanciuniv.edu.tr/", "http://www.sabanciuniv.edu/"],
+    "web_pages": [
+      "http://www.sabanciuniv.edu.tr/",
+      "http://www.sabanciuniv.edu/"
+    ],
     "name": "Sabanci University",
     "alpha_two_code": "TR",
     "state-province": null,
@@ -77748,7 +77837,10 @@
     "country": "Germany"
   },
   {
-    "web_pages": ["http://www.dhbw-mosbach.de/", "https://www.mosbach.dhbw.de/"],
+    "web_pages": [
+      "http://www.dhbw-mosbach.de/",
+      "https://www.mosbach.dhbw.de/"
+    ],
     "name": "Duale Hochschule Baden-Württemberg Mosbach",
     "alpha_two_code": "DE",
     "state-province": "null",
@@ -77788,7 +77880,10 @@
     "country": "Germany"
   },
   {
-    "web_pages": ["http://www.dhbw-karlsruhe.de/", "http://www.karlsruhe.dhbw.de/"],
+    "web_pages": [
+      "http://www.dhbw-karlsruhe.de/",
+      "http://www.karlsruhe.dhbw.de/"
+    ],
     "name": "Duale Hochschule Baden-Württemberg Karlsruhe",
     "alpha_two_code": "DE",
     "state-province": "null",
@@ -77796,7 +77891,10 @@
     "country": "Germany"
   },
   {
-    "web_pages": ["http://www.dhbw-mannheim.de/", "http://www.mannheim.dhbw.de/"],
+    "web_pages": [
+      "http://www.dhbw-mannheim.de/",
+      "http://www.mannheim.dhbw.de/"
+    ],
     "name": "Duale Hochschule Baden-Wuerttemberg Mannheim",
     "alpha_two_code": "DE",
     "state-province": "null",
@@ -78624,7 +78722,12 @@
   },
   {
     "name": "University of Liège",
-    "domains": ["student.uliege.be", "helpnet.uliege.be", "ddi.uliege.be", "uliege.be"],
+    "domains": [
+      "student.uliege.be",
+      "helpnet.uliege.be",
+      "ddi.uliege.be",
+      "uliege.be"
+    ],
     "web_pages": ["https://uliege.be"],
     "country": "Belgium",
     "alpha_two_code": "BE",
@@ -78711,7 +78814,10 @@
     "country": "Germany"
   },
   {
-    "web_pages": ["https://website.musikhochschule-muenchen.de/", "https://www.hmtm.de/"],
+    "web_pages": [
+      "https://website.musikhochschule-muenchen.de/",
+      "https://www.hmtm.de/"
+    ],
     "name": "Hochschule für Musik und Theater München",
     "alpha_two_code": "DE",
     "state-province": "Bavaria",
@@ -78911,7 +79017,9 @@
     "country": "United Kingdom"
   },
   {
-    "web_pages": ["https://www.vlerick.com/en/about-vlerick/our-campuses/brussels-campus/"],
+    "web_pages": [
+      "https://www.vlerick.com/en/about-vlerick/our-campuses/brussels-campus/"
+    ],
     "name": "Vlerick Brussels Campus",
     "alpha_two_code": "BE",
     "state-province": null,
@@ -79855,7 +79963,10 @@
     "country": "United States"
   },
   {
-    "web_pages": ["https://panimalar.ac.in", "https://panimalarengineeringcollegechennai.ac.in/"],
+    "web_pages": [
+      "https://panimalar.ac.in",
+      "https://panimalarengineeringcollegechennai.ac.in/"
+    ],
     "name": "Panimalar Engineering College",
     "alpha_two_code": "IN",
     "state-province": "Tamil Nadu",

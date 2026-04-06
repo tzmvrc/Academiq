@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import FeaturedSection from "@/components/FeaturedSection";
 import DiscussionCard from "@/components/DiscussionCard";
+import AISuggestionPanel from "@/components/AISuggestionPanel"; // Make sure this component exists
 import CreatePostModal from "@/components/CreatePostModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { toast } from "@/hooks/use-toast";
@@ -223,36 +224,17 @@ const Index = () => {
 
   // Load subjects and popular tags for "Topics You May Like"
   useEffect(() => {
-    const loadTopics = async () => {
+    const loadTrendingTopics = async () => {
       try {
-        // Fetch subjects (all)
-        const subjectsRes = await axiosInstance.get("/subjects");
-        const subjects = subjectsRes.data.subjects || [];
-
-        // Fetch popular tags (limit 10)
-        const tagsRes = await axiosInstance.get("/tags?sort=popular&limit=10");
-        const tags = tagsRes.data.tags || [];
-
-        // Combine: subjects first, then tags with "#" prefix
-        const combined: TopicItem[] = [
-          ...subjects.map((s: any) => ({
-            id: s.id,
-            name: s.name,
-            type: "subject" as const,
-          })),
-          ...tags.map((t: any) => ({
-            id: t.id,
-            name: t.name,
-            type: "tag" as const,
-          })),
-        ];
-        setTopics(combined);
+        const res = await axiosInstance.get("/subjects/trending?limit=18");
+        const trendingTopics = res.data.topics; // array of { id, name, type, discussionCount }
+        setTopics(trendingTopics);
       } catch (err) {
-        console.error("Error loading topics:", err);
+        console.error("Error loading trending topics:", err);
+        // Fallback to old method if needed
       }
     };
-
-    loadTopics();
+    loadTrendingTopics();
   }, []);
 
   // Update filter name when subjectId/tagId changes or topics load
@@ -648,23 +630,28 @@ const Index = () => {
               <div
                 key={user.id}
                 className="shrink-0 w-40 sm:w-44 rounded-xl border border-border bg-background p-3 sm:p-4 text-center hover:shadow-sm hover:border-primary/10 transition-all snap-start">
-                <div className="mx-auto mb-2.5 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                  {user.profile_url ? (
-                    <img
-                      src={user.profile_url}
-                      alt={user.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-xs font-semibold text-primary">
-                      {initials}
-                    </span>
-                  )}
-                </div>
-
-                <p className="text-xs font-medium text-foreground truncate">
-                  {user.name}
-                </p>
+                {/* Clickable profile link */}
+                <Link
+                  to={`/${encodeURIComponent(user.name)}`}
+                  className="block"
+                  onClick={(e) => e.stopPropagation()}>
+                  <div className="mx-auto mb-2.5 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                    {user.profile_url ? (
+                      <img
+                        src={user.profile_url}
+                        alt={user.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xs font-semibold text-primary">
+                        {initials}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs font-medium text-foreground truncate">
+                    {user.name}
+                  </p>
+                </Link>
                 {user.school && (
                   <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
                     {user.school}
@@ -743,15 +730,15 @@ const Index = () => {
       )}
 
       {!subjectId && !tagId && (
-        <section className="mb-8 sm:mb-10">
+        <section className="mb-8 sm:mb-12">
           <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground mb-4">
             Topics You May Like
           </h2>
-
+          {/* 
           <div className="flex items-center justify-between mb-2">
             <div />
             <ScrollButtons scrollRef={topicsScrollRef} />
-          </div>
+          </div> */}
 
           <div
             ref={topicsScrollRef}
@@ -771,24 +758,29 @@ const Index = () => {
                 }`}>
                 {item.type === "tag" && "#"}
                 {item.name}
+                <span className="text-xs text-muted-foreground ml-1">
+                  {item.discussionCount} posts
+                </span>
 
                 {followedTopics.has(item.name) && (
                   <Check className="h-3.5 w-3.5" />
                 )}
 
-                <span
+                {/* <span
                   role="button"
                   onClick={(e) => toggleFollowTopic(item.name, e)}
                   className="ml-1 text-xs text-muted-foreground hover:text-primary transition-colors">
                   {followedTopics.has(item.name) ? "✓" : "+"}
-                </span>
+                </span> */}
               </motion.button>
             ))}
           </div>
         </section>
       )}
 
-      <div className="max-w-3xl mx-auto">
+      {/* Two‑column layout */}
+      <div className="grid gap-6 lg:gap-8 lg:grid-cols-[1fr_280px]">
+        {/* Left column – discussions */}
         <div className="space-y-4 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground">
@@ -890,16 +882,22 @@ const Index = () => {
             </>
           )}
         </div>
+
+        {/* Right column – AI suggestions (sticky) */}
+        <div className="hidden lg:block">
+          <div className="sticky top-24">
+            <AISuggestionPanel />
+          </div>
+        </div>
       </div>
 
-      {/* Create Post Modal */}
+      {/* Modals */}
       <CreatePostModal
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreatePost}
       />
 
-      {/* Edit Post Modal */}
       <CreatePostModal
         key={selectedPostId || "create"}
         open={editModalOpen}
@@ -920,7 +918,6 @@ const Index = () => {
         onSuccess={handlePostUpdated}
       />
 
-      {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         open={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}

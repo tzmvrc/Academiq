@@ -4,11 +4,12 @@ import { authMiddleware } from "../middlewares/auth_middleware.js";
 
 const router = express.Router();
 
-// Public: get all tags
+// Public routes – static before dynamic
+router.get("/with-count", TagController.getTagsWithCount);
 router.get("/", TagController.getAllTags);
 router.get("/:id", TagController.getTagById);
 
-// Admin only: create, update, delete
+// Admin only
 router.post("/", authMiddleware, TagController.createTag);
 router.put("/:id", authMiddleware, TagController.updateTag);
 router.delete("/:id", authMiddleware, TagController.deleteTag);

@@ -31,6 +31,9 @@ router.get("/subjects", authMiddleware, OnboardingController.getSubjects);
 router.get("/my-subjects", authMiddleware, OnboardingController.getMySubjects);
 router.post("/my-subjects", authMiddleware, OnboardingController.saveSubjects);
 
+// routes/forum_router.js
+router.get("/trending-academic", ForumsController.getTrendingAcademicForums);
+
 /* -----------------------
    Forums (Public)
 ------------------------ */

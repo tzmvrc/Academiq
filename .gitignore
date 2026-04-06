@@ -19,3 +19,6 @@ __pycache__/
 *.h5
 *.ckpt
 .vscode/
+
+
+ssh -i Academiq-ai.pem ubuntu@16.176.23.175

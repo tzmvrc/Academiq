@@ -36,4 +36,22 @@ export const UserSubjectsModel = {
     if (error) throw error;
     return data;
   },
+
+  async addForUser(userId, subjectId) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .insert({ user_id: userId, subject_id: subjectId })
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  async removeForUser(userId, subjectId) {
+    const { error } = await supabase
+      .from(TABLE)
+      .delete()
+      .eq("user_id", userId)
+      .eq("subject_id", subjectId);
+    return { error };
+  },
 };
