@@ -96,8 +96,7 @@ export const PeersTab: React.FC = () => {
           <BrutalCard key={peer.id} className="p-5">
             <div
               className="flex items-start gap-4 cursor-pointer"
-              onClick={() => handleViewProfile(peer.id)}
-            >
+              onClick={() => handleViewProfile(peer.id)}>
               <div className="w-14 h-14 bg-primary rounded-xl border-[2px] border-foreground shadow-brutal-sm flex items-center justify-center text-xl font-bold text-primary-foreground flex-shrink-0">
                 {peer.name.charAt(0)}
               </div>
@@ -122,11 +121,11 @@ export const PeersTab: React.FC = () => {
               <span className="text-sm font-bold">{peer.points} pts</span>
               <div className="flex gap-2">
                 {peer.isConnected ? (
-                  <BrutalButton variant="teal" size="sm">
+                  <BrutalButton variant="outline" size="sm">
                     <MessageCircle className="w-4 h-4" />
                   </BrutalButton>
                 ) : (
-                  <BrutalButton variant="primary" size="sm">
+                  <BrutalButton variant="default" size="sm">
                     <UserPlus className="w-4 h-4 mr-1" />
                     Connect
                   </BrutalButton>

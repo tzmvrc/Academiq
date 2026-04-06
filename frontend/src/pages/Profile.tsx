@@ -399,19 +399,19 @@ const Profile = () => {
     }
   }, [showFollowingModal, user, currentUserId]);
 
-  const refetchFollowStatus = async () => {
-    if (!user || !currentUserId) return;
-    try {
-      const followingRes = await axiosInstance.get("/peers/users/me/following");
-      const following = followingRes.data.following || [];
-      const followingIds = new Set(
-        following.map((f: any) => f.following?.id || f.id),
-      );
-      setIsFollowing(followingIds.has(user.id));
-    } catch (err) {
-      console.error("Failed to refetch follow status:", err);
-    }
-  };
+  // const refetchFollowStatus = async () => {
+  //   if (!user || !currentUserId) return;
+  //   try {
+  //     const followingRes = await axiosInstance.get("/peers/users/me/following");
+  //     const following = followingRes.data.following || [];
+  //     const followingIds = new Set(
+  //       following.map((f: any) => f.following?.id || f.id),
+  //     );
+  //     setIsFollowing(followingIds.has(user.id));
+  //   } catch (err) {
+  //     console.error("Failed to refetch follow status:", err);
+  //   }
+  // };
 
   // Refresh user data including privacy from backend
   const refreshUserData = async () => {

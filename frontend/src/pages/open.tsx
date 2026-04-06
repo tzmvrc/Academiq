@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Send,
   Hash,
@@ -17,18 +17,18 @@ import { toast } from "@/hooks/use-toast";
 import MessageReactions from "../components/MessageReactions";
 
 // ========== Helper functions (unchanged) ==========
-const getInitials = (name) => {
+const getInitials = (name: any) => {
   if (!name) return "UN";
   return name
     .trim()
     .split(/\s+/)
-    .map((p) => p[0])
+    .map((p: any) => p[0])
     .slice(0, 2)
     .join("")
     .toUpperCase();
 };
 
-const formatElapsedTime = (dateString) => {
+const formatElapsedTime = (dateString: any) => {
   if (!dateString) return "";
   const date = new Date(dateString);
   const now = new Date();
@@ -67,19 +67,23 @@ const SecretChat = () => {
   const [currentUser, setCurrentUser] = useState(() => getUserFromStorage());
   const [isLoading, setIsLoading] = useState(true); // manual loading state
   const [activeTab, setActiveTab] = useState("global");
-  const [activeConv, setActiveConv] = useState(null);
+  const [activeConv, setActiveConv] = useState<any>(null);
   const [messageInput, setMessageInput] = useState("");
 
-  const [globalMessages, setGlobalMessages] = useState([]);
-  const [conversations, setConversations] = useState([]);
-  const [dmMessages, setDmMessages] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
+  const [globalMessages, setGlobalMessages] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [dmMessages, setDmMessages] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
-  const [unreadCounts, setUnreadCounts] = useState({});
-  const [reactionPreviews, setReactionPreviews] = useState({});
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, any>>({});
+  const [reactionPreviews, setReactionPreviews] = useState<Record<string, any>>(
+    {},
+  );
 
-  const [globalReactions, setGlobalReactions] = useState({});
-  const [dmReactions, setDmReactions] = useState({});
+  const [globalReactions, setGlobalReactions] = useState<Record<string, any>>(
+    {},
+  );
+  const [dmReactions, setDmReactions] = useState<Record<string, any>>({});
 
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");

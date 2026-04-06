@@ -39,7 +39,7 @@ const Peers = () => {
           "/peers/users/me/following",
         );
         const following = followingRes.data.following || [];
-        const followingIdsSet = new Set(
+        const followingIdsSet: Set<string> = new Set(
           following.map((f: any) => f.following.id),
         );
 
