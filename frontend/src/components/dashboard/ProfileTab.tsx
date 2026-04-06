@@ -45,8 +45,7 @@ export const ProfileTab: React.FC = () => {
               <BrutalButton
                 variant="outline"
                 size="sm"
-                className="flex items-center justify-center gap-2"
-              >
+                className="flex items-center justify-center gap-2">
                 <Edit className="w-4 h-4" />
                 <span>Edit Profile</span>
               </BrutalButton>
@@ -80,7 +79,7 @@ export const ProfileTab: React.FC = () => {
           <div className="text-3xl font-bold">{mockUser.comments}</div>
           <div className="text-sm font-medium">Comments</div>
         </BrutalCard>
-        <BrutalCard color="coral" className="p-5 text-center">
+        <BrutalCard className="p-5 text-center">
           <ThumbsUp className="w-8 h-8 mx-auto mb-2" />
           <div className="text-3xl font-bold">{mockUser.upvotes}</div>
           <div className="text-sm font-medium">Upvotes</div>

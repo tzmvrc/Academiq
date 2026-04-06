@@ -22,7 +22,7 @@ import PublicRoute from "@/components/protectRoute/publicRoute";
 import Landing from "./pages/Landing";
 import SearchResults from "./pages/SearchResults";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import Signup from "./pages/SignUp";
 import Onboarding from "./pages/Onboarding";
 import SchoolPage from "./pages/SchoolPage";
 import Index from "./pages/Index";

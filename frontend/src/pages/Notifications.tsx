@@ -51,7 +51,7 @@ const Notifications = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const LIMIT = 6;
-  const DISPLAY_LIMIT = expanded ? notifications.length : LIMIT;
+  // const DISPLAY_LIMIT = expanded ? notifications.length : LIMIT;
 
   const fetchNotifications = useCallback(
     async (reset = true) => {
@@ -161,8 +161,6 @@ const Notifications = () => {
     });
     return { today, yesterday, older };
   };
-
-  const { today, yesterday, older } = groupNotificationsByDate(notifications);
 
   const renderGroup = (title: string, items: Notification[]) => (
     <div className="space-y-2">

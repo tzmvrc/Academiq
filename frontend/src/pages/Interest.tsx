@@ -85,7 +85,7 @@ const Interests = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [featuredForums, setFeaturedForums] = useState<Forum[]>([]);
-  const [loadingForums, setLoadingForums] = useState(false);
+  const [_loadingForums, _setLoadingForums] = useState(false);
 
   const [showAllFollowed, setShowAllFollowed] = useState(false);
   const [showAllDiscover, setShowAllDiscover] = useState(false);
@@ -129,7 +129,7 @@ const Interests = () => {
         .slice(0, 3);
       if (topSubjects.length === 0) return;
 
-      setLoadingForums(true);
+      _setLoadingForums(true);
       try {
         const promises = topSubjects.map((subject) =>
           axiosInstance.get(
@@ -145,7 +145,7 @@ const Interests = () => {
       } catch (err) {
         console.error("Error fetching featured forums:", err);
       } finally {
-        setLoadingForums(false);
+        _setLoadingForums(false);
       }
     };
     fetchFeaturedForums();

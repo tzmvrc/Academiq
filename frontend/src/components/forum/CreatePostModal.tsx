@@ -184,8 +184,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
           </h2>
           <button
             onClick={onClose}
-            className="w-10 h-10 bg-background border-[2px] border-foreground rounded-lg shadow-brutal-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
-          >
+            className="w-10 h-10 bg-background border-[2px] border-foreground rounded-lg shadow-brutal-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -219,8 +218,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                       <button
                         key={subj.id}
                         onClick={() => handleSelectSubject(subj)}
-                        className="w-full text-left px-4 py-2.5 hover:bg-primary hover:text-primary-foreground transition-colors border-b-[2px] border-foreground/30 font-medium last:border-b-0"
-                      >
+                        className="w-full text-left px-4 py-2.5 hover:bg-primary hover:text-primary-foreground transition-colors border-b-[2px] border-foreground/30 font-medium last:border-b-0">
                         {subj.name}
                       </button>
                     ))}
@@ -243,8 +241,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                               console.error("Failed to create subject:", err);
                             }
                           }}
-                          className="w-full text-left px-4 py-2.5 hover:bg-green-500 hover:text-green-foreground transition-colors font-bold text-green-700"
-                        >
+                          className="w-full text-left px-4 py-2.5 hover:bg-green-500 hover:text-green-foreground transition-colors font-bold text-green-700">
                           + Create &quot;{subject}&quot;
                         </button>
                       </>
@@ -264,8 +261,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                         console.error("Failed to create subject:", err);
                       }
                     }}
-                    className="w-full text-left px-4 py-3 hover:bg-green-500 hover:text-green-foreground transition-colors font-bold text-green-700"
-                  >
+                    className="w-full text-left px-4 py-3 hover:bg-green-500 hover:text-green-foreground transition-colors font-bold text-green-700">
                     + Create &quot;{subject}&quot;
                   </button>
                 ) : (
@@ -316,8 +312,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
               <BrutalButton
                 type="button"
                 variant="secondary"
-                onClick={handleAddTag}
-              >
+                onClick={handleAddTag}>
                 <Plus className="w-5 h-5" />
               </BrutalButton>
             </div>
@@ -329,8 +324,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                     key={tag}
                     color="teal"
                     className="cursor-pointer"
-                    onClick={() => handleRemoveTag(tag)}
-                  >
+                    onClick={() => handleRemoveTag(tag)}>
                     {tag}
                     <X className="w-3 h-3 ml-1" />
                   </BrutalTag>
@@ -360,8 +354,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                 {attachments.map((file) => (
                   <div
                     key={file.name}
-                    className="flex items-center justify-between p-3 bg-muted border-[2px] border-foreground rounded-lg"
-                  >
+                    className="flex items-center justify-between p-3 bg-muted border-[2px] border-foreground rounded-lg">
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4" />
                       <span className="font-medium truncate max-w-[200px]">
@@ -374,8 +367,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRemoveAttachment(file.name)}
-                      className="w-6 h-6 flex items-center justify-center rounded hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                    >
+                      className="w-6 h-6 flex items-center justify-center rounded hover:bg-destructive hover:text-destructive-foreground transition-colors">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -389,15 +381,13 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
           <BrutalButton
             variant="outline"
             onClick={onClose}
-            disabled={isSubmitting}
-          >
+            disabled={isSubmitting}>
             Cancel
           </BrutalButton>
           <BrutalButton
-            variant="primary"
+            variant="default"
             onClick={handleSubmit}
-            disabled={isSubmitting || !title || !subject || !content}
-          >
+            disabled={isSubmitting || !title || !subject || !content}>
             {isSubmitting ? "Posting..." : "Post Discussion"}
           </BrutalButton>
         </div>

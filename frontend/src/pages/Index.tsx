@@ -29,6 +29,7 @@ type TopicItem = {
   id: string;
   name: string;
   type: "subject" | "tag";
+  discussionCount?: number;
 };
 
 interface PeerUser {
@@ -108,9 +109,9 @@ const DUMMY_FORUM: DiscussionCardProps = {
   comments: 20,
   userVoteState: null,
   isSaved: false,
-  isVerified: true,
   isAiVerified: true,
   tag: "General",
+  isOwn: false,
   aiSummary:
     "A public space for all Academiq members to share ideas, ask questions, and connect outside of specific subjects.",
 };
@@ -122,7 +123,7 @@ const Index = () => {
   const subjectId = searchParams.get("subjectId");
   const tagId = searchParams.get("tagId");
 
-  const [followedTopics, setFollowedTopics] = useState<Set<string>>(new Set());
+  const [followedTopics, _setFollowedTopics] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [forums, setForums] = useState<DiscussionCardProps[]>([]);
@@ -132,9 +133,9 @@ const Index = () => {
 
   // Peers state
   const [peers, setPeers] = useState<PeerUser[]>([]);
-  const [peersFollowingIds, setPeersFollowingIds] = useState<Set<string>>(
+  /* const [peersFollowingIds, setPeersFollowingIds] = useState<Set<string>>(
     new Set(),
-  );
+  ); */
   const [peersLoading, setPeersLoading] = useState(true);
   const [followingUserId, setFollowingUserId] = useState<string | null>(null);
 
@@ -197,7 +198,7 @@ const Index = () => {
           "/peers/users/me/following",
         );
         const following = followingRes.data.following || [];
-        const followingIdsSet = new Set(
+        const followingIdsSet: Set<string> = new Set(
           following.map((f: any) => f.following.id),
         );
 
@@ -207,7 +208,6 @@ const Index = () => {
         }));
 
         setPeers(usersWithFollow);
-        setPeersFollowingIds(followingIdsSet);
       } catch (err) {
         console.error("Error fetching peers:", err);
         toast({
@@ -274,13 +274,13 @@ const Index = () => {
     updateFilterName();
   }, [subjectId, tagId, topics]);
 
-  const handleNewPost = (newPost: DiscussionCardProps) => {
+  /* const handleNewPost = (newPost: DiscussionCardProps) => {
     setForums((prev) => [newPost, ...prev]);
-  };
+  }; */
 
-  const handleTagClick = (tagId: string) => {
+  /* const handleTagClick = (tagId: string) => {
     setSearchParams({ tagId });
-  };
+  }; */
 
   const handleTopicClick = (item: TopicItem) => {
     if (item.type === "subject") {
@@ -294,7 +294,7 @@ const Index = () => {
     setSearchParams({});
   };
 
-  const toggleFollowTopic = (name: string, e: React.MouseEvent) => {
+  /* const toggleFollowTopic = (name: string, e: React.MouseEvent) => {
     e.stopPropagation();
 
     setFollowedTopics((prev) => {
@@ -308,7 +308,7 @@ const Index = () => {
 
       return next;
     });
-  };
+  }; */
 
   const handleCreatePost = async (data: {
     title: string;
@@ -508,11 +508,6 @@ const Index = () => {
             user.id === userId ? { ...user, is_followed: false } : user,
           ),
         );
-        setPeersFollowingIds((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(userId);
-          return newSet;
-        });
         toast({ title: `Unfollowed ${name}` });
       } else {
         await axiosInstance.post(`/peers/${userId}/follow`);
@@ -521,7 +516,6 @@ const Index = () => {
             user.id === userId ? { ...user, is_followed: true } : user,
           ),
         );
-        setPeersFollowingIds((prev) => new Set(prev).add(userId));
         toast({ title: `Following ${name}` });
       }
     } catch (err: any) {
@@ -542,11 +536,14 @@ const Index = () => {
     if (i === 2) feedItems.push({ type: "people", index: 0 });
   });
 
-  const peopleScrollRef = useRef<HTMLDivElement>(null);
-  const topicsScrollRef = useRef<HTMLDivElement>(null);
+  const peopleScrollRef = useRef<HTMLDivElement | null>(null);
+  const topicsScrollRef = useRef<HTMLDivElement | null>(null);
 
   const scroll = useCallback(
-    (ref: React.RefObject<HTMLDivElement>, direction: "left" | "right") => {
+    (
+      ref: React.RefObject<HTMLDivElement | null>,
+      direction: "left" | "right",
+    ) => {
       if (ref.current) {
         ref.current.scrollBy({
           left: direction === "left" ? -200 : 200,
@@ -560,7 +557,7 @@ const Index = () => {
   const ScrollButtons = ({
     scrollRef,
   }: {
-    scrollRef: React.RefObject<HTMLDivElement>;
+    scrollRef: React.RefObject<HTMLDivElement | null>;
   }) => (
     <div className="flex gap-1">
       <button
@@ -832,6 +829,11 @@ const Index = () => {
                     className="block cursor-pointer">
                     <DiscussionCard
                       {...d}
+                      documentUrl={
+                        (d.documentUrl === null ? undefined : d.documentUrl) as
+                          | string
+                          | undefined
+                      }
                       isSaved={d.isSaved}
                       index={item.index}
                       isAuthor={isAuthor}
@@ -908,7 +910,7 @@ const Index = () => {
                 title: selectedPostData.title,
                 content: selectedPostData.fullContent,
                 category: selectedPostData.field,
-                fileName: selectedPostData.documentUrl,
+                fileName: selectedPostData.documentUrl || undefined,
                 tagIds: selectedPostData.tags?.map((t) => t.id) || [],
               }
             : undefined

@@ -33,14 +33,15 @@ export interface CommentCardProps {
 }
 
 // Get the initials from a full name
-const getInitials = (name: string): string => {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase()
-    .substring(0, 2);
-};
+// Function kept for potential future use
+// const getInitials = (name: string): string => {
+//   return name
+//     .split(" ")
+//     .map((word) => word[0])
+//     .join("")
+//     .toUpperCase()
+//     .substring(0, 2);
+// };
 
 // Transform comment API response to comment card format
 const transformCommentToCard = (
@@ -78,7 +79,7 @@ export const commentService = {
       // If user is authenticated, fetch vote states for all comments
       if (currentUserId) {
         const commentsWithVotes = await Promise.all(
-          comments.map(async (comment) => {
+          comments.map(async (comment: any) => {
             try {
               const voteState = await this.getUserCommentVoteState(comment.id);
               return { ...comment, userVote: voteState };

@@ -82,7 +82,7 @@ const Navbar = () => {
   useEffect(() => {
     if (!socket || !user) return;
 
-    const handleNewNotification = (notification) => {
+    const handleNewNotification = (notification: any) => {
       setUnreadCount((prev) => prev + 1);
       toast({
         title: "New notification",

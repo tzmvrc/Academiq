@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Building,
   Users,
@@ -614,7 +614,7 @@ const SchoolPage = () => {
                     onClick={() => handleForumClick(forum.id)}
                     className="cursor-pointer">
                     <DiscussionCard
-                      {...forum}
+                      {...(forum as any)}
                       index={idx}
                       onVote={(voteType) => handleVote(forum.id, voteType)}
                       onUnvote={() => handleUnvote(forum.id)}
@@ -651,7 +651,7 @@ const SchoolPage = () => {
                 title: selectedPostData.title,
                 content: selectedPostData.fullContent,
                 category: selectedPostData.field,
-                fileName: selectedPostData.documentUrl,
+                fileName: selectedPostData.documentUrl || undefined,
                 tagIds: selectedPostData.tags?.map((t) => t.id) || [],
               }
             : undefined

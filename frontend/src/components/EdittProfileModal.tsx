@@ -1,7 +1,7 @@
 // components/EditProfileModal.tsx
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Upload, Link as LinkIcon, Globe, Lock } from "lucide-react";
+import { X, Upload, Globe, Lock } from "lucide-react";
 import axiosInstance from "@/integration/axiosInstance";
 import { toast } from "@/hooks/use-toast";
 

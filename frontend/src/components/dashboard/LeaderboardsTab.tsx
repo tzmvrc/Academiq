@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { BrutalCard } from "@/components/ui/BrutalCard";
-import { BrutalTag } from "@/components/ui/BrutalTag";
 import { Trophy, Medal, Award, TrendingUp } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -90,7 +89,7 @@ const getRankIcon = (rank: number) => {
   }
 };
 
-const getRankColor = (rank: number): "yellow" | "teal" | "pink" | "default" => {
+/* const getRankColor = (rank: number): "yellow" | "teal" | "pink" | "default" => {
   switch (rank) {
     case 1:
       return "yellow";
@@ -101,7 +100,7 @@ const getRankColor = (rank: number): "yellow" | "teal" | "pink" | "default" => {
     default:
       return "default";
   }
-};
+}; */
 
 export const LeaderboardsTab: React.FC = () => {
   useEffect(() => {
@@ -201,8 +200,7 @@ export const LeaderboardsTab: React.FC = () => {
           {mockLeaderboard.map((user) => (
             <div
               key={user.rank}
-              className={`flex items-center gap-4 p-4 ${user.rank <= 3 ? "bg-muted/50" : ""}`}
-            >
+              className={`flex items-center gap-4 p-4 ${user.rank <= 3 ? "bg-muted/50" : ""}`}>
               <div className="w-12 flex items-center justify-center">
                 {getRankIcon(user.rank)}
               </div>
