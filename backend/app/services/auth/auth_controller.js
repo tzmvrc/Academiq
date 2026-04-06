@@ -18,7 +18,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  "http://localhost:8080",
+  "postmessage",
 );
 
 // Helper: convert name to uppercase (e.g., "John Doe" -> "JOHN DOE")
@@ -42,7 +42,7 @@ const getInitials = (name) => {
   return name
     .trim()
     .split(/\s+/)
-    .map(part => part[0])
+    .map((part) => part[0])
     .slice(0, 2)
     .join("")
     .toUpperCase();
@@ -549,232 +549,247 @@ export const AuthController = {
   },
 
   // in your auth_controller.js or a new search_controller.js
-// Helper to get initials from name
+  // Helper to get initials from name
 
+  // =============================
+  // Suggestions endpoint
+  // =============================
+  async getSuggestions(req, res) {
+    try {
+      const { q } = req.query;
+      if (!q || q.trim().length < 2) {
+        return res.json({ suggestions: [] });
+      }
+      const searchTerm = `%${q.trim()}%`;
 
-// =============================
-// Suggestions endpoint
-// =============================
-async getSuggestions(req, res) {
-  try {
-    const { q } = req.query;
-    if (!q || q.trim().length < 2) {
-      return res.json({ suggestions: [] });
+      // Query forums (title)
+      const { data: forums, error: forumsErr } = await supabase
+        .from("forums")
+        .select("id, title")
+        .ilike("title", searchTerm)
+        .limit(5);
+      if (forumsErr) throw forumsErr;
+
+      // Query users (name)
+      const { data: users, error: usersErr } = await supabase
+        .from("users")
+        .select("id, name")
+        .ilike("name", searchTerm)
+        .limit(5);
+      if (usersErr) throw usersErr;
+
+      // Query subjects (name)
+      const { data: subjects, error: subjectsErr } = await supabase
+        .from("subjects")
+        .select("id, name")
+        .ilike("name", searchTerm)
+        .limit(5);
+      if (subjectsErr) throw subjectsErr;
+
+      // Query tags (name)
+      const { data: tags, error: tagsErr } = await supabase
+        .from("tags")
+        .select("id, name")
+        .ilike("name", searchTerm)
+        .limit(5);
+      if (tagsErr) throw tagsErr;
+
+      const suggestions = [
+        ...(forums || []).map((f) => ({
+          type: "forum",
+          text: f.title,
+          id: f.id,
+        })),
+        ...(users || []).map((u) => ({ type: "user", text: u.name, id: u.id })),
+        ...(subjects || []).map((s) => ({
+          type: "subject",
+          text: s.name,
+          id: s.id,
+        })),
+        ...(tags || []).map((t) => ({ type: "tag", text: t.name, id: t.id })),
+      ];
+
+      res.json({ suggestions });
+    } catch (err) {
+      console.error("Suggestion error:", err);
+      res.status(500).json({ error: "Failed to get suggestions" });
     }
-    const searchTerm = `%${q.trim()}%`;
+  },
 
-    // Query forums (title)
-    const { data: forums, error: forumsErr } = await supabase
-      .from('forums')
-      .select('id, title')
-      .ilike('title', searchTerm)
-      .limit(5);
-    if (forumsErr) throw forumsErr;
+  // =============================
+  // Full search endpoint
+  // =============================
+  async search(req, res) {
+    try {
+      const { q } = req.query;
+      if (!q || q.trim().length < 2) {
+        return res.json({ users: [], forums: [], subjects: [], tags: [] });
+      }
+      const searchTerm = q.trim();
+      const currentUserId = req.user.id;
 
-    // Query users (name)
-    const { data: users, error: usersErr } = await supabase
-      .from('users')
-      .select('id, name')
-      .ilike('name', searchTerm)
-      .limit(5);
-    if (usersErr) throw usersErr;
+      // ------------------------------
+      // 1. Users
+      // ------------------------------
+      const { data: users, error: usersErr } = await supabase
+        .from("users")
+        .select("id, name, profile_url, school, bio, points")
+        .ilike("name", `%${searchTerm}%`)
+        .limit(20);
+      if (usersErr) throw usersErr;
 
-    // Query subjects (name)
-    const { data: subjects, error: subjectsErr } = await supabase
-      .from('subjects')
-      .select('id, name')
-      .ilike('name', searchTerm)
-      .limit(5);
-    if (subjectsErr) throw subjectsErr;
+      // Get follow status for each user
+      const usersWithFollow = await Promise.all(
+        (users || []).map(async (u) => {
+          const { data: follow } = await supabase
+            .from("follows")
+            .select("id")
+            .eq("follower_id", currentUserId)
+            .eq("following_id", u.id)
+            .single();
+          return { ...u, is_followed: !!follow };
+        }),
+      );
 
-    // Query tags (name)
-    const { data: tags, error: tagsErr } = await supabase
-      .from('tags')
-      .select('id, name')
-      .ilike('name', searchTerm)
-      .limit(5);
-    if (tagsErr) throw tagsErr;
+      // ------------------------------
+      // 2. Forums (by title, content, or tags)
+      // ------------------------------
+      // First, find tags that match the search term
+      const { data: matchingTags } = await supabase
+        .from("tags")
+        .select("id")
+        .ilike("name", `%${searchTerm}%`);
 
-    const suggestions = [
-      ...(forums || []).map(f => ({ type: 'forum', text: f.title, id: f.id })),
-      ...(users || []).map(u => ({ type: 'user', text: u.name, id: u.id })),
-      ...(subjects || []).map(s => ({ type: 'subject', text: s.name, id: s.id })),
-      ...(tags || []).map(t => ({ type: 'tag', text: t.name, id: t.id })),
-    ];
+      const tagIds = (matchingTags || []).map((t) => t.id);
 
-    res.json({ suggestions });
-  } catch (err) {
-    console.error('Suggestion error:', err);
-    res.status(500).json({ error: 'Failed to get suggestions' });
-  }
-},
-
-// =============================
-// Full search endpoint
-// =============================
-async search(req, res) {
-  try {
-    const { q } = req.query;
-    if (!q || q.trim().length < 2) {
-      return res.json({ users: [], forums: [], subjects: [], tags: [] });
-    }
-    const searchTerm = q.trim();
-    const currentUserId = req.user.id;
-
-    // ------------------------------
-    // 1. Users
-    // ------------------------------
-    const { data: users, error: usersErr } = await supabase
-      .from('users')
-      .select('id, name, profile_url, school, bio, points')
-      .ilike('name', `%${searchTerm}%`)
-      .limit(20);
-    if (usersErr) throw usersErr;
-
-    // Get follow status for each user
-    const usersWithFollow = await Promise.all((users || []).map(async (u) => {
-      const { data: follow } = await supabase
-        .from('follows')
-        .select('id')
-        .eq('follower_id', currentUserId)
-        .eq('following_id', u.id)
-        .single();
-      return { ...u, is_followed: !!follow };
-    }));
-
-    // ------------------------------
-    // 2. Forums (by title, content, or tags)
-    // ------------------------------
-    // First, find tags that match the search term
-    const { data: matchingTags } = await supabase
-      .from('tags')
-      .select('id')
-      .ilike('name', `%${searchTerm}%`);
-
-    const tagIds = (matchingTags || []).map(t => t.id);
-
-    // Build forum query: title or content match OR has any of the matching tags
-    let forumQuery = supabase
-      .from('forums')
-      .select(`
+      // Build forum query: title or content match OR has any of the matching tags
+      let forumQuery = supabase
+        .from("forums")
+        .select(
+          `
         id, title, content, created_at, user_id, subject_id, is_ai_verified,
         users:user_id (id, name, profile_url, school),
         subject:subject_id (id, name),
         upvotes_count, downvotes_count, comments_count
-      `)
-      .or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`)
-      .limit(30);
+      `,
+        )
+        .or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`)
+        .limit(30);
 
-    // If there are matching tags, also include forums that have those tags
-    if (tagIds.length > 0) {
-      // We need to union two sets: forums matching text, and forums matching tags.
-      // Supabase doesn't have UNION, so we'll get forums matching tags separately,
-      // then merge in JS.
-      const { data: tagForums } = await supabase
-        .from('forum_tags')
-        .select('forum_id')
-        .in('tag_id', tagIds);
-      const tagForumIds = (tagForums || []).map(ft => ft.forum_id);
-      
-      // Get forums by text
-      const { data: textForums } = await forumQuery;
-      const textForumIds = (textForums || []).map(f => f.id);
+      // If there are matching tags, also include forums that have those tags
+      if (tagIds.length > 0) {
+        // We need to union two sets: forums matching text, and forums matching tags.
+        // Supabase doesn't have UNION, so we'll get forums matching tags separately,
+        // then merge in JS.
+        const { data: tagForums } = await supabase
+          .from("forum_tags")
+          .select("forum_id")
+          .in("tag_id", tagIds);
+        const tagForumIds = (tagForums || []).map((ft) => ft.forum_id);
 
-      // Combine IDs
-      const allForumIds = [...new Set([...textForumIds, ...tagForumIds])];
-      if (allForumIds.length === 0) {
-        // no forums
-        forumQuery = null;
-      } else {
-        // Fetch all forums that are in the combined set
-        const { data: combinedForums } = await supabase
-          .from('forums')
-          .select(`
+        // Get forums by text
+        const { data: textForums } = await forumQuery;
+        const textForumIds = (textForums || []).map((f) => f.id);
+
+        // Combine IDs
+        const allForumIds = [...new Set([...textForumIds, ...tagForumIds])];
+        if (allForumIds.length === 0) {
+          // no forums
+          forumQuery = null;
+        } else {
+          // Fetch all forums that are in the combined set
+          const { data: combinedForums } = await supabase
+            .from("forums")
+            .select(
+              `
             id, title, content, created_at, user_id, subject_id, is_ai_verified,
             users:user_id (id, name, profile_url, school),
             subject:subject_id (id, name),
             upvotes_count, downvotes_count, comments_count
-          `)
-          .in('id', allForumIds);
-        forumQuery = combinedForums;
+          `,
+            )
+            .in("id", allForumIds);
+          forumQuery = combinedForums;
+        }
+      } else {
+        // only text match
+        const { data: forumsData } = await forumQuery;
+        forumQuery = forumsData;
       }
-    } else {
-      // only text match
-      const { data: forumsData } = await forumQuery;
-      forumQuery = forumsData;
+
+      const forumsData = forumQuery || [];
+
+      // Fetch tags for each forum (optional but nice)
+      const forumIds = forumsData.map((f) => f.id);
+      let tagsByForum = {};
+      if (forumIds.length > 0) {
+        const { data: forumTags } = await supabase
+          .from("forum_tags")
+          .select("forum_id, tags(id, name)")
+          .in("forum_id", forumIds);
+        tagsByForum = forumTags.reduce((acc, ft) => {
+          if (!acc[ft.forum_id]) acc[ft.forum_id] = [];
+          acc[ft.forum_id].push(ft.tags);
+          return acc;
+        }, {});
+      }
+
+      // Format forums for frontend
+      const formattedForums = (forumsData || []).map((forum) => ({
+        id: forum.id,
+        user_id: forum.user_id,
+        title: forum.title,
+        content: forum.content,
+        author: forum.users?.name || "Unknown",
+        authorInitials: getInitials(forum.users?.name),
+        authorProfileUrl: forum.users?.profile_url,
+        authorSchool: forum.users?.school,
+        field: forum.subject?.name || "General",
+        tags: tagsByForum[forum.id] || [],
+        upvotes: forum.upvotes_count || 0,
+        downvotes: forum.downvotes_count || 0,
+        comments: forum.comments_count || 0,
+        userVoteState: null, // we can fetch later if needed
+        isSaved: false,
+        isVerified: true,
+        isAiVerified: forum.is_ai_verified || false,
+        preview:
+          (forum.content || "").substring(0, 150) +
+          ((forum.content || "").length > 150 ? "..." : ""),
+        fullContent: forum.content || "",
+        created_at: forum.created_at,
+      }));
+
+      // ------------------------------
+      // 3. Subjects
+      // ------------------------------
+      const { data: subjects, error: subjectsErr } = await supabase
+        .from("subjects")
+        .select("id, name")
+        .ilike("name", `%${searchTerm}%`)
+        .limit(10);
+      if (subjectsErr) throw subjectsErr;
+
+      // ------------------------------
+      // 4. Tags
+      // ------------------------------
+      const { data: tags, error: tagsErr } = await supabase
+        .from("tags")
+        .select("id, name")
+        .ilike("name", `%${searchTerm}%`)
+        .limit(10);
+      if (tagsErr) throw tagsErr;
+
+      // Send results in priority order (already grouped)
+      res.json({
+        users: usersWithFollow,
+        forums: formattedForums,
+        subjects: subjects || [],
+        tags: tags || [],
+      });
+    } catch (err) {
+      console.error("Search error:", err);
+      res.status(500).json({ error: "Search failed" });
     }
-
-    const forumsData = forumQuery || [];
-
-    // Fetch tags for each forum (optional but nice)
-    const forumIds = forumsData.map(f => f.id);
-    let tagsByForum = {};
-    if (forumIds.length > 0) {
-      const { data: forumTags } = await supabase
-        .from('forum_tags')
-        .select('forum_id, tags(id, name)')
-        .in('forum_id', forumIds);
-      tagsByForum = forumTags.reduce((acc, ft) => {
-        if (!acc[ft.forum_id]) acc[ft.forum_id] = [];
-        acc[ft.forum_id].push(ft.tags);
-        return acc;
-      }, {});
-    }
-
-    // Format forums for frontend
-    const formattedForums = (forumsData || []).map(forum => ({
-      id: forum.id,
-      user_id: forum.user_id,
-      title: forum.title,
-      content: forum.content,
-      author: forum.users?.name || 'Unknown',
-      authorInitials: getInitials(forum.users?.name),
-      authorProfileUrl: forum.users?.profile_url,
-      authorSchool: forum.users?.school,
-      field: forum.subject?.name || 'General',
-      tags: tagsByForum[forum.id] || [],
-      upvotes: forum.upvotes_count || 0,
-      downvotes: forum.downvotes_count || 0,
-      comments: forum.comments_count || 0,
-      userVoteState: null, // we can fetch later if needed
-      isSaved: false,
-      isVerified: true,
-      isAiVerified: forum.is_ai_verified || false,
-      preview: (forum.content || '').substring(0, 150) + ((forum.content || '').length > 150 ? '...' : ''),
-      fullContent: forum.content || '',
-      created_at: forum.created_at,
-    }));
-
-    // ------------------------------
-    // 3. Subjects
-    // ------------------------------
-    const { data: subjects, error: subjectsErr } = await supabase
-      .from('subjects')
-      .select('id, name')
-      .ilike('name', `%${searchTerm}%`)
-      .limit(10);
-    if (subjectsErr) throw subjectsErr;
-
-    // ------------------------------
-    // 4. Tags
-    // ------------------------------
-    const { data: tags, error: tagsErr } = await supabase
-      .from('tags')
-      .select('id, name')
-      .ilike('name', `%${searchTerm}%`)
-      .limit(10);
-    if (tagsErr) throw tagsErr;
-
-    // Send results in priority order (already grouped)
-    res.json({
-      users: usersWithFollow,
-      forums: formattedForums,
-      subjects: subjects || [],
-      tags: tags || [],
-    });
-  } catch (err) {
-    console.error('Search error:', err);
-    res.status(500).json({ error: 'Search failed' });
-  }
-},
+  },
 };
