@@ -17,7 +17,28 @@ import notificationRouter from "./routes/notification_router.js";
 dotenv.config();
 const app = express();
 
-app.use(cors());
+// CORS configuration
+const allowedOrigins = [
+  'https://academiqme.vercel.app',
+  'http://16.176.23.175:8080',  // Vite default dev port
+  'http://localhost:8080'   // Alternative dev port
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,   // If your frontend sends cookies or Authorization headers
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 // Register routes
@@ -37,4 +58,4 @@ app.get("/", (req, res) => {
   res.send("Academiq Backend is running!");
 });
 
-export default app; // ✅ no app.listen() here
+export default app;
