@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import Icon from "@/components/ui/Icon.png";
+import { useInView } from "react-intersection-observer";
 import { motion } from "framer-motion";
 import {
   UserPlus,
@@ -14,9 +14,10 @@ import {
 } from "lucide-react";
 import FeaturedSection from "@/components/FeaturedSection";
 import DiscussionCard from "@/components/DiscussionCard";
-import AISuggestionPanel from "@/components/AISuggestionPanel"; // Make sure this component exists
+import AISuggestionPanel from "@/components/AISuggestionPanel";
 import CreatePostModal from "@/components/CreatePostModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
+import { SkeletonCard } from "@/components/SkeletonCard";
 import { toast } from "@/hooks/use-toast";
 import { DiscussionCardSkeleton } from "@/components/SkeletonLoaders";
 import {
@@ -87,7 +88,8 @@ const getCurrentUser = () => {
 
 const CURRENT_USER = getCurrentUser();
 
-// Dummy forum that always appears at the end
+// COMMENTED OUT FOR NOW - Dummy forum that always appears at the end
+/*
 const DUMMY_FORUM: DiscussionCardProps = {
   id: "open-forum-dummy",
   title: "🌟 Open Forum",
@@ -115,6 +117,7 @@ const DUMMY_FORUM: DiscussionCardProps = {
   aiSummary:
     "A public space for all Academiq members to share ideas, ask questions, and connect outside of specific subjects.",
 };
+*/
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -124,18 +127,23 @@ const Index = () => {
   const tagId = searchParams.get("tagId");
 
   const [followedTopics, _setFollowedTopics] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [forums, setForums] = useState<DiscussionCardProps[]>([]);
   const [topics, setTopics] = useState<TopicItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [filterName, setFilterName] = useState<string>("");
 
+  // Pagination state
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Use refs to avoid stale closures and prevent duplicate requests
+  const pageRef = useRef(0);
+  const isLoadingMoreRef = useRef(false);
+  const hasMoreRef = useRef(true);
+
   // Peers state
   const [peers, setPeers] = useState<PeerUser[]>([]);
-  /* const [peersFollowingIds, setPeersFollowingIds] = useState<Set<string>>(
-    new Set(),
-  ); */
   const [peersLoading, setPeersLoading] = useState(true);
   const [followingUserId, setFollowingUserId] = useState<string | null>(null);
 
@@ -146,24 +154,94 @@ const Index = () => {
   const [selectedPostData, setSelectedPostData] =
     useState<DiscussionCardProps | null>(null);
 
-  // Combine real forums with the dummy forum (always last)
-  const allDiscussions = useMemo(() => [...forums, DUMMY_FORUM], [forums]);
+  // Intersection Observer for infinite scroll
+  const { ref: loadMoreRef, inView } = useInView({ threshold: 0.1 });
 
-  // Load forums – pass subjectId / tagId to backend
+  // Display forums + skeleton loading placeholder when loading more
+  const displayForums = useMemo(() => {
+    if (isLoadingMore && hasMoreRef.current) {
+      return forums.concat([
+        {
+          id: "skeleton-placeholder",
+          title: "",
+          author: "",
+          authorInitials: "",
+          field: "",
+          preview: "",
+          fullContent: "",
+          upvotes: 0,
+          downvotes: 0,
+          comments: 0,
+          tag: "",
+          isOwn: false,
+          isSaved: false,
+          userVoteState: null,
+          isAiVerified: false,
+        } as DiscussionCardProps,
+      ]);
+    }
+    return forums;
+  }, [forums, isLoadingMore]);
+
+  // Combine with the dummy forum (always last) - COMMENTED OUT FOR NOW
+  const allDiscussions = useMemo(
+    () => [...displayForums], // TEMP: removed DUMMY_FORUM
+    [displayForums],
+  );
+
+  // Reset pagination when filters change
   useEffect(() => {
-    const loadForums = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+    setForums([]);
+    pageRef.current = 0;
+    hasMoreRef.current = true;
+    setInitialLoading(true);
+    setIsLoadingMore(false);
+    isLoadingMoreRef.current = false;
+    setError(null);
+  }, [subjectId, tagId]);
 
-        const filters: { subjectId?: string; tagId?: string } = {};
+  // Load forums function
+  const loadForums = useCallback(
+    async (reset = false) => {
+      // Prevent duplicate requests
+      if (isLoadingMoreRef.current && !reset) {
+        return;
+      }
+
+      try {
+        if (reset) {
+          setInitialLoading(true);
+          pageRef.current = 0;
+        } else {
+          setIsLoadingMore(true);
+          isLoadingMoreRef.current = true;
+        }
+
+        // Calculate offset based on current page
+        const offset = pageRef.current * 10;
+
+        const filters: {
+          subjectId?: string;
+          tagId?: string;
+          limit?: number;
+          offset?: number;
+        } = {
+          limit: 10,
+          offset,
+        };
         if (subjectId) filters.subjectId = subjectId;
         if (tagId) filters.tagId = tagId;
 
-        const fetchedForums = await forumService.getAllForums(filters);
+        console.log(
+          `Loading forums with offset=${offset}, page=${pageRef.current}`,
+        );
 
-        const forumsWithSavedState = await Promise.all(
-          fetchedForums.map(async (forum) => {
+        const { forums: newForums, hasMore: more } =
+          await forumService.getAllForums(filters);
+
+        // Add saved state
+        const forumsWithSaved = await Promise.all(
+          newForums.map(async (forum) => {
             if (!forum.id) return { ...forum, isSaved: false };
             try {
               const saveRes = await forumService.getSaveStatus(forum.id);
@@ -174,17 +252,62 @@ const Index = () => {
           }),
         );
 
-        setForums(forumsWithSavedState);
+        // Update forums - APPEND if loading more, REPLACE if resetting
+        // Deduplicate: filter out forums that already exist
+        setForums((prev) => {
+          if (reset) {
+            console.log(`Reset: Loading ${forumsWithSaved.length} new forums`);
+            return forumsWithSaved;
+          } else {
+            const existingIds = new Set(prev.map((f) => f.id));
+            const uniqueNewForums = forumsWithSaved.filter(
+              (f) => !existingIds.has(f.id),
+            );
+            console.log(
+              `Appending ${uniqueNewForums.length} new forums (filtered from ${forumsWithSaved.length})`,
+            );
+            return [...prev, ...uniqueNewForums];
+          }
+        });
+
+        // Update refs and state
+        hasMoreRef.current = more;
+
+        // Increment page for next load
+        if (!reset) {
+          pageRef.current += 1;
+        }
       } catch (err) {
         console.error("Error loading forums:", err);
         setError("Failed to load forums.");
       } finally {
-        setIsLoading(false);
+        if (reset) {
+          setInitialLoading(false);
+        } else {
+          setIsLoadingMore(false);
+          isLoadingMoreRef.current = false;
+        }
       }
-    };
+    },
+    [subjectId, tagId],
+  );
 
-    loadForums();
-  }, [subjectId, tagId]);
+  // Initial load
+  useEffect(() => {
+    loadForums(true);
+  }, [subjectId, tagId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load more when sentinel becomes visible
+  useEffect(() => {
+    if (
+      inView &&
+      hasMoreRef.current &&
+      !isLoadingMoreRef.current &&
+      !initialLoading
+    ) {
+      loadForums(false);
+    }
+  }, [inView, initialLoading, loadForums]);
 
   // Load peers data (similar to Peers component)
   useEffect(() => {
@@ -227,11 +350,10 @@ const Index = () => {
     const loadTrendingTopics = async () => {
       try {
         const res = await axiosInstance.get("/subjects/trending?limit=18");
-        const trendingTopics = res.data.topics; // array of { id, name, type, discussionCount }
+        const trendingTopics = res.data.topics;
         setTopics(trendingTopics);
       } catch (err) {
         console.error("Error loading trending topics:", err);
-        // Fallback to old method if needed
       }
     };
     loadTrendingTopics();
@@ -274,14 +396,6 @@ const Index = () => {
     updateFilterName();
   }, [subjectId, tagId, topics]);
 
-  /* const handleNewPost = (newPost: DiscussionCardProps) => {
-    setForums((prev) => [newPost, ...prev]);
-  }; */
-
-  /* const handleTagClick = (tagId: string) => {
-    setSearchParams({ tagId });
-  }; */
-
   const handleTopicClick = (item: TopicItem) => {
     if (item.type === "subject") {
       setSearchParams({ subjectId: item.id });
@@ -293,22 +407,6 @@ const Index = () => {
   const clearFilter = () => {
     setSearchParams({});
   };
-
-  /* const toggleFollowTopic = (name: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-
-    setFollowedTopics((prev) => {
-      const next = new Set(prev);
-      const isFollowing = next.has(name);
-      isFollowing ? next.delete(name) : next.add(name);
-
-      toast({
-        title: isFollowing ? `Unfollowed ${name}` : `Following ${name}`,
-      });
-
-      return next;
-    });
-  }; */
 
   const handleCreatePost = async (data: {
     title: string;
@@ -357,15 +455,11 @@ const Index = () => {
     }
   };
 
-  // Robust handler: after edit, fetch the latest forum data
   const handlePostUpdated = async () => {
     if (!selectedPostId) return;
 
     try {
-      // Fetch the updated forum from the server
       const freshForum = await forumService.getForumById(selectedPostId);
-
-      // Recompute truncated preview
       const truncatedPreview =
         (freshForum.fullContent || "").substring(0, 150) +
         ((freshForum.fullContent || "").length > 150 ? "..." : "");
@@ -381,7 +475,6 @@ const Index = () => {
                 field: freshForum.field,
                 tags: freshForum.tags,
                 documentUrl: freshForum.documentUrl,
-                // Keep other fields like author, votes, etc.
               }
             : f,
         ),
@@ -404,7 +497,6 @@ const Index = () => {
   const handleVoteForum = async (forumId: string, voteType: 1 | -1) => {
     try {
       const result = await forumService.voteForum(forumId, voteType);
-
       setForums((prevForums) =>
         prevForums.map((forum) =>
           forum.id === forumId
@@ -417,7 +509,6 @@ const Index = () => {
             : forum,
         ),
       );
-
       toast({
         title: voteType === 1 ? "Upvoted!" : "Downvoted!",
       });
@@ -434,7 +525,6 @@ const Index = () => {
   const handleUnvoteForum = async (forumId: string) => {
     try {
       const result = await forumService.unvoteForum(forumId);
-
       setForums((prevForums) =>
         prevForums.map((forum) =>
           forum.id === forumId
@@ -447,10 +537,7 @@ const Index = () => {
             : forum,
         ),
       );
-
-      toast({
-        title: "Vote removed",
-      });
+      toast({ title: "Vote removed" });
     } catch (err) {
       console.error("Error removing vote:", err);
       toast({
@@ -464,7 +551,6 @@ const Index = () => {
   const handleSaveForum = async (forumId: string) => {
     try {
       const result = await forumService.toggleSaveForum(forumId);
-
       setForums((prevForums) =>
         prevForums.map((forum) =>
           forum.id === forumId
@@ -475,11 +561,9 @@ const Index = () => {
             : forum,
         ),
       );
-
       toast({
         title: result.saved ? "Forum saved" : "Forum unsaved",
       });
-
       return result.saved;
     } catch (err) {
       console.error("Error saving forum:", err);
@@ -529,12 +613,75 @@ const Index = () => {
     }
   };
 
-  // Build the feed items array (posts interleaved with a people section)
-  const feedItems: { type: "post" | "people"; index: number }[] = [];
-  allDiscussions.forEach((_, i) => {
-    feedItems.push({ type: "post", index: i });
-    if (i === 2) feedItems.push({ type: "people", index: 0 });
-  });
+  // Render forums with people section inserted after 3rd post
+  const renderForumsList = () => {
+    const items: React.ReactNode[] = [];
+
+    for (let i = 0; i < allDiscussions.length; i++) {
+      const d = allDiscussions[i];
+      if (!d) continue;
+
+      // Render skeleton loading placeholder
+      if (d.id === "skeleton-placeholder") {
+        items.push(<SkeletonCard key="skeleton-loading" />);
+        continue;
+      }
+
+      const isAuthor =
+        d.id !== "open-forum-dummy" && CURRENT_USER.id === d.user_id;
+
+      const navigateTo =
+        d.id === "open-forum-dummy" ? "/open-forum" : `/post/${d.id}`;
+
+      items.push(
+        <div
+          key={`${d.id}-${i}`}
+          onClick={() => navigate(navigateTo)}
+          onKeyDown={(e) => e.key === "Enter" && navigate(navigateTo)}
+          role="link"
+          tabIndex={0}
+          className="block cursor-pointer">
+          <DiscussionCard
+            {...d}
+            documentUrl={
+              (d.documentUrl === null ? undefined : d.documentUrl) as
+                | string
+                | undefined
+            }
+            isSaved={d.isSaved}
+            index={i}
+            isAuthor={isAuthor}
+            onEdit={d.id !== "open-forum-dummy" ? handleEditPost : undefined}
+            onDelete={
+              d.id !== "open-forum-dummy" ? handleDeletePost : undefined
+            }
+            onVote={
+              d.id !== "open-forum-dummy"
+                ? (voteType) => handleVoteForum(d.id!, voteType)
+                : undefined
+            }
+            onUnvote={
+              d.id !== "open-forum-dummy"
+                ? () => handleUnvoteForum(d.id!)
+                : undefined
+            }
+            onSave={
+              d.id !== "open-forum-dummy"
+                ? () => handleSaveForum(d.id!)
+                : undefined
+            }
+          />
+        </div>,
+      );
+
+      // Insert people section after 3rd real post (excluding skeleton)
+      if (i === 2) {
+        items.push(<PeopleSection key="people-section" />);
+      }
+    }
+
+    return items;
+  };
 
   const peopleScrollRef = useRef<HTMLDivElement | null>(null);
   const topicsScrollRef = useRef<HTMLDivElement | null>(null);
@@ -574,7 +721,6 @@ const Index = () => {
   );
 
   const PeopleSection = () => {
-    // Show only first 6 users (or all if fewer)
     const visiblePeers = peers.slice(0, 6);
 
     if (peersLoading) {
@@ -627,7 +773,6 @@ const Index = () => {
               <div
                 key={user.id}
                 className="shrink-0 w-40 sm:w-44 rounded-xl border border-border bg-background p-3 sm:p-4 text-center hover:shadow-sm hover:border-primary/10 transition-all snap-start">
-                {/* Clickable profile link */}
                 <Link
                   to={`/${encodeURIComponent(user.name)}`}
                   className="block"
@@ -731,12 +876,6 @@ const Index = () => {
           <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground mb-4">
             Topics You May Like
           </h2>
-          {/* 
-          <div className="flex items-center justify-between mb-2">
-            <div />
-            <ScrollButtons scrollRef={topicsScrollRef} />
-          </div> */}
-
           <div
             ref={topicsScrollRef}
             className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scroll-smooth"
@@ -758,17 +897,9 @@ const Index = () => {
                 <span className="text-xs text-muted-foreground ml-1">
                   {item.discussionCount} posts
                 </span>
-
                 {followedTopics.has(item.name) && (
                   <Check className="h-3.5 w-3.5" />
                 )}
-
-                {/* <span
-                  role="button"
-                  onClick={(e) => toggleFollowTopic(item.name, e)}
-                  className="ml-1 text-xs text-muted-foreground hover:text-primary transition-colors">
-                  {followedTopics.has(item.name) ? "✓" : "+"}
-                </span> */}
               </motion.button>
             ))}
           </div>
@@ -783,7 +914,6 @@ const Index = () => {
             <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground">
               {subjectId || tagId ? "" : "Latest Discussions"}
             </h2>
-
             <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors">
@@ -797,75 +927,29 @@ const Index = () => {
             </div>
           )}
 
-          {isLoading ? (
+          {initialLoading ? (
             <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
+              {[...Array(5)].map((_, i) => (
                 <DiscussionCardSkeleton key={i} index={i} />
               ))}
             </div>
           ) : (
             <>
-              {feedItems.map((item, idx) => {
-                if (item.type === "people")
-                  return <PeopleSection key="people-section" />;
+              {renderForumsList()}
 
-                const d = allDiscussions[item.index];
-                if (!d) return null;
+              {/* Sentinel for intersection observer – triggers load more */}
+              {hasMoreRef.current && !isLoadingMoreRef.current && (
+                <div ref={loadMoreRef} className="h-10 w-full" />
+              )}
 
-                const isAuthor =
-                  d.id !== "open-forum-dummy" && CURRENT_USER.id === d.user_id;
+              {/* End of list message */}
+              {!hasMoreRef.current && forums.length > 0 && (
+                <p className="text-center text-muted-foreground text-sm py-6">
+                  You've reached the end – no more discussions.
+                </p>
+              )}
 
-                // Navigate to /open-forum for dummy, otherwise to post details
-                const navigateTo =
-                  d.id === "open-forum-dummy" ? "/open-forum" : `/post/${d.id}`;
-
-                return (
-                  <div
-                    onClick={() => navigate(navigateTo)}
-                    onKeyDown={(e) => e.key === "Enter" && navigate(navigateTo)}
-                    role="link"
-                    tabIndex={0}
-                    key={d.id ?? idx}
-                    className="block cursor-pointer">
-                    <DiscussionCard
-                      {...d}
-                      documentUrl={
-                        (d.documentUrl === null ? undefined : d.documentUrl) as
-                          | string
-                          | undefined
-                      }
-                      isSaved={d.isSaved}
-                      index={item.index}
-                      isAuthor={isAuthor}
-                      onEdit={
-                        d.id !== "open-forum-dummy" ? handleEditPost : undefined
-                      }
-                      onDelete={
-                        d.id !== "open-forum-dummy"
-                          ? handleDeletePost
-                          : undefined
-                      }
-                      onVote={
-                        d.id !== "open-forum-dummy"
-                          ? (voteType) => handleVoteForum(d.id!, voteType)
-                          : undefined
-                      }
-                      onUnvote={
-                        d.id !== "open-forum-dummy"
-                          ? () => handleUnvoteForum(d.id!)
-                          : undefined
-                      }
-                      onSave={
-                        d.id !== "open-forum-dummy"
-                          ? () => handleSaveForum(d.id!)
-                          : undefined
-                      }
-                    />
-                  </div>
-                );
-              })}
-
-              {forums.length === 0 && !isLoading && (
+              {forums.length === 0 && !initialLoading && (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">
                     {subjectId || tagId

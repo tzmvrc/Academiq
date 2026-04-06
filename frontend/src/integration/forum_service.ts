@@ -119,24 +119,38 @@ export const forumService = {
   async getAllForums(params?: {
     subjectId?: string;
     tagId?: string;
-  }): Promise<DiscussionCardProps[]> {
+    limit?: number;
+    offset?: number;
+  }): Promise<{
+    forums: DiscussionCardProps[];
+    hasMore: boolean;
+    total: number;
+  }> {
     try {
       const query = new URLSearchParams();
       if (params?.subjectId) query.append("subjectId", params.subjectId);
       if (params?.tagId) query.append("tagId", params.tagId);
-      const url = query.toString() ? `/forums?${query}` : "/forums";
+      if (params?.limit !== undefined)
+        query.append("limit", params.limit.toString());
+      if (params?.offset !== undefined)
+        query.append("offset", params.offset.toString());
+      const url = `/forums?${query.toString()}`;
 
       const response = await axiosInstance.get(url);
       const currentUser = localStorage.getItem("user");
       const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
 
-      const forums = (response.data.forums || []).map((forum: ForumResponse) =>
+      const rawForums = response.data.forums || [];
+      const hasMore = response.data.hasMore === true;
+      const total = response.data.total || 0;
+
+      let forums = rawForums.map((forum: ForumResponse) =>
         transformForumToDiscussion(forum, currentUserId),
       );
 
-      if (currentUserId) {
+      if (currentUserId && forums.length) {
         const forumsWithVotes = await Promise.all(
-          forums.map(async (forum: any) => {
+          forums.map(async (forum: DiscussionCardProps) => {
             try {
               const voteState = await this.getUserVoteState(forum.id!);
               return { ...forum, userVoteState: voteState };
@@ -145,16 +159,15 @@ export const forumService = {
             }
           }),
         );
-        return forumsWithVotes;
+        forums = forumsWithVotes;
       }
 
-      return forums;
+      return { forums, hasMore, total };
     } catch (error) {
       console.error("Failed to fetch forums:", error);
       throw error;
     }
   },
-
   async getForumById(id: string): Promise<DiscussionCardProps> {
     try {
       const response = await axiosInstance.get(`/forums/${id}`);

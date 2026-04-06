@@ -13,7 +13,6 @@ import {
   Pencil,
   Trash2,
   X,
-  Eye,
   SquareArrowOutUpRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";

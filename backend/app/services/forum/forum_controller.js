@@ -85,51 +85,51 @@ const setForumTags = async (forumId, newTagIds) => {
 
 export const ForumsController = {
   // GET /api/forums
-  async getAllForums(req, res) {
-    try {
-      const { subjectId, tagId } = req.query;
-      let query = supabase.from("forums").select(`
+  // inside ForumsController
+  // In forum_controller.js
+async getAllForums(req, res) {
+  try {
+    const { subjectId, tagId, limit = 10, offset = 0 } = req.query;
+    const parsedLimit = parseInt(limit, 10);
+    const parsedOffset = parseInt(offset, 10);
+
+    let query = supabase.from("forums").select(`
       *,
       user:user_id(id, name, profile_url, school),
       subject:subject_id(id, name),
-      forum_tags(
-        tag:tag_id(id, name, slug, usage_count)
-      )
-    `);
+      forum_tags( tag:tag_id(id, name, slug, usage_count) )
+    `, { count: "exact" });
 
-      if (subjectId) {
-        query = query.eq("subject_id", subjectId);
-      }
-      if (tagId) {
-        const { data: forumIds } = await supabase
-          .from("forum_tags")
-          .select("forum_id")
-          .eq("tag_id", tagId);
-        const ids = forumIds.map((ft) => ft.forum_id);
-        if (ids.length === 0) {
-          return res.json({ forums: [] });
-        }
-        query = query.in("id", ids);
-      }
-
-      const { data, error } = await query.order("created_at", {
-        ascending: false,
-      });
-      if (error) throw error;
-
-      // Transform to include tags array
-      const forums = data.map((forum) => ({
-        ...forum,
-        tags: (forum.forum_tags || []).map((ft) => ft.tag).filter(Boolean),
-        forum_tags: undefined,
-      }));
-
-      res.json({ forums });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Failed to fetch forums" });
+    if (subjectId) query = query.eq("subject_id", subjectId);
+    if (tagId) {
+      const { data: forumIds } = await supabase
+        .from("forum_tags")
+        .select("forum_id")
+        .eq("tag_id", tagId);
+      const ids = forumIds.map(ft => ft.forum_id);
+      if (ids.length === 0) return res.json({ forums: [], hasMore: false, total: 0 });
+      query = query.in("id", ids);
     }
-  },
+
+    const { data, error, count } = await query
+      .order("created_at", { ascending: false })
+      .range(parsedOffset, parsedOffset + parsedLimit - 1);
+
+    if (error) throw error;
+
+    const forums = data.map(forum => ({
+      ...forum,
+      tags: (forum.forum_tags || []).map(ft => ft.tag).filter(Boolean),
+      forum_tags: undefined,
+    }));
+
+    const hasMore = count ? parsedOffset + parsedLimit < count : data.length === parsedLimit;
+    res.json({ forums, hasMore, total: count || 0 });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch forums" });
+  }
+},
 
   // GET /api/forums/:id
   async getForumById(req, res) {
