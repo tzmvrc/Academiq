@@ -52,10 +52,7 @@ export const TagModel = {
   },
 
   async delete(id) {
-    const { error } = await supabase
-      .from(TABLE)
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from(TABLE).delete().eq("id", id);
     return { error };
   },
 
@@ -66,5 +63,27 @@ export const TagModel = {
       delta: delta,
     });
     return { data, error };
+  },
+
+  // models/tag_model.js
+  async findAllWithCount(limit = 15) {
+    // Fetch all tags with their forum_tags count (no ordering in DB)
+    const { data, error } = await supabase.from("tags").select(`
+      id,
+      name,
+      forum_tags(count)
+    `);
+    if (error) throw error;
+
+    // Format and compute discussion_count
+    let tagsWithCount = data.map((t) => ({
+      id: t.id,
+      name: t.name,
+      discussion_count: t.forum_tags?.[0]?.count || 0,
+    }));
+
+    // Sort by discussion_count descending and apply limit
+    tagsWithCount.sort((a, b) => b.discussion_count - a.discussion_count);
+    return tagsWithCount.slice(0, limit);
   },
 };

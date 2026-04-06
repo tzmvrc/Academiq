@@ -11,7 +11,8 @@ import forumRouter from "./routes/forum_router.js";
 import peersRouter from "./routes/peers_router.js";
 import openrouter from "./routes/open_router.js";
 import profileRouter from "./routes/profile_router.js";
-
+import leaderboardRouter from "./routes/leaderboard_router.js";
+import notificationRouter from "./routes/notification_router.js";
 
 dotenv.config();
 const app = express();
@@ -23,11 +24,13 @@ app.use(express.json());
 app.use("/api/test", postRoutes);
 app.use("/api/auth", authrouter);
 app.use("/api/comments", commentRouter);
+app.use("/api/leaderboard", leaderboardRouter);
 app.use("/api/subjects", subjectRouter);
 app.use("/api/forums", forumRouter);
 app.use("/api/open", openrouter);
 app.use("/api/tags", tagrouter);
 app.use("/api/peers", peersRouter);
+app.use("/api/notifications", notificationRouter);
 app.use("/api/profile", profileRouter);
 
 app.get("/", (req, res) => {

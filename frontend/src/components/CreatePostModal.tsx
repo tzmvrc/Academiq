@@ -704,7 +704,7 @@ const CreatePostModal = ({
                         className="text-xs text-primary hover:underline">
                         Change
                       </button>
-                      {mode === "edit" && (
+                      {/* {mode === "edit" && (
                         <button
                           type="button"
                           onClick={() => {
@@ -715,7 +715,7 @@ const CreatePostModal = ({
                           className="text-xs text-destructive hover:underline">
                           Remove
                         </button>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 )}

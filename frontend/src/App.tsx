@@ -24,6 +24,7 @@ import SearchResults from "./pages/SearchResults";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Onboarding from "./pages/Onboarding";
+import SchoolPage from "./pages/SchoolPage";
 import Index from "./pages/Index";
 import Peers from "./pages/Peers";
 import Leaderboards from "./pages/Leaderboards";
@@ -112,7 +113,7 @@ const AppRoutes = () => {
           }
         />
 
-         <Route
+        <Route
           path="/search"
           element={
             <ProtectedRoute>
@@ -120,7 +121,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-
 
         <Route
           path="/feed"
@@ -145,6 +145,15 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <Leaderboards />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/school/:schoolName"
+          element={
+            <ProtectedRoute>
+              <SchoolPage />
             </ProtectedRoute>
           }
         />
