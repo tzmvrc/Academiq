@@ -113,8 +113,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
         "relative space-y-3.5 overflow-visible",
         depth > 0 && "ml-10",
         className,
-      )}
-    >
+      )}>
       {/* Relationship lines (for replies) */}
       {depth > 0 && (
         <>
@@ -122,8 +121,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
           <svg
             className="absolute pointer-events-none"
             style={{ left: -16, top: -12, width: 24, height: 38 }}
-            fill="none"
-          >
+            fill="none">
             <path
               d="M1 0 L1 22 Q1 34 13 34 L24 34"
               strokeWidth="2.5"
@@ -154,8 +152,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
           comment.isAIVerified && "border-teal bg-teal/10",
           isAuthor && "bg-blue/10 border-blue",
           depth > 0 && "ml-2",
-        )}
-      >
+        )}>
         <div className="flex flex-col">
           {/* Content */}
           <div className="flex-1 p-3">
@@ -203,17 +200,15 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                     <div className="flex gap-2">
                       <BrutalButton
                         size="sm"
-                        variant="primary"
-                        onClick={handleSubmitEdit}
-                      >
+                        variant="default"
+                        onClick={handleSubmitEdit}>
                         <Check className="w-3 h-3 mr-1" />
                         Save
                       </BrutalButton>
                       <BrutalButton
                         size="sm"
                         variant="outline"
-                        onClick={handleCancelEdit}
-                      >
+                        onClick={handleCancelEdit}>
                         <X className="w-3 h-3 mr-1" />
                         Cancel
                       </BrutalButton>
@@ -236,8 +231,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                           "w-6 h-6 rounded-md border-2 border-foreground flex items-center justify-center transition-all hover:bg-teal/20",
                           userVote === 1 && "bg-teal text-foreground",
                         )}
-                        title="Upvote"
-                      >
+                        title="Upvote">
                         <ArrowUp className="w-3 h-3" />
                       </button>
                       <span className="font-bold text-xs min-w-6 text-center">
@@ -250,8 +244,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                           userVote === -1 &&
                             "bg-destructive text-destructive-foreground",
                         )}
-                        title="Downvote"
-                      >
+                        title="Downvote">
                         <ArrowDown className="w-3 h-3" />
                       </button>
 
@@ -262,8 +255,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                       {depth < maxDepth && (
                         <button
                           onClick={() => setIsReplying(!isReplying)}
-                          className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors opacity-0 group-hover:opacity-100"
-                        >
+                          className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors opacity-0 group-hover:opacity-100">
                           <Reply className="w-3 h-3" />
                           Reply
                         </button>
@@ -274,8 +266,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                         <div className="relative">
                           <button
                             onClick={() => setShowMenu(!showMenu)}
-                            className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors p-1 opacity-0 group-hover:opacity-100"
-                          >
+                            className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors p-1 opacity-0 group-hover:opacity-100">
                             <MoreVertical className="w-3 h-3" />
                           </button>
                           {showMenu && (
@@ -285,8 +276,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                                   setIsEditing(true);
                                   setShowMenu(false);
                                 }}
-                                className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/20 w-full text-left transition-colors border-b-2 border-foreground"
-                              >
+                                className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/20 w-full text-left transition-colors border-b-2 border-foreground">
                                 <Edit2 className="w-3 h-3" />
                                 Edit
                               </button>
@@ -295,8 +285,7 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                                   onDelete?.(comment.id);
                                   setShowMenu(false);
                                 }}
-                                className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 w-full text-left transition-colors"
-                              >
+                                className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 w-full text-left transition-colors">
                                 <Trash2 className="w-3 h-3" />
                                 Delete
                               </button>
@@ -328,16 +317,14 @@ export const CommentCard: React.FC<CommentCardProps> = ({
                 <div className="flex gap-2">
                   <BrutalButton
                     size="sm"
-                    variant="primary"
-                    onClick={handleSubmitReply}
-                  >
+                    variant="default"
+                    onClick={handleSubmitReply}>
                     Reply
                   </BrutalButton>
                   <BrutalButton
                     size="sm"
                     variant="outline"
-                    onClick={() => setIsReplying(false)}
-                  >
+                    onClick={() => setIsReplying(false)}>
                     Cancel
                   </BrutalButton>
                 </div>

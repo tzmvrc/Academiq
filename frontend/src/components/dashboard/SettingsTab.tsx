@@ -205,7 +205,7 @@ export const SettingsTab: React.FC = () => {
         </div>
 
         <div className="mt-5">
-          <BrutalButton variant="primary" onClick={handleSaveNotifications}>
+          <BrutalButton onClick={handleSaveNotifications}>
             <Save className="w-4 h-4 mr-2" />
             Save Preferences
           </BrutalButton>

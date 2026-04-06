@@ -569,9 +569,9 @@ const Profile = () => {
   ];
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: "posts", label: "Posts" },
-    ...(isOwnProfile ? [{ key: "saved", label: "Saved" }] : []),
-    ...(isOwnProfile ? [{ key: "comments", label: "Comments" }] : []),
+    { key: "posts" as const, label: "Posts" },
+    ...(isOwnProfile ? [{ key: "saved" as const, label: "Saved" }] : []),
+    ...(isOwnProfile ? [{ key: "comments" as const, label: "Comments" }] : []),
   ];
 
   const handleForumClick = (id: string) => {

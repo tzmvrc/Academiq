@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   Search as SearchIcon,
   UserPlus,
   Check,
@@ -9,7 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowRight,
-  Plus,
   X,
 } from "lucide-react";
 import DiscussionCard from "@/components/DiscussionCard";
@@ -483,9 +481,12 @@ const SearchResults = () => {
   }, [query]);
 
   // --- Horizontal scroll helpers (same as Index) ---
-  const peopleScrollRef = useRef<HTMLDivElement>(null);
+  const peopleScrollRef = useRef<HTMLDivElement | null>(null);
   const scroll = useCallback(
-    (ref: React.RefObject<HTMLDivElement>, direction: "left" | "right") => {
+    (
+      ref: React.RefObject<HTMLDivElement | null>,
+      direction: "left" | "right",
+    ) => {
       if (ref.current) {
         ref.current.scrollBy({
           left: direction === "left" ? -200 : 200,
@@ -499,7 +500,7 @@ const SearchResults = () => {
   const ScrollButtons = ({
     scrollRef,
   }: {
-    scrollRef: React.RefObject<HTMLDivElement>;
+    scrollRef: React.RefObject<HTMLDivElement | null>;
   }) => (
     <div className="flex gap-1">
       <button
@@ -709,7 +710,7 @@ const SearchResults = () => {
                     tabIndex={0}
                     className="block cursor-pointer">
                     <DiscussionCard
-                      {...forum}
+                      {...(forum as any)}
                       onVote={(voteType) => handleVote(forum.id, voteType)}
                       onUnvote={() => handleUnvote(forum.id)}
                       onSave={() => handleSave(forum.id)}
@@ -789,7 +790,7 @@ const SearchResults = () => {
                 title: selectedPostData.title,
                 content: selectedPostData.fullContent,
                 category: selectedPostData.field,
-                fileName: selectedPostData.documentUrl,
+                fileName: selectedPostData.documentUrl || undefined,
                 tagIds: selectedPostData.tags?.map((t) => t.id) || [],
               }
             : undefined

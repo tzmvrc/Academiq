@@ -11,8 +11,6 @@ import {
   BookmarkCheck,
   Sparkles,
   FileText,
-  Image,
-  File,
   Reply,
   Calendar,
   ChevronDown,
@@ -1052,7 +1050,7 @@ const PostDetails = () => {
     }
   };
 
-  const handleEditPost = async (data: {
+  /* const handleEditPost = async (data: {
     title: string;
     content: string;
     category: string;
@@ -1082,7 +1080,7 @@ const PostDetails = () => {
         variant: "destructive",
       });
     }
-  };
+  }; */
 
   const handleDeletePost = async () => {
     try {

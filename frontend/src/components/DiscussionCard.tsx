@@ -365,7 +365,7 @@ const DiscussionCard = ({
       )}
 
       {/* AI Summary */}
-      {aiSummary?.trim()?.length > 0 && (
+      {aiSummary && aiSummary.trim().length > 0 && (
         <div className="rounded-lg bg-ai-subtle/50 border border-ai/10 p-2.5 sm:p-3 mb-4">
           <div className="flex items-center gap-1.5 mb-1">
             <Sparkles className="h-3 w-3 text-ai" />

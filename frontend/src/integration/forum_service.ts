@@ -48,13 +48,13 @@ export interface DiscussionCardProps {
   tags?: Tag[]; // array of tags
   preview: string;
   fullContent: string;
-  aiSummary: string;
+  aiSummary?: string;
   upvotes: number;
-  documentUrl?: string | null;
+  documentUrl?: string | null | undefined;
   downvotes: number;
   comments: number;
   tag: string; // keep for backward compatibility? Actually we might remove and use field+tags
-  isOwn: boolean;
+  isOwn?: boolean;
   isSaved?: boolean;
   userVoteState?: 1 | -1 | null;
   isAiVerified?: boolean;
@@ -136,7 +136,7 @@ export const forumService = {
 
       if (currentUserId) {
         const forumsWithVotes = await Promise.all(
-          forums.map(async (forum) => {
+          forums.map(async (forum: any) => {
             try {
               const voteState = await this.getUserVoteState(forum.id!);
               return { ...forum, userVoteState: voteState };

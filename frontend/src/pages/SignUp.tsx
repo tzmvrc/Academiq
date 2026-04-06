@@ -2,14 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Icon from "../components/ui/Icon.png";
-import {
-  Eye,
-  EyeOff,
-  ArrowRight,
-  ArrowLeft,
-  Check,
-  RefreshCw,
-} from "lucide-react";
+import { Eye, EyeOff, ArrowRight, ArrowLeft, Check } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useGoogleAuth } from "@/components/auth/useGoogleAuth";
 import { useSignup } from "@/components/auth/useSignup";

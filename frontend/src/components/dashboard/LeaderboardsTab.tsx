@@ -89,7 +89,7 @@ const getRankIcon = (rank: number) => {
   }
 };
 
-const getRankColor = (rank: number): "yellow" | "teal" | "pink" | "default" => {
+/* const getRankColor = (rank: number): "yellow" | "teal" | "pink" | "default" => {
   switch (rank) {
     case 1:
       return "yellow";
@@ -100,7 +100,7 @@ const getRankColor = (rank: number): "yellow" | "teal" | "pink" | "default" => {
     default:
       return "default";
   }
-};
+}; */
 
 export const LeaderboardsTab: React.FC = () => {
   useEffect(() => {

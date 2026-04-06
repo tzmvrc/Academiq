@@ -79,7 +79,7 @@ export const commentService = {
       // If user is authenticated, fetch vote states for all comments
       if (currentUserId) {
         const commentsWithVotes = await Promise.all(
-          comments.map(async (comment) => {
+          comments.map(async (comment: any) => {
             try {
               const voteState = await this.getUserCommentVoteState(comment.id);
               return { ...comment, userVote: voteState };

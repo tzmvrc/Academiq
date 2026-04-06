@@ -20,7 +20,7 @@ interface User {
 
 const Peers = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  // const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
 
@@ -49,7 +49,6 @@ const Peers = () => {
         }));
 
         setUsers(usersWithFollow);
-        setFollowingIds(followingIdsSet);
       } catch (err) {
         console.error("Error fetching peers data:", err);
         toast({ title: "Failed to load peers", variant: "destructive" });
@@ -75,11 +74,6 @@ const Peers = () => {
             user.id === userId ? { ...user, is_followed: false } : user,
           ),
         );
-        setFollowingIds((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(userId);
-          return newSet;
-        });
         toast({ title: `Unfollowed ${name}` });
       } else {
         await axiosInstance.post(`/peers/${userId}/follow`);
@@ -88,7 +82,6 @@ const Peers = () => {
             user.id === userId ? { ...user, is_followed: true } : user,
           ),
         );
-        setFollowingIds((prev) => new Set(prev).add(userId));
         toast({ title: `Following ${name}` });
       }
     } catch (err: any) {

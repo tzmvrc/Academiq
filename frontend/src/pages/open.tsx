@@ -87,9 +87,9 @@ const SecretChat = () => {
 
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");
-  const searchInputRef = useRef(null);
-  const messagesEndRef = useRef(null);
-  const globalMessagesEndRef = useRef(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const globalMessagesEndRef = useRef<HTMLDivElement>(null);
 
   const filteredUsers = useMemo(() => {
     if (!userSearchQuery.trim()) return allUsers;
@@ -151,7 +151,7 @@ const SecretChat = () => {
     if (!currentUser) return;
     try {
       const { data } = await axiosInstance.get("/open/global-messages");
-      const formatted = data.messages.map((msg) => ({
+      const formatted = data.messages.map((msg: any) => ({
         id: msg.id,
         user: msg.users.name,
         userId: msg.users.id,
@@ -163,11 +163,12 @@ const SecretChat = () => {
         reactions: msg.reactions || [],
       }));
       const unique = formatted.filter(
-        (msg, index, self) => self.findIndex((m) => m.id === msg.id) === index,
+        (msg: any, index: any, self: any) =>
+          self.findIndex((m: any) => m.id === msg.id) === index,
       );
       setGlobalMessages(unique);
-      const reactionsMap = {};
-      unique.forEach((msg) => {
+      const reactionsMap: Record<string, any> = {};
+      unique.forEach((msg: any) => {
         if (msg.reactions?.length) {
           reactionsMap[msg.id] = msg.reactions;
         }
@@ -184,8 +185,9 @@ const SecretChat = () => {
     try {
       const { data } = await axiosInstance.get("/open/dm-conversations");
       const sorted = [...data.conversations].sort(
-        (a, b) =>
-          new Date(b.last_msg_time || 0) - new Date(a.last_msg_time || 0),
+        (a: any, b: any) =>
+          new Date(b.last_msg_time || 0).getTime() -
+          new Date(a.last_msg_time || 0).getTime(),
       );
       setConversations(sorted);
     } catch (err) {
@@ -197,10 +199,10 @@ const SecretChat = () => {
     if (!currentUser) return;
     try {
       const { data } = await axiosInstance.get("/auth/users");
-      const filtered = data.users.filter((u) => u.id !== currentUser.id);
+      const filtered = data.users.filter((u: any) => u.id !== currentUser.id);
       const unique = filtered.filter(
-        (user, index, self) =>
-          self.findIndex((u) => u.id === user.id) === index,
+        (user: any, index: any, self: any) =>
+          self.findIndex((u: any) => u.id === user.id) === index,
       );
       setAllUsers(unique);
     } catch (err) {
@@ -208,12 +210,12 @@ const SecretChat = () => {
     }
   }, [currentUser]);
 
-  const fetchDmMessages = useCallback(async (conversationId) => {
+  const fetchDmMessages = useCallback(async (conversationId: any) => {
     try {
       const { data } = await axiosInstance.get(
         `/open/dm-messages/${conversationId}`,
       );
-      const formatted = data.messages.map((msg) => ({
+      const formatted = data.messages.map((msg: any) => ({
         id: msg.id,
         user: msg.sender.name,
         userId: msg.sender.id,
@@ -225,11 +227,12 @@ const SecretChat = () => {
         reactions: msg.reactions || [],
       }));
       const unique = formatted.filter(
-        (msg, index, self) => self.findIndex((m) => m.id === msg.id) === index,
+        (msg: any, index: any, self: any) =>
+          self.findIndex((m: any) => m.id === msg.id) === index,
       );
       setDmMessages(unique);
-      const reactionsMap = {};
-      unique.forEach((msg) => {
+      const reactionsMap: Record<string, any> = {};
+      unique.forEach((msg: any) => {
         if (msg.reactions?.length) {
           reactionsMap[msg.id] = msg.reactions;
         }
@@ -253,7 +256,7 @@ const SecretChat = () => {
 
     socket.emit("join_global");
 
-    const onGlobalMessage = (msg) => {
+    const onGlobalMessage = (msg: any) => {
       const formatted = {
         id: msg.id,
         user: msg.users.name,
@@ -271,7 +274,7 @@ const SecretChat = () => {
       });
     };
 
-    const onDmMessage = (msg) => {
+    const onDmMessage = (msg: any) => {
       setConversations((prev) => {
         const updated = prev.map((c) =>
           c.id === msg.conversation_id
@@ -284,8 +287,9 @@ const SecretChat = () => {
             : c,
         );
         return updated.sort(
-          (a, b) =>
-            new Date(b.last_msg_time || 0) - new Date(a.last_msg_time || 0),
+          (a: any, b: any) =>
+            new Date(b.last_msg_time || 0).getTime() -
+            new Date(a.last_msg_time || 0).getTime(),
         );
       });
 
@@ -318,7 +322,7 @@ const SecretChat = () => {
       }
     };
 
-    const onUserStatus = ({ userId, status }) => {
+    const onUserStatus = ({ userId, status }: any) => {
       setOnlineUsers((prev) => {
         const newSet = new Set(prev);
         if (status === "online") newSet.add(userId);
@@ -327,7 +331,7 @@ const SecretChat = () => {
       });
     };
 
-    const onOnlineUsersList = (userIds) => {
+    const onOnlineUsersList = (userIds: any) => {
       setOnlineUsers(new Set(userIds));
     };
 
@@ -338,13 +342,15 @@ const SecretChat = () => {
       reaction,
       userName,
       conversationId,
-    }) => {
+    }: any) => {
       const newReaction = { userId, reaction, userName };
       if (messageType === "global") {
         setGlobalReactions((prev) => {
           const existing = prev[messageId] || [];
           if (
-            existing.some((r) => r.userId === userId && r.reaction === reaction)
+            existing.some(
+              (r: any) => r.userId === userId && r.reaction === reaction,
+            )
           )
             return prev;
           return { ...prev, [messageId]: [...existing, newReaction] };
@@ -353,7 +359,9 @@ const SecretChat = () => {
         setDmReactions((prev) => {
           const existing = prev[messageId] || [];
           if (
-            existing.some((r) => r.userId === userId && r.reaction === reaction)
+            existing.some(
+              (r: any) => r.userId === userId && r.reaction === reaction,
+            )
           )
             return prev;
           return { ...prev, [messageId]: [...existing, newReaction] };
@@ -374,12 +382,12 @@ const SecretChat = () => {
       userId,
       reaction,
       conversationId,
-    }) => {
+    }: any) => {
       if (messageType === "global") {
         setGlobalReactions((prev) => {
           const existing = prev[messageId] || [];
           const filtered = existing.filter(
-            (r) => !(r.userId === userId && r.reaction === reaction),
+            (r: any) => !(r.userId === userId && r.reaction === reaction),
           );
           if (filtered.length === 0) {
             const { [messageId]: _, ...rest } = prev;
@@ -391,7 +399,7 @@ const SecretChat = () => {
         setDmReactions((prev) => {
           const existing = prev[messageId] || [];
           const filtered = existing.filter(
-            (r) => !(r.userId === userId && r.reaction === reaction),
+            (r: any) => !(r.userId === userId && r.reaction === reaction),
           );
           if (filtered.length === 0) {
             const { [messageId]: _, ...rest } = prev;
@@ -504,7 +512,12 @@ const SecretChat = () => {
     }
   };
 
-  const handleReaction = async (messageId, messageType, reaction, action) => {
+  const handleReaction = async (
+    messageId: any,
+    messageType: any,
+    reaction: any,
+    action: any,
+  ) => {
     try {
       if (action === "add") {
         await axiosInstance.post("/open/reactions", {
@@ -523,7 +536,7 @@ const SecretChat = () => {
     }
   };
 
-  const startNewDM = async (user) => {
+  const startNewDM = async (user: any) => {
     try {
       const { data } = await axiosInstance.post("/open/dm-conversations", {
         userId: user.id,
@@ -542,7 +555,7 @@ const SecretChat = () => {
     }
   };
 
-  const formatLastMsg = (conv, currentUserId) => {
+  const formatLastMsg = (conv: any, currentUserId: any) => {
     if (!conv.last_msg) return "No messages yet";
     if (conv.last_msg_sender_id === currentUserId) {
       return `You: ${conv.last_msg.substring(0, 50)}${conv.last_msg.length > 50 ? "..." : ""}`;

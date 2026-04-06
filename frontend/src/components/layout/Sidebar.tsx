@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axiosInstance, { clearAuth } from "@/integration/axiosInstance";
 import { cn } from "@/lib/utils";
 import {
@@ -199,7 +198,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 Cancel
               </BrutalButton>
               <BrutalButton
-                variant="primary"
+                variant="destructive"
                 onClick={handleLogout}
                 disabled={loggingOut}>
                 {loggingOut ? "Logging out..." : "Yes, Logout"}

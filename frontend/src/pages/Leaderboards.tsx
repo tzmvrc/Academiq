@@ -110,7 +110,7 @@ const Leaderboards = () => {
 
   const LIMIT = 10;
   const fetchLeaderboardRef =
-    useRef<(reset: boolean, school?: string | null) => Promise<void>>();
+    useRef<(reset?: boolean, school?: string | null) => Promise<void>>(null);
   const prevCategoryRef = useRef<Category>("global");
   const hasFetchedMyInfoRef = useRef(false);
 
