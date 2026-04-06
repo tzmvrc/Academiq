@@ -173,6 +173,21 @@ const buildCommentTree = (
   return roots;
 };
 
+const sortRepliesRecursively = (commentsList: Comment[]): Comment[] => {
+  return commentsList.map((comment) => ({
+    ...comment,
+    replies: comment.replies
+      ? sortRepliesRecursively(
+          [...comment.replies].sort(
+            (a, b) =>
+              new Date(b.originalCreatedAt).getTime() -
+              new Date(a.originalCreatedAt).getTime(),
+          ),
+        )
+      : [],
+  }));
+};
+
 const countCommentsRecursive = (list: Comment[]): number =>
   list.reduce((total, item) => {
     return total + 1 + countCommentsRecursive(item.replies || []);
@@ -573,12 +588,15 @@ const PostDetails = () => {
           replies: [],
         };
 
+        // Inside onCommentCreated, when parent_comment_id exists:
         if (comment.parent_comment_id) {
-          // Insert as reply
           const insertReply = (list: Comment[]): Comment[] =>
             list.map((c) => {
               if (c.id === comment.parent_comment_id) {
-                return { ...c, replies: [...(c.replies || []), newComment] };
+                return {
+                  ...c,
+                  replies: [newComment, ...(c.replies || [])], // prepend
+                };
               }
               if (c.replies) {
                 return { ...c, replies: insertReply(c.replies) };
@@ -587,7 +605,7 @@ const PostDetails = () => {
             });
           return insertReply(prev);
         } else {
-          // Top-level comment
+          // Top‑level comment – prepend to keep newest first
           return [newComment, ...prev];
         }
       });
@@ -690,10 +708,9 @@ const PostDetails = () => {
           if (comment.id === parentCommentId) {
             return {
               ...comment,
-              replies: [...(comment.replies || []), mappedReply],
+              replies: [mappedReply, ...(comment.replies || [])], // prepend
             };
           }
-
           return {
             ...comment,
             replies: comment.replies
@@ -801,7 +818,8 @@ const PostDetails = () => {
           new Date(b.originalCreatedAt).getTime() -
           new Date(a.originalCreatedAt).getTime(),
       );
-      setComments(tree);
+      const sortedTree = sortRepliesRecursively(tree);
+      setComments(sortedTree);
 
       if (saveRes?.data) {
         setSaved(!!saveRes.data.saved);
