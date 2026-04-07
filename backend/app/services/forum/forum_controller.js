@@ -8,6 +8,7 @@ import { VotesModel } from "../../models/votes_model.js";
 import { UserModel } from "../../models/user_model.js";
 import { supabase } from "../../database/supabase.js";
 import { addWatermarkToPDF } from "../watermark/watermarkService.js";
+import { generateForumEmbedding } from "../embedding/embeddingService.js";
 
 const POST_DOCUMENT_BUCKET = "post_document";
 
@@ -240,6 +241,12 @@ export const ForumsController = {
       const userId = req.user?.id;
       if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
+      // Fetch user details for watermarking (and embedding)
+      const user = await UserModel.findById(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      const userName = user.name || "User";
+      const schoolName = user.school || "School";
+
       // Accept tagIds (instead of topicIds)
       let { tagIds = [], subject, subject_id, title, content } = req.body;
 
@@ -294,6 +301,27 @@ export const ForumsController = {
       if (Array.isArray(tagIds) && tagIds.length > 0) {
         await setForumTags(forum.id, tagIds);
       }
+
+      // --- ASYNC: Generate embedding for this forum ---
+      setImmediate(async () => {
+        try {
+          const { generateForumEmbedding } =
+            await import("../embedding/embeddingService.js");
+          const embedding = await generateForumEmbedding(title, content);
+          if (embedding) {
+            await supabase
+              .from("forums")
+              .update({ embedding })
+              .eq("id", forum.id);
+            console.log(`✅ Embedding stored for forum ${forum.id}`);
+          }
+        } catch (err) {
+          console.error(
+            `Failed to generate embedding for forum ${forum.id}:`,
+            err,
+          );
+        }
+      });
 
       return res.status(201).json({ forum });
     } catch (err) {
@@ -375,6 +403,25 @@ export const ForumsController = {
       // Update tags if tagIds were provided
       if (tagIds !== undefined) {
         await setForumTags(id, tagIds);
+      }
+
+      // --- ASYNC: Regenerate embedding if title or content changed ---
+      const titleChanged = title !== existingForum.title;
+      const contentChanged = content !== existingForum.content;
+      if (titleChanged || contentChanged) {
+        setImmediate(async () => {
+          try {
+            const { generateForumEmbedding } =
+              await import("../embedding/embeddingService.js");
+            const embedding = await generateForumEmbedding(title, content);
+            if (embedding) {
+              await supabase.from("forums").update({ embedding }).eq("id", id);
+              console.log(`✅ Embedding updated for forum ${id}`);
+            }
+          } catch (err) {
+            console.error(`Failed to update embedding for forum ${id}:`, err);
+          }
+        });
       }
 
       return res.json({ forum: updatedForum });

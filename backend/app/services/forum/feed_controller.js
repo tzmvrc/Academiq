@@ -1,10 +1,10 @@
 import { supabase } from "../../database/supabase.js";
 import { UserModel } from "../../models/user_model.js";
 import { UserInterestsModel } from "../../models/user_interests_model.js";
-import { MutualConnectionsModel } from "../../models/mutual_connections_model.js";
 import { ActivityService } from "../activity_service.js";
+import { computeUserInterestVector } from "../embedding/userInterestService.js";
 
-// Helper: get forum details with tags and subject
+// Helper: get forum details with tags and subject (unchanged)
 const enrichForum = async (forum, currentUserId) => {
   // fetch tags and subject
   const { data: tags } = await supabase
@@ -51,12 +51,8 @@ const enrichForum = async (forum, currentUserId) => {
 
 export const FeedController = {
   /**
-   * Enhanced personalized feed with intelligent ranking:
-   * 1. Followed subjects (35% weight)
-   * 2. Posts from followed peers (25% weight)
-   * 3. Content-based interests (25% weight)
-   * 4. Trending/engagement (10% weight)
-   * 5. Recency boost (5% weight)
+   * Personalized feed with 30‑minute expiry on interest vector.
+   * Uses semantic similarity + secondary ranking.
    */
   async getPersonalizedFeed(req, res) {
     try {
@@ -69,120 +65,226 @@ export const FeedController = {
       const parsedLimit = parseInt(limit);
       const parsedOffset = parseInt(offset);
 
-      // 1. Fetch all necessary data in parallel
-      const [followedSubjectsData, followedUsersData, userInterestsData] =
-        await Promise.all([
-          supabase
-            .from("user_subjects")
-            .select("subject_id")
-            .eq("user_id", userId),
-          supabase
-            .from("user_follows")
-            .select("following_id")
-            .eq("follower_id", userId),
-          UserInterestsModel.getUserTopInterests(userId, 10),
-        ]);
+      console.log("🔍 Feed: checking user interest vector for user", userId);
+      // 1. Get or compute user interest vector with 30‑minute expiry
+      let userVector = null;
+      const { data: stored } = await supabase
+        .from("user_interest_vectors")
+        .select("interest_vector, updated_at")
+        .eq("user_id", userId)
+        .single();
 
-      const followedSubjectIds =
-        followedSubjectsData.data?.map((s) => s.subject_id) || [];
-      const followedUserIds =
-        followedUsersData.data?.map((f) => f.following_id) || [];
-      const topInterestTopics = new Set(
-        userInterestsData.map((i) => i.content_topic),
-      );
+      const vectorAgeMinutes = stored?.updated_at
+        ? (Date.now() - new Date(stored.updated_at).getTime()) / (1000 * 60)
+        : Infinity;
 
-      // 2. Build a comprehensive forums query - fetch ALL forums for ranking
-      // No date filter - get ALL forums and apply personalization ranking
-      const { data: allForums, error } = await supabase.from("forums").select(
-        `
+      if (stored?.interest_vector && vectorAgeMinutes < 30) {
+        console.log(
+          `🔍 Using stored vector (age: ${vectorAgeMinutes.toFixed(1)} minutes)`,
+        );
+        userVector = stored.interest_vector;
+      } else {
+        console.log(
+          `🔍 Vector missing or stale (age: ${vectorAgeMinutes === Infinity ? "none" : vectorAgeMinutes.toFixed(1)} minutes) – recomputing...`,
+        );
+        userVector = await computeUserInterestVector(userId);
+        console.log(
+          "🔍 After compute, userVector =",
+          userVector ? "received" : "null",
+        );
+      }
+
+      let candidateForums = [];
+      let total = 0;
+
+      // 2. If we have a vector, get semantically similar forums
+      if (userVector) {
+        console.log("🔍 Calling get_semantic_suggestions with vector");
+        const { data: similar, error: vecErr } = await supabase.rpc(
+          "get_semantic_suggestions",
+          {
+            query_vector: userVector,
+            max_results: 200,
+          },
+        );
+        if (vecErr) {
+          console.error("❌ Vector search error:", vecErr);
+        } else if (similar) {
+          console.log(`✅ Got ${similar.length} similar forums`);
+          candidateForums = similar.map((item) => ({
+            id: item.id,
+            title: item.title,
+            content: item.content,
+            subject_id: item.subject_id,
+            created_at: item.created_at,
+            similarity_score: item.similarity_score,
+            user: item.user_data,
+            subject: item.subject,
+            forum_tags: item.forum_tags,
+            upvotes_count: item.upvotes_count,
+            downvotes_count: item.downvotes_count,
+            comments_count: item.comments_count,
+          }));
+          total = candidateForums.length;
+        }
+      }
+
+      // 3. If no vector or no results, fallback to traditional ranking (fetch all forums)
+      if (!userVector || candidateForums.length === 0) {
+        console.log("🔍 Falling back to traditional ranking");
+        // Fetch all data needed for fallback ranking
+        const [followedSubjectsData, followedUsersData, userInterestsData] =
+          await Promise.all([
+            supabase
+              .from("user_subjects")
+              .select("subject_id")
+              .eq("user_id", userId),
+            supabase
+              .from("user_follows")
+              .select("following_id")
+              .eq("follower_id", userId),
+            UserInterestsModel.getUserTopInterests(userId, 10),
+          ]);
+
+        const followedSubjectIds =
+          followedSubjectsData.data?.map((s) => s.subject_id) || [];
+        const followedUserIds =
+          followedUsersData.data?.map((f) => f.following_id) || [];
+        const topInterestTopics = new Set(
+          userInterestsData.map((i) => i.content_topic),
+        );
+
+        const { data: allForums, error: allErr } = await supabase
+          .from("forums")
+          .select(
+            `
           *,
           user:user_id(id, name, profile_url, school),
           subject:subject_id(id, name),
           forum_tags(tag:tag_id(id, name, slug, usage_count))
         `,
-      );
-
-      if (error) throw error;
-
-      // 3. Score each forum based on multiple signals
-      const rankedForums = allForums.map((forum) => {
-        let score = 0;
-        let reasonsArray = [];
-
-        // Signal 1: Followed subjects (35% weight) - normalized to 0-1
-        if (followedSubjectIds.includes(forum.subject_id)) {
-          score += 0.35;
-          reasonsArray.push("subject");
-        }
-
-        // Signal 2: Posts from followed users (25% weight)
-        if (followedUserIds.includes(forum.user_id)) {
-          score += 0.25;
-          reasonsArray.push("peer");
-        }
-
-        // Signal 3: Content-based interests (25% weight)
-        const forumTags = (forum.forum_tags || [])
-          .map((ft) => ft.tag?.name?.toLowerCase())
-          .filter(Boolean);
-        let interestMatch = 0;
-        for (const tag of forumTags) {
-          if (topInterestTopics.has(tag)) {
-            interestMatch += 1;
-          }
-        }
-        if (interestMatch > 0 && topInterestTopics.size > 0) {
-          const interestScore = Math.min(
-            0.25,
-            (interestMatch / topInterestTopics.size) * 0.25,
           );
-          score += interestScore;
-          reasonsArray.push("interest");
-        }
+        if (allErr) throw allErr;
 
-        // Signal 4: Trending/Engagement (10% weight)
-        const engagementScore = ActivityService.calculateEngagementScore(forum);
-        const normalizedEngagement = Math.min(0.1, engagementScore * 0.01); // Normalize
-        score += normalizedEngagement;
-        if (engagementScore > 0) reasonsArray.push("trending");
+        // Score each forum (same as original)
+        candidateForums = allForums.map((forum) => {
+          let score = 0;
+          if (followedSubjectIds.includes(forum.subject_id)) score += 0.35;
+          if (followedUserIds.includes(forum.user_id)) score += 0.25;
 
-        // Signal 5: Recency boost (5% weight)
-        const recencyBoost = ActivityService.calculateRecencyBoost(
-          forum.created_at,
+          const forumTags = (forum.forum_tags || [])
+            .map((ft) => ft.tag?.name?.toLowerCase())
+            .filter(Boolean);
+          let interestMatch = 0;
+          for (const tag of forumTags) {
+            if (topInterestTopics.has(tag)) interestMatch++;
+          }
+          if (interestMatch > 0 && topInterestTopics.size > 0) {
+            score += Math.min(
+              0.25,
+              (interestMatch / topInterestTopics.size) * 0.25,
+            );
+          }
+
+          const engagementScore =
+            ActivityService.calculateEngagementScore(forum);
+          score += Math.min(0.1, engagementScore * 0.01);
+          const recencyBoost = ActivityService.calculateRecencyBoost(
+            forum.created_at,
+          );
+          score += (recencyBoost - 1.0) * 0.05;
+
+          return { ...forum, feedScore: score };
+        });
+
+        candidateForums.sort((a, b) => {
+          if (b.feedScore !== a.feedScore) return b.feedScore - a.feedScore;
+          return new Date(b.created_at) - new Date(a.created_at);
+        });
+        total = candidateForums.length;
+        console.log(`📊 Fallback total forums: ${total}`);
+      } else {
+        // 4. Apply secondary ranking on the candidate set (from vector search)
+        console.log("🔍 Applying secondary ranking on vector candidates");
+        const [followedSubjectsData, followedUsersData, userInterestsData] =
+          await Promise.all([
+            supabase
+              .from("user_subjects")
+              .select("subject_id")
+              .eq("user_id", userId),
+            supabase
+              .from("user_follows")
+              .select("following_id")
+              .eq("follower_id", userId),
+            UserInterestsModel.getUserTopInterests(userId, 10),
+          ]);
+
+        const followedSubjectIds =
+          followedSubjectsData.data?.map((s) => s.subject_id) || [];
+        const followedUserIds =
+          followedUsersData.data?.map((f) => f.following_id) || [];
+        const topInterestTopics = new Set(
+          userInterestsData.map((i) => i.content_topic),
         );
-        const recencyScore = (recencyBoost - 1.0) * 0.05; // 0 to 0.05
-        score += recencyScore;
 
-        return {
-          ...forum,
-          feedScore: score,
-          scoringReasons: reasonsArray,
-        };
-      });
+        const scored = candidateForums.map((forum) => {
+          let score = 0;
+          if (followedSubjectIds.includes(forum.subject_id)) score += 0.2;
+          if (followedUserIds.includes(forum.user_id)) score += 0.15;
 
-      // 4. Sort by score, then by recency
-      rankedForums.sort((a, b) => {
-        if (b.feedScore !== a.feedScore) {
-          return b.feedScore - a.feedScore;
-        }
-        return new Date(b.created_at) - new Date(a.created_at);
-      });
+          const forumTags = (forum.forum_tags || [])
+            .map((ft) => ft.tag?.name?.toLowerCase())
+            .filter(Boolean);
+          let interestMatch = 0;
+          for (const tag of forumTags) {
+            if (topInterestTopics.has(tag)) interestMatch++;
+          }
+          if (interestMatch > 0 && topInterestTopics.size > 0) {
+            score += Math.min(
+              0.15,
+              (interestMatch / topInterestTopics.size) * 0.15,
+            );
+          }
+
+          const engagementScore =
+            ActivityService.calculateEngagementScore(forum);
+          score += Math.min(0.1, engagementScore * 0.01);
+          const recencyBoost = ActivityService.calculateRecencyBoost(
+            forum.created_at,
+          );
+          score += (recencyBoost - 1.0) * 0.05;
+
+          const similarityBonus = (forum.similarity_score || 0) * 0.5;
+          score += similarityBonus;
+
+          return { ...forum, feedScore: score };
+        });
+
+        scored.sort((a, b) => {
+          if (b.feedScore !== a.feedScore) return b.feedScore - a.feedScore;
+          return new Date(b.created_at) - new Date(a.created_at);
+        });
+        candidateForums = scored;
+        total = candidateForums.length;
+        console.log(`📊 Vector + ranking total forums: ${total}`);
+      }
 
       // 5. Apply pagination
-      const paginatedForums = rankedForums.slice(
+      const paginatedForums = candidateForums.slice(
         parsedOffset,
         parsedOffset + parsedLimit,
       );
+      const hasMore = parsedOffset + parsedLimit < total;
 
-      // 6. Enrich each forum with tags, votes, saves
+      // 6. Enrich each forum (adds tags, vote state, etc.)
       const enriched = await Promise.all(
         paginatedForums.map((forum) => enrichForum(forum, userId)),
       );
 
       res.json({
         forums: enriched,
-        hasMore: parsedOffset + parsedLimit < rankedForums.length,
-        total: rankedForums.length,
+        hasMore,
+        total,
       });
     } catch (err) {
       console.error("Feed error:", err);
@@ -190,7 +292,7 @@ export const FeedController = {
     }
   },
 
-  // Get "People You May Know" with mutual connections
+  // Get "People You May Know" with mutual connections (unchanged)
   async getPeopleYouMayKnow(req, res) {
     try {
       const userId = req.user?.id;
@@ -207,7 +309,6 @@ export const FeedController = {
       const followingIds = myFollowing?.map((f) => f.following_id) || [];
 
       // Step 2: Get who the users I follow... follow (for mutual detection)
-      // Mutual = user I'm suggesting is followed by someone I follow
       let usersThatFollowMyFollows = new Set();
 
       if (followingIds.length > 0) {
@@ -278,7 +379,7 @@ export const FeedController = {
     }
   },
 
-  // Log user activity (call from other controllers)
+  // Log user activity (call from other controllers) – unchanged
   async logActivity(userId, forumId, actionType) {
     try {
       await supabase.from("user_activity").insert({

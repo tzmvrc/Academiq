@@ -15,48 +15,69 @@ interface User {
   points: number;
   followers_count: number;
   following_count: number;
+  mutual_count?: number; // new
   is_followed?: boolean;
 }
 
 const Peers = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  // const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(true);
+  const [followedUsers, setFollowedUsers] = useState<User[]>([]);
+  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
+  const [isLoadingFollowed, setIsLoadingFollowed] = useState(true);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
 
   const [showAllFollowed, setShowAllFollowed] = useState(false);
   const [showAllDiscover, setShowAllDiscover] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Fetch followed users (Your Network)
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchFollowedUsers = async () => {
       try {
-        setIsLoading(true);
-        const usersRes = await axiosInstance.get("/peers/users");
-        const allUsers = usersRes.data.users || [];
-
+        setIsLoadingFollowed(true);
         const followingRes = await axiosInstance.get(
           "/peers/users/me/following",
         );
         const following = followingRes.data.following || [];
-        const followingIdsSet: Set<string> = new Set(
-          following.map((f: any) => f.following.id),
-        );
-
-        const usersWithFollow = allUsers.map((user: User) => ({
-          ...user,
-          is_followed: followingIdsSet.has(user.id),
+        const followedUsersList = following.map((f: any) => ({
+          ...f.following,
+          is_followed: true,
         }));
-
-        setUsers(usersWithFollow);
+        setFollowedUsers(followedUsersList);
       } catch (err) {
-        console.error("Error fetching peers data:", err);
-        toast({ title: "Failed to load peers", variant: "destructive" });
+        console.error("Error fetching followed users:", err);
+        toast({ title: "Failed to load your network", variant: "destructive" });
       } finally {
-        setIsLoading(false);
+        setIsLoadingFollowed(false);
       }
     };
-    fetchData();
+    fetchFollowedUsers();
+  }, []);
+
+  // Fetch suggested users (People You May Know) with mutual counts
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      try {
+        setIsLoadingSuggestions(true);
+        // Use the same endpoint as Index.tsx
+        const response = await axiosInstance.get(
+          "/forums/suggestions/people?limit=20",
+        );
+        const users = response.data.users || [];
+        // Add is_followed = false for suggestions
+        const usersWithFollow = users.map((user: any) => ({
+          ...user,
+          is_followed: false,
+        }));
+        setSuggestedUsers(usersWithFollow);
+      } catch (err) {
+        console.error("Error fetching suggestions:", err);
+        toast({ title: "Failed to load suggestions", variant: "destructive" });
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    };
+    fetchSuggestions();
   }, []);
 
   const toggleFollow = async (
@@ -69,19 +90,21 @@ const Peers = () => {
     try {
       if (isFollowed) {
         await axiosInstance.delete(`/peers/${userId}/unfollow`);
-        setUsers((prev) =>
-          prev.map((user) =>
-            user.id === userId ? { ...user, is_followed: false } : user,
-          ),
-        );
+        // Remove from followed list and maybe add to suggestions? For simplicity, just refetch.
+        setFollowedUsers((prev) => prev.filter((u) => u.id !== userId));
+        // Optionally move user to suggestions – but we'll just refresh suggestions later
         toast({ title: `Unfollowed ${name}` });
       } else {
         await axiosInstance.post(`/peers/${userId}/follow`);
-        setUsers((prev) =>
-          prev.map((user) =>
-            user.id === userId ? { ...user, is_followed: true } : user,
-          ),
-        );
+        // Move user from suggestions to followed
+        const followedUser = suggestedUsers.find((u) => u.id === userId);
+        if (followedUser) {
+          setFollowedUsers((prev) => [
+            { ...followedUser, is_followed: true },
+            ...prev,
+          ]);
+          setSuggestedUsers((prev) => prev.filter((u) => u.id !== userId));
+        }
         toast({ title: `Following ${name}` });
       }
     } catch (err: any) {
@@ -95,35 +118,26 @@ const Peers = () => {
     }
   };
 
-  const followedUsers = useMemo(
-    () => users.filter((u) => u.is_followed),
-    [users],
-  );
-  const discoverUsers = useMemo(
-    () => users.filter((u) => !u.is_followed),
-    [users],
-  );
-
-  const filteredDiscover = useMemo(() => {
-    if (!searchTerm.trim()) return discoverUsers;
-    return discoverUsers.filter((u) =>
+  const filteredSuggestions = useMemo(() => {
+    if (!searchTerm.trim()) return suggestedUsers;
+    return suggestedUsers.filter((u) =>
       u.name.toLowerCase().includes(searchTerm.toLowerCase()),
     );
-  }, [discoverUsers, searchTerm]);
+  }, [suggestedUsers, searchTerm]);
 
   const visibleFollowed = showAllFollowed
     ? followedUsers
     : followedUsers.slice(0, 6);
   const visibleDiscover = showAllDiscover
-    ? filteredDiscover
-    : filteredDiscover.slice(0, 6);
+    ? filteredSuggestions
+    : filteredSuggestions.slice(0, 6);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setShowAllDiscover(false);
   };
 
-  if (isLoading) {
+  if (isLoadingFollowed && isLoadingSuggestions) {
     return (
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8">
         <h1 className="text-xl sm:text-2xl font-heading font-bold text-foreground mb-2">
@@ -206,10 +220,9 @@ const Peers = () => {
                       {user.school}
                     </p>
                   )}
-
                   <div className="flex items-center justify-center gap-1 mt-3 text-xs text-muted-foreground">
                     <Star className="h-3 w-3 text-accent" />
-                    <span>{user.points.toLocaleString()} points</span>
+                    <span>{user.points?.toLocaleString() || 0} points</span>
                   </div>
                   <button
                     onClick={() => toggleFollow(user.id, user.name, true)}
@@ -234,9 +247,9 @@ const Peers = () => {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground">
-            Discover Other Peers
+            People You May Know
           </h2>
-          {filteredDiscover.length > 6 && !searchTerm && (
+          {filteredSuggestions.length > 6 && !searchTerm && (
             <button
               onClick={() => setShowAllDiscover(!showAllDiscover)}
               className="text-sm text-primary hover:underline">
@@ -258,73 +271,101 @@ const Peers = () => {
           </div>
         </div>
 
-        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {visibleDiscover.map((user) => {
-            const initials = user.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase()
-              .slice(0, 2);
-            return (
-              <motion.div
-                key={user.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="rounded-xl border border-border bg-card p-4 sm:p-5 text-center transition-all hover:shadow-md hover:border-primary/10">
-                <Link
-                  to={`/${encodeURIComponent(user.name)}`}
-                  className="block"
-                  onClick={(e) => e.stopPropagation()}>
-                  <div className="mx-auto mb-3 h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                    {user.profile_url ? (
-                      <img
-                        src={user.profile_url}
-                        alt={user.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-base sm:text-lg font-semibold text-primary">
-                        {initials}
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="font-heading font-semibold text-foreground text-sm">
-                    {user.name}
-                  </h3>
-                </Link>
-                {user.school && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {user.school}
-                  </p>
-                )}
-
-                <div className="flex items-center justify-center gap-1 mt-3 text-xs text-muted-foreground">
-                  <Star className="h-3 w-3 text-accent" />
-                  <span>{user.points.toLocaleString()} points</span>
-                </div>
-                <button
-                  onClick={() => toggleFollow(user.id, user.name, false)}
-                  disabled={loadingUserId === user.id}
-                  className="mt-4 w-full flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90">
-                  {loadingUserId === user.id ? (
-                    "Following..."
-                  ) : (
-                    <>
-                      <UserPlus className="h-3.5 w-3.5" /> Follow
-                    </>
-                  )}
-                </button>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {filteredDiscover.length === 0 && searchTerm && (
-          <div className="text-center py-8 text-muted-foreground">
-            No peers found matching "{searchTerm}"
+        {isLoadingSuggestions ? (
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <PeerCardSkeleton key={i} index={i} />
+            ))}
           </div>
+        ) : (
+          <>
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {visibleDiscover.map((user) => {
+                const initials = user.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2);
+                const isFollowed = user.is_followed || false;
+                return (
+                  <motion.div
+                    key={user.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="rounded-xl border border-border bg-card p-4 sm:p-5 text-center transition-all hover:shadow-md hover:border-primary/10">
+                    <Link
+                      to={`/${encodeURIComponent(user.name)}`}
+                      className="block"
+                      onClick={(e) => e.stopPropagation()}>
+                      <div className="mx-auto mb-3 h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                        {user.profile_url ? (
+                          <img
+                            src={user.profile_url}
+                            alt={user.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-base sm:text-lg font-semibold text-primary">
+                            {initials}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="font-heading font-semibold text-foreground text-sm">
+                        {user.name}
+                      </h3>
+                    </Link>
+                    {user.school && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {user.school}
+                      </p>
+                    )}
+
+                    <div className="flex flex-col gap-1 mt-2">
+                      {(user.mutual_count ?? 0) > 0 ? (
+                        <p className="text-[10px] text-accent font-medium">
+                          {user.mutual_count} mutual{" "}
+                          {user.mutual_count === 1
+                            ? "connection"
+                            : "connections"}
+                        </p>
+                      ) : (
+                        <div className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+                          <Star className="h-2.5 w-2.5 text-accent" />
+                          <span>
+                            {user.followers_count?.toLocaleString() || 0}{" "}
+                            followers
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        toggleFollow(user.id, user.name, isFollowed)
+                      }
+                      disabled={loadingUserId === user.id}
+                      className="mt-4 w-full flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90">
+                      {loadingUserId === user.id ? (
+                        "Following..."
+                      ) : (
+                        <>
+                          <UserPlus className="h-3.5 w-3.5" /> Follow
+                        </>
+                      )}
+                    </button>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {filteredSuggestions.length === 0 && searchTerm && (
+              <div className="text-center py-8 text-muted-foreground">
+                No peers found matching "{searchTerm}"
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
