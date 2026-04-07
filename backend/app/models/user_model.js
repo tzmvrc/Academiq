@@ -252,6 +252,4 @@ export const UserModel = {
     if (updateError) throw updateError;
     return newCount;
   },
-
-  
 };

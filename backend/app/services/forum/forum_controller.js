@@ -7,8 +7,11 @@ import { TagModel } from "../../models/tag_model.js";
 import { VotesModel } from "../../models/votes_model.js";
 import { UserModel } from "../../models/user_model.js";
 import { supabase } from "../../database/supabase.js";
+import { addWatermarkToPDF } from "../watermark/watermarkService.js";
 
 const POST_DOCUMENT_BUCKET = "post_document";
+
+import { ActivityService } from "../activity_service.js";
 
 const slugifyFileName = (name = "file") => {
   return name
@@ -19,8 +22,26 @@ const slugifyFileName = (name = "file") => {
     .replace(/^-+|-+$/g, "");
 };
 
-const uploadForumAttachment = async (file, userId) => {
+const uploadForumAttachment = async (file, userId, userName, schoolName) => {
   if (!file) return null;
+
+  let watermarkedBuffer = file.buffer;
+
+  // Apply watermark only to PDFs
+  if (file.mimetype === "application/pdf") {
+    try {
+      watermarkedBuffer = await addWatermarkToPDF(
+        file.buffer,
+        userName,
+        schoolName,
+      );
+      console.log(`✅ Watermarked PDF for user ${userId}`);
+    } catch (err) {
+      console.error("Watermarking failed, uploading original:", err);
+      // fallback to original buffer
+    }
+  }
+  // DOCX and other types are uploaded as‑is (no watermark)
 
   const ext = path.extname(file.originalname || "").toLowerCase();
   const baseName = slugifyFileName(file.originalname || "attachment");
@@ -28,14 +49,12 @@ const uploadForumAttachment = async (file, userId) => {
 
   const { error: uploadError } = await supabase.storage
     .from(POST_DOCUMENT_BUCKET)
-    .upload(filePath, file.buffer, {
+    .upload(filePath, watermarkedBuffer, {
       contentType: file.mimetype,
       upsert: false,
     });
 
-  if (uploadError) {
-    throw uploadError;
-  }
+  if (uploadError) throw uploadError;
 
   const { data: publicUrlData } = supabase.storage
     .from(POST_DOCUMENT_BUCKET)
@@ -87,56 +106,68 @@ export const ForumsController = {
   // GET /api/forums
   // inside ForumsController
   // In forum_controller.js
-async getAllForums(req, res) {
-  try {
-    const { subjectId, tagId, limit = 10, offset = 0 } = req.query;
-    const parsedLimit = parseInt(limit, 10);
-    const parsedOffset = parseInt(offset, 10);
+  async getAllForums(req, res) {
+    try {
+      const { subjectId, tagId, limit = 10, offset = 0 } = req.query;
+      const parsedLimit = parseInt(limit, 10);
+      const parsedOffset = parseInt(offset, 10);
 
-    let query = supabase.from("forums").select(`
+      let query = supabase.from("forums").select(
+        `
       *,
       user:user_id(id, name, profile_url, school),
       subject:subject_id(id, name),
       forum_tags( tag:tag_id(id, name, slug, usage_count) )
-    `, { count: "exact" });
+    `,
+        { count: "exact" },
+      );
 
-    if (subjectId) query = query.eq("subject_id", subjectId);
-    if (tagId) {
-      const { data: forumIds } = await supabase
-        .from("forum_tags")
-        .select("forum_id")
-        .eq("tag_id", tagId);
-      const ids = forumIds.map(ft => ft.forum_id);
-      if (ids.length === 0) return res.json({ forums: [], hasMore: false, total: 0 });
-      query = query.in("id", ids);
+      if (subjectId) query = query.eq("subject_id", subjectId);
+      if (tagId) {
+        const { data: forumIds } = await supabase
+          .from("forum_tags")
+          .select("forum_id")
+          .eq("tag_id", tagId);
+        const ids = forumIds.map((ft) => ft.forum_id);
+        if (ids.length === 0)
+          return res.json({ forums: [], hasMore: false, total: 0 });
+        query = query.in("id", ids);
+      }
+
+      const { data, error, count } = await query
+        .order("created_at", { ascending: false })
+        .range(parsedOffset, parsedOffset + parsedLimit - 1);
+
+      if (error) throw error;
+
+      const forums = data.map((forum) => ({
+        ...forum,
+        tags: (forum.forum_tags || []).map((ft) => ft.tag).filter(Boolean),
+        forum_tags: undefined,
+      }));
+
+      const hasMore = count
+        ? parsedOffset + parsedLimit < count
+        : data.length === parsedLimit;
+      res.json({ forums, hasMore, total: count || 0 });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch forums" });
     }
-
-    const { data, error, count } = await query
-      .order("created_at", { ascending: false })
-      .range(parsedOffset, parsedOffset + parsedLimit - 1);
-
-    if (error) throw error;
-
-    const forums = data.map(forum => ({
-      ...forum,
-      tags: (forum.forum_tags || []).map(ft => ft.tag).filter(Boolean),
-      forum_tags: undefined,
-    }));
-
-    const hasMore = count ? parsedOffset + parsedLimit < count : data.length === parsedLimit;
-    res.json({ forums, hasMore, total: count || 0 });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch forums" });
-  }
-},
+  },
 
   // GET /api/forums/:id
   async getForumById(req, res) {
     try {
       const { id } = req.params;
+      const userId = req.user?.id; // Optional - user might not be logged in
+
       const { data, error } = await ForumModel.findById(id);
-      if (error) throw error;
+      if (error)
+        if (userId && data) {
+          /* Line 162 omitted */
+        }
+
       res.json({ forum: data });
     } catch (err) {
       console.error("Get Forum Error:", err);
@@ -241,7 +272,12 @@ async getAllForums(req, res) {
         }
       }
 
-      const uploadedDocumentUrl = await uploadForumAttachment(req.file, userId);
+      const uploadedDocumentUrl = await uploadForumAttachment(
+        req.file,
+        userId,
+        userName,
+        schoolName,
+      );
 
       const payload = {
         title,
@@ -319,9 +355,14 @@ async getAllForums(req, res) {
       };
 
       if (req.file) {
+        const user = await UserModel.findById(userId);
+        const userName = user?.name || "User";
+        const schoolName = user?.school || "School";
         updatePayload.document_url = await uploadForumAttachment(
           req.file,
           userId,
+          userName,
+          schoolName,
         );
       }
 
@@ -394,6 +435,14 @@ async getAllForums(req, res) {
       // Fetch forum details to get owner and title
       const { data: forum, error: fErr } = await ForumModel.findById(forumId);
       if (fErr) throw fErr;
+
+      // Log voting activity (upvote or downvote)
+      const actionType = voteTypeNum === 1 ? "upvote" : "downvote";
+      ActivityService.logActivityAsync(userId, forumId, actionType, {
+        title: forum.title,
+        tags: forum.tags || [],
+        subject: forum.subject,
+      }).catch((err) => console.error("Failed to log vote:", err));
 
       // --- Notification: when someone votes on your forum (and not yourself) ---
       if (forum && forum.user_id !== userId) {

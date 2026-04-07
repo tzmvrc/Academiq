@@ -363,4 +363,77 @@ export const forumService = {
       return null;
     }
   },
+
+  // Get personalized feed (NEW)
+  async getPersonalizedFeed(params?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<{
+    forums: DiscussionCardProps[];
+    hasMore: boolean;
+    total: number;
+  }> {
+    try {
+      const query = new URLSearchParams();
+      if (params?.limit !== undefined)
+        query.append("limit", params.limit.toString());
+      if (params?.offset !== undefined)
+        query.append("offset", params.offset.toString());
+      const url = `/forums/feed?${query.toString()}`;
+
+      const response = await axiosInstance.get(url);
+      const currentUser = localStorage.getItem("user");
+      const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
+
+      const rawForums = response.data.forums || [];
+      const hasMore = response.data.hasMore === true;
+      const total = response.data.total || 0;
+
+      let forums = rawForums.map((forum: ForumResponse) =>
+        transformForumToDiscussion(forum, currentUserId),
+      );
+
+      if (currentUserId && forums.length) {
+        const forumsWithVotes = await Promise.all(
+          forums.map(async (forum: DiscussionCardProps) => {
+            try {
+              const voteState = await this.getUserVoteState(forum.id!);
+              return { ...forum, userVoteState: voteState };
+            } catch {
+              return forum;
+            }
+          }),
+        );
+        forums = forumsWithVotes;
+      }
+
+      return { forums, hasMore, total };
+    } catch (error) {
+      console.error("Failed to fetch personalized feed:", error);
+      // Fallback to regular forums
+      return this.getAllForums(params);
+    }
+  },
+
+  // Get people you may know recommendations (NEW)
+  async getPeopleYouMayKnow(limit = 1000): Promise<PeerUser[]> {
+    try {
+      const response = await axiosInstance.get(
+        `/forums/suggestions/people?limit=${limit}`,
+      );
+      return response.data.users || [];
+    } catch (error) {
+      console.error("Failed to fetch people suggestions:", error);
+      return [];
+    }
+  },
 };
+
+export interface PeerUser {
+  id: string;
+  name: string;
+  profile_url: string | null;
+  school: string | null;
+  followers_count: number;
+  mutual_count?: number;
+}

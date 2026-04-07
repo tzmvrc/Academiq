@@ -1,4 +1,6 @@
 import { ForumSavesModel } from "../../models/forumSaves_model.js";
+import { ActivityService } from "../activity_service.js";
+import { ForumModel } from "../../models/forum_model.js";
 
 export const ForumSavesController = {
   // POST /api/forums/:id/save
@@ -29,6 +31,14 @@ export const ForumSavesController = {
         if (error) throw error;
         message = "Forum saved";
         saved = true;
+
+        // Log save activity (only when saving, not unsaving)
+        const forum = await ForumModel.findById(forumId);
+        ActivityService.logActivityAsync(userId, forumId, "save", {
+          title: forum?.title,
+          tags: forum?.tags || [],
+          subject: forum?.subject,
+        }).catch((err) => console.error("Failed to log save:", err));
       }
 
       res.json({ message, saved });

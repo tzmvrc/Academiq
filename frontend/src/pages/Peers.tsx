@@ -206,11 +206,7 @@ const Peers = () => {
                       {user.school}
                     </p>
                   )}
-                  {user.bio && (
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                      {user.bio}
-                    </p>
-                  )}
+
                   <div className="flex items-center justify-center gap-1 mt-3 text-xs text-muted-foreground">
                     <Star className="h-3 w-3 text-accent" />
                     <span>{user.points.toLocaleString()} points</span>
@@ -303,11 +299,7 @@ const Peers = () => {
                     {user.school}
                   </p>
                 )}
-                {user.bio && (
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                    {user.bio}
-                  </p>
-                )}
+
                 <div className="flex items-center justify-center gap-1 mt-3 text-xs text-muted-foreground">
                   <Star className="h-3 w-3 text-accent" />
                   <span>{user.points.toLocaleString()} points</span>

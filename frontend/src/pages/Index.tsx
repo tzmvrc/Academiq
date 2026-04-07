@@ -38,10 +38,11 @@ interface PeerUser {
   name: string;
   profile_url: string | null;
   school: string | null;
-  bio: string | null;
-  points: number;
+  bio?: string | null;
+  points?: number;
   followers_count: number;
-  following_count: number;
+  following_count?: number;
+  mutual_count?: number;
   is_followed?: boolean;
 }
 
@@ -221,23 +222,37 @@ const Index = () => {
         const offset = pageRef.current * 10;
 
         const filters: {
-          subjectId?: string;
-          tagId?: string;
           limit?: number;
           offset?: number;
         } = {
           limit: 10,
           offset,
         };
-        if (subjectId) filters.subjectId = subjectId;
-        if (tagId) filters.tagId = tagId;
 
         console.log(
           `Loading forums with offset=${offset}, page=${pageRef.current}`,
         );
 
-        const { forums: newForums, hasMore: more } =
-          await forumService.getAllForums(filters);
+        // Use personalized feed when no filters, otherwise use filtered forums
+        let newForums;
+        let more;
+
+        if (!subjectId && !tagId) {
+          // Personalized feed
+          const result = await forumService.getPersonalizedFeed(filters);
+          newForums = result.forums;
+          more = result.hasMore;
+        } else {
+          // Filtered by subject or tag
+          const filterParams = {
+            ...(subjectId ? { subjectId } : {}),
+            ...(tagId ? { tagId } : {}),
+            ...filters,
+          };
+          const result = await forumService.getAllForums(filterParams);
+          newForums = result.forums;
+          more = result.hasMore;
+        }
 
         // Add saved state
         const forumsWithSaved = await Promise.all(
@@ -309,41 +324,51 @@ const Index = () => {
     }
   }, [inView, initialLoading, loadForums]);
 
-  // Load peers data (similar to Peers component)
+  // Load peers data (using new personalized suggestions)
   useEffect(() => {
     const fetchPeers = async () => {
       try {
         setPeersLoading(true);
-        const usersRes = await axiosInstance.get("/peers/users");
-        const allUsers = usersRes.data.users || [];
-
-        const followingRes = await axiosInstance.get(
-          "/peers/users/me/following",
-        );
-        const following = followingRes.data.following || [];
-        const followingIdsSet: Set<string> = new Set(
-          following.map((f: any) => f.following.id),
-        );
-
-        const usersWithFollow = allUsers.map((user: PeerUser) => ({
+        // Get 10 random unfollowed users, sorted by mutual connections
+        const suggestedUsers = await forumService.getPeopleYouMayKnow(10);
+        const usersWithFollow = suggestedUsers.map((user: any) => ({
           ...user,
-          is_followed: followingIdsSet.has(user.id),
+          is_followed: false, // These are suggestions, not follows
+          mutual_count: user.mutual_count,
         }));
-
         setPeers(usersWithFollow);
       } catch (err) {
-        console.error("Error fetching peers:", err);
-        toast({
-          title: "Failed to load people you may know",
-          variant: "destructive",
-        });
+        console.error("Error fetching peer suggestions:", err);
+        // Fallback: fetch general users
+        try {
+          const usersRes = await axiosInstance.get("/peers/users");
+          const allUsers = usersRes.data.users || [];
+          const followingRes = await axiosInstance.get(
+            "/peers/users/me/following",
+          );
+          const following = followingRes.data.following || [];
+          const followingIdsSet: Set<string> = new Set(
+            following.map((f: any) => f.following.id),
+          );
+          const usersWithFollow = allUsers.map((user: PeerUser) => ({
+            ...user,
+            is_followed: followingIdsSet.has(user.id),
+          }));
+          setPeers(usersWithFollow);
+        } catch (fallbackErr) {
+          console.error("Fallback peers fetch failed:", fallbackErr);
+          toast({
+            title: "Failed to load people you may know",
+            variant: "destructive",
+          });
+        }
       } finally {
         setPeersLoading(false);
       }
     };
 
     fetchPeers();
-  }, []);
+  }, [toast]);
 
   // Load subjects and popular tags for "Topics You May Like"
   useEffect(() => {
@@ -721,7 +746,7 @@ const Index = () => {
   );
 
   const PeopleSection = () => {
-    const visiblePeers = peers.slice(0, 6);
+    const visiblePeers = peers.slice(0, 10);
 
     if (peersLoading) {
       return (
@@ -799,14 +824,21 @@ const Index = () => {
                     {user.school}
                   </p>
                 )}
-                {user.bio && (
-                  <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">
-                    {user.bio}
-                  </p>
-                )}
-                <div className="flex items-center justify-center gap-1 mt-2 text-[10px] text-muted-foreground">
-                  <Star className="h-2.5 w-2.5 text-accent" />
-                  <span>{user.points?.toLocaleString() || 0} pts</span>
+
+                <div className="flex flex-col gap-1 mt-2">
+                  {(user.mutual_count ?? 0) > 0 ? (
+                    <p className="text-[10px] text-accent font-medium">
+                      {user.mutual_count} mutual{" "}
+                      {user.mutual_count === 1 ? "connection" : "connections"}
+                    </p>
+                  ) : (
+                    <div className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+                      <Star className="h-2.5 w-2.5 text-accent" />
+                      <span>
+                        {user.followers_count?.toLocaleString() || 0} followers
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <button

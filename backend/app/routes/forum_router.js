@@ -5,6 +5,7 @@ import { ForumSavesController } from "../services/forum/forumSaves_controller.js
 import { CommentsController } from "../services/comment/comment_controller.js";
 import { authMiddleware } from "../middlewares/auth_middleware.js";
 import { OnboardingController } from "../services/forum/Onboarding_controller.js";
+import { FeedController } from "../services/forum/feed_controller.js";
 
 const router = express.Router();
 
@@ -33,6 +34,12 @@ router.post("/my-subjects", authMiddleware, OnboardingController.saveSubjects);
 
 // routes/forum_router.js
 router.get("/trending-academic", ForumsController.getTrendingAcademicForums);
+router.get("/feed", authMiddleware, FeedController.getPersonalizedFeed);
+router.get(
+  "/suggestions/people",
+  authMiddleware,
+  FeedController.getPeopleYouMayKnow,
+);
 
 /* -----------------------
    Forums (Public)

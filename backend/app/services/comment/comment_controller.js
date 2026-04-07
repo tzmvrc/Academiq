@@ -3,6 +3,7 @@ import { getIO } from "../../middlewares/socket.js";
 import { NotificationService } from "../../services/notification/notification_service.js";
 import { ForumModel } from "../../models/forum_model.js";
 import { UserModel } from "../../models/user_model.js";
+import { ActivityService } from "../activity_service.js";
 
 export const CommentsController = {
   // GET /api/forums/:id/comments
@@ -115,6 +116,13 @@ export const CommentsController = {
             },
           });
         }
+
+        // Log comment activity (non-blocking)
+        ActivityService.logActivityAsync(userId, forumId, "comment", {
+          title: forum?.title,
+          tags: forum?.tags || [],
+          subject: forum?.subject,
+        }).catch((err) => console.error("Failed to log comment:", err));
       }
 
       // Emit real-time event
