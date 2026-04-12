@@ -48,6 +48,7 @@ interface DiscussionCardProps {
   index?: number;
   isOwn?: boolean;
   isAuthor?: boolean;
+  created_at?: string;
   onVote?: (voteType: 1 | -1) => Promise<void>;
   onUnvote?: () => Promise<void>;
   onSave?: () => Promise<boolean | void>;
@@ -85,7 +86,35 @@ const getFileNameFromUrl = (url: string): string => {
   }
 };
 
-// Helper to determine file type and render appropriate embed
+// Helper to format creation date
+const formatCreationDate = (dateString?: string) => {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+  const diffDays = diffHours / 24;
+
+  if (diffHours < 1) {
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    if (diffMinutes < 1) return "just now";
+    return `${diffMinutes} minute${diffMinutes === 1 ? "" : "s"} ago`;
+  } else if (diffHours < 24) {
+    const hours = Math.floor(diffHours);
+    return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  } else if (diffDays < 7) {
+    const days = Math.floor(diffDays);
+    return `${days} day${days === 1 ? "" : "s"} ago`;
+  } else {
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+};
+
+// Helper to render document preview (unchanged)
 const renderDocumentPreview = (url: string) => {
   const lowerUrl = url.toLowerCase();
   if (lowerUrl.endsWith(".pdf")) {
@@ -114,7 +143,6 @@ const renderDocumentPreview = (url: string) => {
       </video>
     );
   }
-  // Fallback: show download link
   return (
     <div className="text-center p-8">
       <p className="text-muted-foreground mb-4">
@@ -161,6 +189,7 @@ const DiscussionCard = ({
   onEdit,
   onDelete,
   index = 0,
+  created_at,
 }: DiscussionCardProps) => {
   const navigate = useNavigate();
   const [upvoted, setUpvoted] = useState<boolean>(userVoteState === 1);
@@ -268,6 +297,7 @@ const DiscussionCard = ({
         isAiVerified,
         tag: field,
         isAuthor,
+        created_at,
       });
     }
     setShowMenu(false);
@@ -299,7 +329,8 @@ const DiscussionCard = ({
   const closePostModal = () => setIsPostModalOpen(false);
   const closeDocModal = () => setIsDocModalOpen(false);
 
-  // Modal for post preview (same as before)
+  const formattedDate = formatCreationDate(created_at);
+
   const renderPostModal = () => (
     <AnimatePresence>
       {isPostModalOpen && (
@@ -318,6 +349,7 @@ const DiscussionCard = ({
               <X className="h-5 w-5" />
             </button>
             <div className="p-6">
+              {/* ... modal content same as before ... */}
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                   {authorProfileUrl ? (
@@ -397,7 +429,6 @@ const DiscussionCard = ({
                         {getFileNameFromUrl(documentUrl)}
                       </span>
                     </div>
-                    {/* <Eye className="h-4 w-4 text-muted-foreground" /> */}
                   </button>
                 </div>
               )}
@@ -422,7 +453,6 @@ const DiscussionCard = ({
     </AnimatePresence>
   );
 
-  // Modal for document preview
   const renderDocumentModal = () => (
     <AnimatePresence>
       {isDocModalOpen && documentUrl && (
@@ -562,7 +592,7 @@ const DiscussionCard = ({
           </div>
         )}
 
-        {/* Document Attachment - now opens modal instead of new tab */}
+        {/* Document Attachment */}
         {documentUrl && (
           <div className="mb-3">
             <button
@@ -574,7 +604,6 @@ const DiscussionCard = ({
                   {getFileNameFromUrl(documentUrl)}
                 </span>
               </div>
-              {/* <Eye className="h-4 w-4 text-muted-foreground shrink-0 opacity-70 group-hover/doc:opacity-100" /> */}
             </button>
           </div>
         )}
@@ -592,8 +621,9 @@ const DiscussionCard = ({
           </div>
         )}
 
-        {/* Action buttons */}
+        {/* Action buttons with date beside save icon */}
         <div className="flex items-center gap-0.5 sm:gap-1">
+          {/* Left side: upvote, downvote, comment buttons */}
           <button
             onClick={handleUpvote}
             disabled={isVoting}
@@ -626,19 +656,28 @@ const DiscussionCard = ({
             <MessageCircle className="h-4 w-4" />
             <span className="text-xs font-medium">{comments}</span>
           </button>
-          <button
-            onClick={handleSave}
-            className={`ml-auto rounded-md p-1.5 transition-colors ${
-              saved
-                ? "text-primary bg-primary/10"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}>
-            {saved ? (
-              <BookmarkCheck className="h-4 w-4 fill-primary" />
-            ) : (
-              <Bookmark className="h-4 w-4" />
+
+          {/* Right side: date + save button */}
+          <div className="ml-auto flex items-center gap-2">
+            {formattedDate && (
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                {formattedDate}
+              </span>
             )}
-          </button>
+            <button
+              onClick={handleSave}
+              className={`rounded-md p-1.5 transition-colors ${
+                saved
+                  ? "text-primary bg-primary/10"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}>
+              {saved ? (
+                <BookmarkCheck className="h-4 w-4 fill-primary" />
+              ) : (
+                <Bookmark className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         </div>
       </motion.article>
 

@@ -13,6 +13,7 @@ import openrouter from "./routes/open_router.js";
 import profileRouter from "./routes/profile_router.js";
 import leaderboardRouter from "./routes/leaderboard_router.js";
 import notificationRouter from "./routes/notification_router.js";
+import achievementRouter from "./routes/achievements_router.js";
 
 dotenv.config();
 const app = express();
@@ -43,6 +44,7 @@ app.use(express.json());
 
 // Register routes
 app.use("/api/test", postRoutes);
+app.use("/api/achievements", achievementRouter);
 app.use("/api/auth", authrouter);
 app.use("/api/comments", commentRouter);
 app.use("/api/leaderboard", leaderboardRouter);

@@ -49,42 +49,67 @@ export const SubjectModel = {
   },
 
   async getTrendingTopics(limit = 18) {
-    // 1. Get subjects with forum count
-    const { data: subjects, error: subjErr } = await supabase.from("subjects")
-      .select(`
-        id,
-        name,
-        forums:forums(count)
-      `);
+    // 1. Get subjects with count of approved forums
+    const { data: subjects, error: subjErr } = await supabase
+      .from("forums")
+      .select("subject_id, subjects(id, name)", { count: "exact" })
+      .eq("validation_status", "approved")
+      .not("subject_id", "is", null);
 
     if (subjErr) throw subjErr;
 
-    // 2. Get tags with forum count via forum_tags
-    const { data: tags, error: tagErr } = await supabase.from("tags").select(`
-        id,
-        name,
-        forum_tags(count)
-      `);
+    // Aggregate counts per subject
+    const subjectCountMap = new Map();
+    subjects?.forEach((forum) => {
+      const subject = forum.subjects;
+      if (subject && subject.id) {
+        const existing = subjectCountMap.get(subject.id) || {
+          id: subject.id,
+          name: subject.name,
+          count: 0,
+        };
+        existing.count += 1;
+        subjectCountMap.set(subject.id, existing);
+      }
+    });
 
-    if (tagErr) throw tagErr;
-
-    // 3. Format subjects
-    const subjectsFormatted = subjects.map((s) => ({
+    const subjectsFormatted = Array.from(subjectCountMap.values()).map((s) => ({
       id: s.id,
       name: s.name,
       type: "subject",
-      discussionCount: s.forums?.[0]?.count || 0,
+      discussionCount: s.count,
     }));
 
-    // 4. Format tags
-    const tagsFormatted = tags.map((t) => ({
+    // 2. Get tags with count of approved forums (via forum_tags → forums)
+    const { data: tagsWithCount, error: tagErr } = await supabase
+      .from("forum_tags")
+      .select("tag_id, tags(id, name), forums!inner(validation_status)")
+      .eq("forums.validation_status", "approved");
+
+    if (tagErr) throw tagErr;
+
+    const tagCountMap = new Map();
+    tagsWithCount?.forEach((ft) => {
+      const tag = ft.tags;
+      if (tag && tag.id) {
+        const existing = tagCountMap.get(tag.id) || {
+          id: tag.id,
+          name: tag.name,
+          count: 0,
+        };
+        existing.count += 1;
+        tagCountMap.set(tag.id, existing);
+      }
+    });
+
+    const tagsFormatted = Array.from(tagCountMap.values()).map((t) => ({
       id: t.id,
       name: t.name,
       type: "tag",
-      discussionCount: t.forum_tags?.[0]?.count || 0,
+      discussionCount: t.count,
     }));
 
-    // 5. Combine, sort descending, limit
+    // 3. Combine, sort descending, limit
     const all = [...subjectsFormatted, ...tagsFormatted]
       .sort((a, b) => b.discussionCount - a.discussionCount)
       .slice(0, limit);

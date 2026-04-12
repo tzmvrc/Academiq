@@ -17,8 +17,10 @@ export const CommentModel = {
         id, user_id, forum_id, parent_comment_id,
         content,
         is_ai_verified,
+        verification_source_url,
         upvotes_count, downvotes_count,
         created_at, updated_at,
+        points_awarded, points_reason,
         users!comments_user_id_fkey ( id, name, profile_url )
       `,
       )
@@ -35,8 +37,10 @@ export const CommentModel = {
         id, user_id, forum_id, parent_comment_id,
         content,
         is_ai_verified,
+        verification_source_url,
         upvotes_count, downvotes_count,
         created_at, updated_at,
+        points_awarded, points_reason,
         users!comments_user_id_fkey ( id, name, profile_url )
       `,
       )

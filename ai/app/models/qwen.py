@@ -5,6 +5,8 @@ from peft import PeftModel
 import torch
 import os
 import json
+import warnings
+warnings.filterwarnings("ignore", message="The following generation flags are not valid")
 
 # -------------------------
 # Model paths
@@ -42,52 +44,38 @@ print("✅ Qwen + LoRA adapter loaded")
 # Function to generate response
 # -------------------------
 def generate_response(prompt: str, max_new_tokens: int = 300):
-    """
-    Generate response from fine-tuned Qwen with LoRA adapter.
-
-    Args:
-        prompt (str): User input / forum post to validate
-        max_new_tokens (int): max tokens to generate
-
-    Returns:
-        str: Generated response
-    """
-
-    # Build chat messages
     messages = [
         {"role": "system", "content": "You are a helpful AI assistant that validates academic forum posts."},
         {"role": "user", "content": prompt}
     ]
-
-    # Convert messages to model input using Qwen's chat template
-    input_text = tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True
-    )
-
-    # Tokenize
+    input_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(input_text, return_tensors="pt").to(model.device)
-
-    # Keep track of prompt length to slice generated tokens
     prompt_length = inputs["input_ids"].shape[1]
 
-    # Generate output
     outputs = model.generate(
         **inputs,
         max_new_tokens=max_new_tokens,
         do_sample=False,
-        eos_token_id=tokenizer.eos_token_id
+        eos_token_id=tokenizer.eos_token_id,
+        pad_token_id=tokenizer.eos_token_id,
     )
 
-    # Only take the newly generated tokens
     generated_tokens = outputs[0][prompt_length:]
-
-    # Decode to string
     response = tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
 
-    return response
+    # Optional: truncate after finding a complete JSON object to avoid trailing text
+    # Find first '}' and cut
+    brace_count = 0
+    for i, ch in enumerate(response):
+        if ch == '{':
+            brace_count += 1
+        elif ch == '}':
+            brace_count -= 1
+            if brace_count == 0:
+                response = response[:i+1]
+                break
 
+    return response
 # -------------------------
 # Optional: quick test
 # -------------------------

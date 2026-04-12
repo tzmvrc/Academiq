@@ -94,17 +94,23 @@ export const SchoolModel = {
       });
     }
 
-    const schoolsWithInfo = Array.from(schoolMap.entries()).map(([school, data]) => {
-      const logo = getSchoolLogo(school);
-      return {
-        school,
-        totalPoints: data.totalPoints,
-        users: data.users.sort((a, b) => (b.points || 0) - (a.points || 0)).slice(0, 3),
-        logo: logo || null,
-      };
-    });
+    const schoolsWithInfo = Array.from(schoolMap.entries()).map(
+      ([school, data]) => {
+        const logo = getSchoolLogo(school);
+        return {
+          school,
+          totalPoints: data.totalPoints,
+          users: data.users
+            .sort((a, b) => (b.points || 0) - (a.points || 0))
+            .slice(0, 3),
+          logo: logo || null,
+        };
+      },
+    );
 
-    const sorted = schoolsWithInfo.sort((a, b) => b.totalPoints - a.totalPoints).slice(0, limit);
+    const sorted = schoolsWithInfo
+      .sort((a, b) => b.totalPoints - a.totalPoints)
+      .slice(0, limit);
     return sorted.map((item, idx) => ({ ...item, rank: idx + 1 }));
   },
 
@@ -125,18 +131,21 @@ export const SchoolModel = {
       .select("id")
       .eq("school", schoolName);
     if (userError) throw userError;
-    const userIds = users.map(u => u.id);
+    const userIds = users.map((u) => u.id);
     if (userIds.length === 0) return [];
 
     const { data: forums, error: forumsError } = await supabase
       .from("forums")
-      .select(`
-        id, title, content, created_at, user_id, subject_id, is_ai_verified,
-        upvotes_count, downvotes_count, comments_count,
-        users:user_id (id, name, profile_url, school),
-        subject:subject_id (id, name)
-      `)
+      .select(
+        `
+      id, title, content, created_at, user_id, subject_id, is_ai_verified,
+      upvotes_count, downvotes_count, comments_count,
+      users:user_id (id, name, profile_url, school),
+      subject:subject_id (id, name)
+    `,
+      )
       .in("user_id", userIds)
+      .eq("validation_status", "approved") // <-- ADD THIS
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
     if (forumsError) throw forumsError;

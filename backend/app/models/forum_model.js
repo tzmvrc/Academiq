@@ -7,11 +7,30 @@ export const ForumModel = {
     return supabase.from(TABLE).insert(payload).select().single();
   },
 
-  async findById(id) {
-    const { data, error } = await supabase
-      .from("forums")
-      .select(
-        `
+  // models/forum_model.js
+
+// Keep findById with author check – single query
+async findById(id, currentUserId = null) {
+  // Fetch the forum without any status filter
+  const { data, error } = await this.findByIdUnfiltered(id);
+  if (error) throw error;
+  if (!data) throw { code: "PGRST116", message: "Forum not found" };
+
+  const isApproved = data.validation_status === "approved";
+  const isAuthor = currentUserId && String(data.user_id) === String(currentUserId);
+
+  if (!isApproved && !isAuthor) {
+    throw { code: "PGRST116", message: "Forum not found" };
+  }
+  return { data, error: null };
+},
+
+// For internal use only (update, delete)
+async findByIdUnfiltered(id) {
+  const { data, error } = await supabase
+    .from("forums")
+    .select(
+      `
       *,
       user:user_id(id, name, profile_url, school),
       subject:subject_id(id, name),
@@ -19,19 +38,34 @@ export const ForumModel = {
         tag:tag_id(id, name, slug, usage_count)
       )
     `,
-      )
-      .eq("id", id)
-      .single();
+    )
+    .eq("id", id)
+    .single();
 
-    if (error) throw error;
-    // Transform tags
-    if (data) {
-      data.tags = (data.forum_tags || []).map((ft) => ft.tag).filter(Boolean);
-      delete data.forum_tags;
-    }
-    return { data, error: null };
-  },
+  if (error) throw error;
+  if (data) {
+    data.tags = (data.forum_tags || []).map((ft) => ft.tag).filter(Boolean);
+    delete data.forum_tags;
+  }
+  return { data, error: null };
+},
 
+// Update method (no .single() to avoid PGRST116)
+async update(id, updates) {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update(updates)
+    .eq("id", id)
+    .select();
+
+  if (error) throw error;
+  if (!data || data.length === 0) {
+    throw { code: "PGRST116", message: "Forum not found after update" };
+  }
+  return { data: data[0], error: null };
+},
+
+  // For user's own posts – do NOT filter (show all statuses)
   async findByUserId(userId, limit = 10, offset = 0) {
     const { data, error } = await supabase
       .from("forums")
@@ -53,6 +87,7 @@ export const ForumModel = {
     return { data, error: null };
   },
 
+  // Public – only approved
   async findAll() {
     return supabase
       .from(TABLE)
@@ -67,10 +102,12 @@ export const ForumModel = {
         subjects ( id, name )
       `,
       )
+      .eq("validation_status", "approved") // ✅ only approved
       .order("created_at", { ascending: false });
   },
 
-  async findByUserId(userId) {
+  // User's own posts (detailed) – do NOT filter
+  async findByUserIdWithDetails(userId) {
     const { data, error } = await supabase
       .from("forums")
       .select(
@@ -87,7 +124,6 @@ export const ForumModel = {
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    // Transform tags for each forum
     const transformed = data.map((forum) => ({
       ...forum,
       tags: (forum.forum_tags || []).map((ft) => ft.tag).filter(Boolean),
@@ -97,7 +133,17 @@ export const ForumModel = {
   },
 
   async update(id, updates) {
-    return supabase.from(TABLE).update(updates).eq("id", id).select().single();
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update(updates)
+      .eq("id", id)
+      .select(); // Remove .single()
+
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      throw { code: "PGRST116", message: "Forum not found after update" };
+    }
+    return { data: data[0], error: null };
   },
 
   async delete(id) {
@@ -114,7 +160,6 @@ export const ForumModel = {
   },
 
   async setTags(forumId, tagIds) {
-    // Delete existing
     const { error: delError } = await supabase
       .from("forum_tags")
       .delete()
@@ -132,18 +177,19 @@ export const ForumModel = {
     return data;
   },
 
-  // models/forum_model.js
+  // Trending – only approved forums within last 30 days
   async getTrendingAcademicForums(limit = 3) {
     const cutoff = new Date(
       Date.now() - 30 * 24 * 60 * 60 * 1000,
     ).toISOString();
 
-    // 1. Fetch forums from last 30 days
+    // 1. Fetch approved forums from last 30 days
     const { data: forums, error: forumsErr } = await supabase
       .from("forums")
       .select(
         "id, title, content, upvotes_count, comments_count, created_at, subject_id, user_id",
       )
+      .eq("validation_status", "approved") // ✅ only approved
       .gte("created_at", cutoff);
     if (forumsErr) throw forumsErr;
     if (!forums || forums.length === 0) return [];
@@ -159,7 +205,6 @@ export const ForumModel = {
     });
 
     // 3. Get tag popularity per forum
-    //    Fetch all forum_tags for these forums in one query
     const forumIds = forums.map((f) => f.id);
     const { data: forumTags, error: tagErr } = await supabase
       .from("forum_tags")
@@ -167,7 +212,6 @@ export const ForumModel = {
       .in("forum_id", forumIds);
     if (tagErr) throw tagErr;
 
-    // Map: forum_id -> sum of tag forum_counts
     const tagPopMap = {};
     for (const ft of forumTags || []) {
       const tagCount = ft.tag?.forum_tags?.[0]?.count || 0;
@@ -175,7 +219,7 @@ export const ForumModel = {
       tagPopMap[ft.forum_id] += tagCount;
     }
 
-    // 4. Compute score for each forum
+    // 4. Compute score
     const now = Date.now();
     const forumsWithScore = forums.map((forum) => {
       const daysOld = (now - new Date(forum.created_at)) / (1000 * 3600 * 24);
@@ -188,7 +232,7 @@ export const ForumModel = {
       return { ...forum, score };
     });
 
-    // 5. Group by subject_id, keep the highest‑scoring forum per subject
+    // 5. Group by subject_id, keep highest‑scoring
     const bestPerSubject = new Map();
     for (const forum of forumsWithScore) {
       const existing = bestPerSubject.get(forum.subject_id);
@@ -197,7 +241,7 @@ export const ForumModel = {
       }
     }
 
-    // 6. Sort by score and take top N
+    // 6. Sort and limit
     const bestForums = Array.from(bestPerSubject.values());
     bestForums.sort((a, b) => b.score - a.score);
     const topForums = bestForums.slice(0, limit);
@@ -225,7 +269,6 @@ export const ForumModel = {
       userMap[u.id] = u;
     });
 
-    // Final shape
     return topForums.map((forum) => ({
       id: forum.id,
       title: forum.title,
@@ -243,5 +286,32 @@ export const ForumModel = {
         profile_url: null,
       },
     }));
+  },
+
+  // Add this method to the ForumModel
+  // models/forum_model.js
+
+  async findByIdUnfiltered(id) {
+    const { data, error } = await supabase
+      .from("forums")
+      .select(
+        `
+      *,
+      user:user_id(id, name, profile_url, school),
+      subject:subject_id(id, name),
+      forum_tags(
+        tag:tag_id(id, name, slug, usage_count)
+      )
+    `,
+      )
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+    if (data) {
+      data.tags = (data.forum_tags || []).map((ft) => ft.tag).filter(Boolean);
+      delete data.forum_tags;
+    }
+    return { data, error: null };
   },
 };

@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import EditProfileModal from "@/components/EdittProfileModal";
+import AchievementsDisplay from "@/components/AchievementsDisplay";
 import {
   Star,
   MessageCircle,
   Bookmark,
-  Award,
   ArrowBigUp,
   UserPlus,
   Check,
@@ -67,7 +67,7 @@ interface Comment {
   created_at: string;
 }
 
-type Tab = "posts" | "saved" | "comments";
+type Tab = "posts" | "saved" | "comments" | "achievements";
 
 const ITEMS_LIMIT = 5;
 
@@ -117,6 +117,7 @@ const Profile = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [activeTab, setActiveTab] = useState<Tab>("posts");
   const [loadingContent, setLoadingContent] = useState(false);
+  const [featuredAchievements, setFeaturedAchievements] = useState<any[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -256,13 +257,15 @@ const Profile = () => {
         const promises: Promise<any>[] = [
           axiosInstance.get(`/forums/user?userId=${user.id}&limit=10`),
           axiosInstance.get(`/forums/comments?userId=${user.id}&limit=10`),
+          axiosInstance.get(`/achievements/user/${user.id}`),
         ];
         if (isOwnProfile) {
           promises.push(axiosInstance.get("/forums/saved"));
         }
 
-        const [postsRes, commentsRes, savedRes] =
-          await Promise.allSettled(promises);
+        const results = await Promise.allSettled(promises);
+        const [postsRes, commentsRes, achievementsRes, ...otherResults] =
+          results;
 
         if (postsRes.status === "fulfilled") {
           setPosts(postsRes.value.data.forums || []);
@@ -276,8 +279,36 @@ const Profile = () => {
           console.error("Failed to fetch comments:", commentsRes.reason);
         }
 
-        if (isOwnProfile && savedRes && savedRes.status === "fulfilled") {
-          setSavedPosts(savedRes.value.data.saved || []);
+        if (achievementsRes.status === "fulfilled") {
+          const allAchievements = achievementsRes.value.data.achievements || [];
+
+          // Get featured achievement IDs from localStorage
+          const featuredKey = `featured_achievements_${user.id}`;
+          const storedFeatured = localStorage.getItem(featuredKey);
+          const featuredIds = storedFeatured ? JSON.parse(storedFeatured) : [];
+
+          // Filter to show only featured achievements if any are selected
+          let displayAchievements = allAchievements;
+          if (featuredIds.length > 0) {
+            displayAchievements = allAchievements.filter((ach: any) =>
+              featuredIds.includes(ach.id),
+            );
+          }
+
+          setFeaturedAchievements(displayAchievements);
+        } else {
+          console.error(
+            "Failed to fetch achievements:",
+            achievementsRes.reason,
+          );
+        }
+
+        if (
+          isOwnProfile &&
+          otherResults[0] &&
+          otherResults[0].status === "fulfilled"
+        ) {
+          setSavedPosts(otherResults[0].value.data.saved || []);
         }
       } catch (err) {
         console.error("Error fetching content:", err);
@@ -435,6 +466,33 @@ const Profile = () => {
     }
   };
 
+  // Refresh featured achievements from localStorage
+  const refreshFeaturedAchievements = async () => {
+    if (!user) return;
+    try {
+      // Fetch all user achievements
+      const res = await axiosInstance.get(`/achievements/user/${user.id}`);
+      const allAchievements = res.data.achievements || [];
+
+      // Get featured achievement IDs from localStorage
+      const featuredKey = `featured_achievements_${user.id}`;
+      const storedFeatured = localStorage.getItem(featuredKey);
+      const featuredIds = storedFeatured ? JSON.parse(storedFeatured) : [];
+
+      // Filter to show only featured achievements if any are selected
+      let displayAchievements = allAchievements;
+      if (featuredIds.length > 0) {
+        displayAchievements = allAchievements.filter((ach: any) =>
+          featuredIds.includes(ach.id),
+        );
+      }
+
+      setFeaturedAchievements(displayAchievements);
+    } catch (err) {
+      console.error("Failed to refresh featured achievements:", err);
+    }
+  };
+
   const handleFollowToggle = async () => {
     if (!user || !currentUserId) return;
     setLoadingFollow(true);
@@ -550,28 +608,11 @@ const Profile = () => {
       : []),
   ];
 
-  const achievements = [
-    {
-      title: "First Verified Post",
-      description: "Your first AI-verified academic contribution",
-      icon: "🎓",
-    },
-    {
-      title: "Top Contributor",
-      description: "Ranked in top 10% for Computer Science",
-      icon: "🏆",
-    },
-    {
-      title: "Peer Mentor",
-      description: "Helped 50+ students with verified answers",
-      icon: "🤝",
-    },
-  ];
-
   const tabs: { key: Tab; label: string }[] = [
     { key: "posts" as const, label: "Posts" },
     ...(isOwnProfile ? [{ key: "saved" as const, label: "Saved" }] : []),
     ...(isOwnProfile ? [{ key: "comments" as const, label: "Comments" }] : []),
+    { key: "achievements" as const, label: "Achievements" },
   ];
 
   const handleForumClick = (id: string) => {
@@ -785,6 +826,9 @@ const Profile = () => {
         );
       }
 
+      case "achievements":
+        return <AchievementsDisplay userId={user.id} isOwn={isOwnProfile} />;
+
       default:
         return null;
     }
@@ -899,32 +943,50 @@ const Profile = () => {
         ))}
       </div>
 
-      {/* Achievements */}
-      <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground mb-3 sm:mb-4 flex items-center gap-2">
-        <Award className="h-5 w-5 text-accent" /> Achievements
-      </h2>
-      <div className="grid gap-3 grid-cols-1 sm:grid-cols-3 mb-6 sm:mb-8">
-        {achievements.map((a) => (
-          <motion.div
-            key={a.title}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{
-              delay:
-                0.2 +
-                achievements.findIndex((item) => item.title === a.title) * 0.05,
-            }}
-            className="rounded-xl border border-border bg-card p-3 sm:p-4">
-            <div className="text-2xl mb-2">{a.icon}</div>
-            <p className="font-heading font-semibold text-foreground text-sm">
-              {a.title}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {a.description}
-            </p>
-          </motion.div>
-        ))}
-      </div>
+      {/* Featured Achievements */}
+      {featuredAchievements.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 sm:mb-8">
+          <h2 className="text-lg font-heading font-semibold text-foreground mb-3">
+            Featured Achievements
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            {featuredAchievements.map((achievement) => (
+              <motion.div
+                key={achievement.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-xl border border-border bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20 p-4 hover:shadow-md transition-all">
+                <div className="flex items-start gap-3">
+                  <div className="h-12 w-12 rounded-lg bg-green-500/20 flex items-center justify-center text-2xl flex-shrink-0">
+                    {achievement.achievement_icon || achievement.icon || "🏆"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground text-sm line-clamp-2">
+                      {achievement.achievement_name || achievement.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {achievement.achievement_description ||
+                        achievement.description}
+                    </p>
+                    {achievement.unlocked_at && (
+                      <p className="text-xs text-green-600/80 mt-2">
+                        Unlocked{" "}
+                        {new Date(achievement.unlocked_at).toLocaleDateString(
+                          undefined,
+                          { month: "short", day: "numeric", year: "numeric" },
+                        )}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-border mb-4 sm:mb-6 overflow-x-auto scrollbar-hide">
@@ -1205,6 +1267,8 @@ const Profile = () => {
           setUser(updatedUser);
           // Refresh privacy and other data from backend to ensure they're in sync
           refreshUserData();
+          // Refresh featured achievements from localStorage
+          refreshFeaturedAchievements();
         }}
       />
 

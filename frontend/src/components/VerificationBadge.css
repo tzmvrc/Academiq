@@ -1,0 +1,209 @@
+/* src/components/VerificationBadge.css */
+
+.verification-badge-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+/* Badge Icon/Logo */
+.verification-badge-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  object-fit: contain;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.verification-badge-icon:hover {
+  transform: scale(1.25);
+  filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.5));
+}
+
+/* Badge Text (Checkmark) */
+.verification-badge-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+  border-radius: 50%;
+  border: 1px solid #10b981;
+  transition: all 0.2s ease;
+}
+
+.verification-badge-text:hover {
+  background-color: rgba(16, 185, 129, 0.2);
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+/* Tooltip */
+.verification-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1f2937;
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid #374151;
+  animation: fadeIn 0.2s ease;
+}
+
+.verification-tooltip.small {
+  white-space: normal;
+  padding: 8px 12px;
+}
+
+.verification-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #1f2937;
+}
+
+.verification-tooltip-header {
+  margin-bottom: 4px;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.verification-tooltip-url {
+  color: #93c5fd;
+  margin-bottom: 4px;
+  word-break: break-all;
+  max-width: 200px;
+}
+
+.verification-tooltip-confidence {
+  color: #d1d5db;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.verification-tooltip-action {
+  color: #6b7280;
+  font-size: 11px;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Comment Author with Verification */
+.comment-author-with-verification {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.comment-author-with-verification .author-name {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Verification Status Component */
+.verification-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.verification-status.verified {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.verification-status.verified.high {
+  border-color: #10b981;
+  background-color: rgba(16, 185, 129, 0.15);
+}
+
+.verification-status.verified.medium {
+  border-color: #fbbf24;
+  background-color: rgba(251, 191, 36, 0.1);
+  color: #d97706;
+}
+
+.verification-status.verified.low {
+  border-color: #f97316;
+  background-color: rgba(249, 115, 22, 0.1);
+  color: #d97706;
+}
+
+.verification-status.unverified {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.verification-status .status-icon {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.verification-status .status-text {
+  flex: 1;
+}
+
+.verification-status .status-link {
+  color: #3b82f6;
+  text-decoration: none;
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.verification-status .status-link:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .verification-tooltip {
+    max-width: 150px;
+    white-space: normal;
+  }
+
+  .verification-tooltip-url {
+    max-width: 120px;
+    font-size: 11px;
+  }
+}

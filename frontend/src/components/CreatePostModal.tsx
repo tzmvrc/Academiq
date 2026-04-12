@@ -401,6 +401,7 @@ const CreatePostModal = ({
     try {
       setSubmitting(true);
 
+      // Ensure subject exists (if creating a new one)
       await ensureSubjectExists(normalizedCategory);
 
       if (mode === "edit") {
@@ -416,36 +417,51 @@ const CreatePostModal = ({
         });
 
         setRemoveFile(false);
+        toast({
+          title: "Post updated!",
+          description: "Your changes have been saved.",
+        });
+        await onSuccess?.();
+        onClose();
       } else {
+        // CREATE mode – now async with background validation
         if (!onSubmit) {
           throw new Error("onSubmit is required for create mode");
         }
 
-        await onSubmit({
+        // Call the onSubmit prop (which internally uses forumService.createForum)
+        const result = await onSubmit({
           title: title.trim(),
           content: content.trim(),
           category: normalizedCategory,
           tagIds: selectedTagIds,
           file: selectedFile || undefined,
         });
+
+        // If the backend returns 202 Accepted, result will contain { forum, message }
+        toast({
+          title: "Post submitted",
+          description:
+            (result as any)?.message ||
+            "Your post is being reviewed. You'll receive a notification once it's approved.",
+          duration: 6000,
+        });
+        await onSuccess?.();
+        onClose();
       }
-
-      toast({
-        title: mode === "create" ? "Post published!" : "Post updated!",
-        description:
-          mode === "create"
-            ? "Your discussion has been posted."
-            : "Your changes have been saved.",
-      });
-
-      await onSuccess?.();
-      onClose();
     } catch (err: any) {
       console.error("Create/Edit post modal submit error:", err);
+      let errorMessage = "Failed to submit post";
+      if (err?.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
       toast({
-        title:
-          err?.response?.data?.error || err?.message || "Failed to submit post",
+        title: "Submission Failed",
+        description: errorMessage,
         variant: "destructive",
+        duration: 6000,
       });
     } finally {
       setSubmitting(false);

@@ -18,7 +18,7 @@ import { forumService } from "@/integration/forum_service";
 import CreatePostModal from "@/components/CreatePostModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 
-// --- Interfaces (same as before) ---
+// --- Interfaces ---
 interface SearchResultUser {
   id: string;
   name: string;
@@ -38,7 +38,7 @@ interface SearchResultForum {
   authorProfileUrl?: string | null;
   authorSchool?: string;
   field: string;
-  tag: string; // legacy, subject name
+  tag: string;
   tags: { id: string; name: string }[];
   upvotes: number;
   downvotes: number;
@@ -65,7 +65,7 @@ interface SearchResultTag {
   name: string;
 }
 
-// --- Helper to get current user (same as feed) ---
+// --- Helper to get current user ---
 const getCurrentUser = () => {
   try {
     const rawUser = localStorage.getItem("user");
@@ -106,9 +106,31 @@ const getCurrentUser = () => {
   }
 };
 
-// --- Helper to transform raw search forum into the shape expected by DiscussionCard ---
+// --- Helper to get initials ---
+const getInitials = (name: string): string => {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .substring(0, 2);
+};
+
+// --- Transform main search forum (supports nested user object, computes preview) ---
 const transformSearchForum = (raw: any): SearchResultForum => {
-  // Accept both camelCase and snake_case fields
+  const user = raw.user || null;
+  const authorName = raw.author || user?.name || "Unknown User";
+  const authorInitials =
+    raw.authorInitials || getInitials(user?.name || authorName);
+  const authorProfileUrl = raw.authorProfileUrl || user?.profile_url || null;
+  const authorSchool = raw.authorSchool || user?.school || null;
+
+  // Compute preview and fullContent from raw.content if not provided
+  const fullContent = raw.fullContent || raw.content || "";
+  const preview =
+    raw.preview ||
+    fullContent.substring(0, 150) + (fullContent.length > 150 ? "..." : "");
+
   const aiSummary = raw.aiSummary ?? raw.ai_summary ?? "";
   const documentUrl = raw.documentUrl ?? raw.document_url ?? null;
 
@@ -116,12 +138,12 @@ const transformSearchForum = (raw: any): SearchResultForum => {
     id: raw.id,
     title: raw.title,
     content: raw.content,
-    author: raw.author,
-    authorInitials: raw.authorInitials,
-    authorProfileUrl: raw.authorProfileUrl,
-    authorSchool: raw.authorSchool,
+    author: authorName,
+    authorInitials,
+    authorProfileUrl,
+    authorSchool,
     field: raw.field,
-    tag: raw.field, // legacy field, uses field value
+    tag: raw.field,
     tags: raw.tags || [],
     upvotes: raw.upvotes,
     downvotes: raw.downvotes,
@@ -130,8 +152,8 @@ const transformSearchForum = (raw: any): SearchResultForum => {
     isSaved: raw.isSaved ?? false,
     isVerified: raw.isVerified ?? true,
     isAiVerified: raw.isAiVerified ?? false,
-    preview: raw.preview,
-    fullContent: raw.fullContent,
+    preview,
+    fullContent,
     created_at: raw.created_at,
     user_id: raw.user_id,
     aiSummary,
@@ -139,15 +161,11 @@ const transformSearchForum = (raw: any): SearchResultForum => {
   };
 };
 
-// --- Helper to transform forum from API response into SearchResultForum ---
+// --- Transform forum from API (expects forum.user to exist) ---
 const transformForumFromApi = (forum: any): SearchResultForum => {
-  const author = forum.user?.name || "Unknown User";
-  const authorInitials = author
-    .split(" ")
-    .map((part: string) => part[0])
-    .join("")
-    .toUpperCase()
-    .substring(0, 2);
+  const user = forum.user || {};
+  const author = user.name || "Unknown User";
+  const authorInitials = getInitials(author);
   const preview =
     (forum.content || "").substring(0, 150) +
     ((forum.content || "").length > 150 ? "..." : "");
@@ -158,8 +176,8 @@ const transformForumFromApi = (forum: any): SearchResultForum => {
     content: forum.content,
     author,
     authorInitials,
-    authorProfileUrl: forum.user?.profile_url,
-    authorSchool: forum.user?.school,
+    authorProfileUrl: user.profile_url,
+    authorSchool: user.school,
     field: forum.subject?.name || "General",
     tag: forum.subject?.name || "General",
     tags: forum.tags || [],
@@ -191,7 +209,6 @@ const SearchResults = () => {
   const [tags, setTags] = useState<SearchResultTag[]>([]);
   const [followingUserId, setFollowingUserId] = useState<string | null>(null);
 
-  // Edit/Delete modals state
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
@@ -201,12 +218,16 @@ const SearchResults = () => {
 
   const currentUser = getCurrentUser();
 
-  // --- Follow/Unfollow (same as feed) ---
+  // Follow/Unfollow
   const toggleFollow = async (
     userId: string,
     name: string,
     isFollowed: boolean,
   ) => {
+    if (userId === currentUser.id) {
+      toast({ title: "You cannot follow yourself", variant: "destructive" });
+      return;
+    }
     if (followingUserId === userId) return;
     setFollowingUserId(userId);
     try {
@@ -231,7 +252,7 @@ const SearchResults = () => {
     }
   };
 
-  // --- Edit/Delete Handlers ---
+  // Edit/Delete
   const handleEditPost = (post: SearchResultForum) => {
     setSelectedPostId(post.id);
     setSelectedPostData(post);
@@ -294,7 +315,7 @@ const SearchResults = () => {
     }
   };
 
-  // --- Vote & Save handlers (same as feed) ---
+  // Vote & Save
   const handleVote = async (forumId: string, voteType: 1 | -1) => {
     try {
       const result = await forumService.voteForum(forumId, voteType);
@@ -351,7 +372,7 @@ const SearchResults = () => {
     }
   };
 
-  // --- Fetch search results and augment with vote & save status ---
+  // --- Main search effect ---
   useEffect(() => {
     if (!query.trim()) {
       setLoading(false);
@@ -365,14 +386,44 @@ const SearchResults = () => {
           `/auth/search?q=${encodeURIComponent(query)}`,
         );
         const data = res.data;
-        setUsers(data.users || []);
+
+        // Filter out current user
+        const filteredUsers = (data.users || []).filter(
+          (u: SearchResultUser) => u.id !== currentUser.id,
+        );
+        setUsers(filteredUsers);
         setSubjects(data.subjects || []);
         setTags(data.tags || []);
 
-        // Transform forums to ensure camelCase fields
+        // 1. Transform main search forums (now with preview computed)
         let forumsData = (data.forums || []).map(transformSearchForum);
 
-        // Fetch forums by subject
+        // 2. Build a map of users from main search (for fallback enrichment)
+        const usersMap = new Map();
+        (data.users || []).forEach((u: SearchResultUser) => {
+          usersMap.set(u.id, u);
+        });
+
+        // 3. Enrich main forums with missing user info (if any)
+        forumsData = forumsData.map((forum: any) => {
+          if (
+            (forum.author === "Unknown User" || !forum.authorSchool) &&
+            forum.user_id &&
+            usersMap.has(forum.user_id)
+          ) {
+            const user = usersMap.get(forum.user_id);
+            return {
+              ...forum,
+              author: user.name,
+              authorInitials: getInitials(user.name),
+              authorProfileUrl: user.profile_url,
+              authorSchool: user.school,
+            };
+          }
+          return forum;
+        });
+
+        // 4. Fetch forums by subject (these already include user object via backend join)
         const subjectForums: SearchResultForum[] = [];
         if (data.subjects && data.subjects.length > 0) {
           for (const subject of data.subjects) {
@@ -393,7 +444,7 @@ const SearchResults = () => {
           }
         }
 
-        // Fetch forums by user
+        // 5. Fetch forums by user – manually attach user object
         const userForums: SearchResultForum[] = [];
         if (data.users && data.users.length > 0) {
           for (const user of data.users) {
@@ -401,9 +452,18 @@ const SearchResults = () => {
               const userForumsRes = await axiosInstance.get(
                 `/forums/user?userId=${user.id}`,
               );
-              const transformed = (userForumsRes.data.forums || []).map(
-                transformForumFromApi,
+              const forumsWithUser = (userForumsRes.data.forums || []).map(
+                (forum: any) => ({
+                  ...forum,
+                  user: {
+                    id: user.id,
+                    name: user.name,
+                    profile_url: user.profile_url,
+                    school: user.school,
+                  },
+                }),
               );
+              const transformed = forumsWithUser.map(transformForumFromApi);
               userForums.push(...transformed);
             } catch (err) {
               console.error(`Failed to fetch forums for user ${user.id}:`, err);
@@ -411,7 +471,7 @@ const SearchResults = () => {
           }
         }
 
-        // Combine all forums and remove duplicates
+        // 6. Combine all forums and deduplicate
         const combinedForums = [...forumsData, ...subjectForums, ...userForums];
         const uniqueForumMap = new Map<string, SearchResultForum>();
         combinedForums.forEach((forum) => {
@@ -421,34 +481,9 @@ const SearchResults = () => {
         });
         const uniqueForums = Array.from(uniqueForumMap.values());
 
-        // Only fetch full details if AI summary or document URL is missing
-        const forumsWithDetails = await Promise.all(
-          uniqueForums.map(async (forum) => {
-            if (!forum.id) return forum;
-            // If we already have both fields and they are not empty/null, skip fetching full details
-            if (forum.aiSummary && forum.documentUrl) {
-              return forum;
-            }
-            try {
-              const fullForum = await forumService.getForumById(forum.id);
-              return {
-                ...forum,
-                aiSummary: fullForum.aiSummary,
-                documentUrl: fullForum.documentUrl,
-              };
-            } catch (err) {
-              console.error(
-                `Failed to fetch details for forum ${forum.id}`,
-                err,
-              );
-              return forum;
-            }
-          }),
-        );
-
-        // Now fetch save and vote status (as before)
+        // 7. Fetch save status and vote state for each forum
         const forumsWithStatus = await Promise.all(
-          forumsWithDetails.map(async (forum) => {
+          uniqueForums.map(async (forum) => {
             if (!forum.id)
               return { ...forum, isSaved: false, userVoteState: null };
             try {
@@ -478,9 +513,9 @@ const SearchResults = () => {
     };
 
     fetchResults();
-  }, [query]);
+  }, [query, currentUser.id]);
 
-  // --- Horizontal scroll helpers (same as Index) ---
+  // --- Horizontal scroll helpers ---
   const peopleScrollRef = useRef<HTMLDivElement | null>(null);
   const scroll = useCallback(
     (
@@ -516,10 +551,9 @@ const SearchResults = () => {
     </div>
   );
 
-  // --- People Section (same as Index's PeopleSection) ---
+  // --- People Section ---
   const PeopleSection = () => {
-    const visibleUsers = users.slice(0, 10); // show first 10
-
+    const visibleUsers = users.slice(0, 10);
     if (users.length === 0) return null;
 
     return (
@@ -530,19 +564,14 @@ const SearchResults = () => {
           </h3>
           <ScrollButtons scrollRef={peopleScrollRef} />
         </div>
-
         <div
           ref={peopleScrollRef}
           className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth"
           style={{ scrollbarWidth: "thin" }}>
           {visibleUsers.map((user) => {
-            const initials = user.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase()
-              .slice(0, 2);
+            const initials = getInitials(user.name);
             const isFollowed = user.is_followed || false;
+            const isSelf = user.id === currentUser.id;
             return (
               <div
                 key={user.id}
@@ -582,26 +611,28 @@ const SearchResults = () => {
                   <Star className="h-2.5 w-2.5 text-accent" />
                   <span>{user.points?.toLocaleString() || 0} pts</span>
                 </div>
-                <button
-                  onClick={() => toggleFollow(user.id, user.name, isFollowed)}
-                  disabled={followingUserId === user.id}
-                  className={`mt-3 w-full flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
-                    isFollowed
-                      ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                      : "bg-primary text-primary-foreground hover:bg-primary/90"
-                  }`}>
-                  {followingUserId === user.id ? (
-                    "Following..."
-                  ) : isFollowed ? (
-                    <>
-                      <Check className="h-3 w-3" /> Following
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="h-3 w-3" /> Follow
-                    </>
-                  )}
-                </button>
+                {!isSelf && (
+                  <button
+                    onClick={() => toggleFollow(user.id, user.name, isFollowed)}
+                    disabled={followingUserId === user.id}
+                    className={`mt-3 w-full flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
+                      isFollowed
+                        ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                        : "bg-primary text-primary-foreground hover:bg-primary/90"
+                    }`}>
+                    {followingUserId === user.id ? (
+                      "Following..."
+                    ) : isFollowed ? (
+                      <>
+                        <Check className="h-3 w-3" /> Following
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="h-3 w-3" /> Follow
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             );
           })}
@@ -620,14 +651,13 @@ const SearchResults = () => {
     );
   };
 
-  // --- Clear search (go back to feed) ---
+  // --- Clear search ---
   const clearSearch = () => {
-    // Dispatch custom event to clear navbar search
     window.dispatchEvent(new CustomEvent("clearNavbarSearch"));
     navigate("/feed");
   };
 
-  // --- Early return if no query ---
+  // --- Early return ---
   if (!query.trim()) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8 text-center">
@@ -646,13 +676,7 @@ const SearchResults = () => {
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8">
-      {/* Header with back button */}
       <div className="flex items-center gap-3 mb-6">
-        {/* <button
-          onClick={clearSearch}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Back to Feed
-        </button> */}
         <h1 className="text-xl sm:text-2xl font-heading font-bold text-foreground">
           Search results for "{query}"
         </h1>
@@ -663,7 +687,6 @@ const SearchResults = () => {
         </button>
       </div>
 
-      {/* Loading state */}
       {loading ? (
         <div className="max-w-3xl mx-auto space-y-6">
           <div className="h-32 bg-secondary/50 rounded-xl animate-pulse" />
@@ -685,10 +708,8 @@ const SearchResults = () => {
         </div>
       ) : (
         <div className="max-w-3xl mx-auto space-y-6">
-          {/* People section (horizontal scroll, same as feed) */}
           <PeopleSection />
 
-          {/* Discussion section – only rendered if there are forums */}
           {forums.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-2">
@@ -696,7 +717,6 @@ const SearchResults = () => {
                   Discussions
                 </h2>
               </div>
-
               {forums.map((forum) => {
                 const isAuthor = currentUser.id === forum.user_id;
                 return (
@@ -724,7 +744,6 @@ const SearchResults = () => {
             </div>
           )}
 
-          {/* Subjects section (if any) */}
           {subjects.length > 0 && (
             <section>
               <h2 className="text-lg font-heading font-semibold text-foreground mb-4">
@@ -743,7 +762,6 @@ const SearchResults = () => {
             </section>
           )}
 
-          {/* Tags section (if any) */}
           {tags.length > 0 && (
             <section>
               <h2 className="text-lg font-heading font-semibold text-foreground mb-4">
@@ -776,7 +794,7 @@ const SearchResults = () => {
             tagIds: data.tagIds,
             file: data.file,
           });
-          navigate(`/post/${newForum.id}`);
+          navigate(`/post/${newForum.forum.id}`);
         }}
       />
 

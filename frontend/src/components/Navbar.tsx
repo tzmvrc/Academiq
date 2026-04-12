@@ -291,7 +291,7 @@ const Navbar = () => {
   const ThemeIcon = themeIcon;
 
   const getUserInitials = () => {
-    if (!user) return "?";
+    if (!user || !user.name) return "?";
     return user.name
       .split(" ")
       .map((n) => n[0])

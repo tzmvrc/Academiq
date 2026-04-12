@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useInView } from "react-intersection-observer";
 import { motion } from "framer-motion";
+import { useSocket } from "@/components/SocketContext";
 import {
   UserPlus,
   Check,
@@ -14,10 +15,11 @@ import {
 } from "lucide-react";
 import FeaturedSection from "@/components/FeaturedSection";
 import DiscussionCard from "@/components/DiscussionCard";
-import AISuggestionPanel from "@/components/AISuggestionPanel";
+import AchievementsPanel from "@/components/AchievementsPanel";
 import CreatePostModal from "@/components/CreatePostModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { SkeletonCard } from "@/components/SkeletonCard";
+import PendingPostsPanel from "@/components/PendingPostsPanel";
 import { toast } from "@/hooks/use-toast";
 import { DiscussionCardSkeleton } from "@/components/SkeletonLoaders";
 import {
@@ -123,6 +125,7 @@ const DUMMY_FORUM: DiscussionCardProps = {
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { socket } = useSocket();
 
   const subjectId = searchParams.get("subjectId");
   const tagId = searchParams.get("tagId");
@@ -307,6 +310,31 @@ const Index = () => {
     [subjectId, tagId],
   );
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleValidationCompleted = (data: {
+      forumId: string;
+      verdict: string;
+    }) => {
+      // Only refresh if the post belongs to the current user (optional, but safe)
+      // We can simply refresh the feed to show the updated content.
+      console.log("Validation completed for forum", data.forumId, data.verdict);
+      // Reset and reload feed
+      setForums([]);
+      pageRef.current = 0;
+      hasMoreRef.current = true;
+      setInitialLoading(true);
+      loadForums(true);
+    };
+
+    socket.on("forum_validation_completed", handleValidationCompleted);
+
+    return () => {
+      socket.off("forum_validation_completed", handleValidationCompleted);
+    };
+  }, [socket, loadForums]);
+
   // Initial load
   useEffect(() => {
     loadForums(true);
@@ -440,14 +468,21 @@ const Index = () => {
     tagIds?: string[];
     file?: File;
   }) => {
-    const newForum = await forumService.createForum({
+    const result = await forumService.createForum({
       title: data.title,
       content: data.content,
       subject: data.category,
       tagIds: data.tagIds,
       file: data.file,
     });
-    navigate(`/post/${newForum.id}`);
+    // Dispatch custom event for PendingPostsPanel to add the new post instantly
+    const newPost = {
+      id: result.forum.id,
+      title: result.forum.title,
+      created_at: result.forum.created_at,
+      validation_status: "pending",
+    };
+    window.dispatchEvent(new CustomEvent("post-created", { detail: newPost }));
   };
 
   // Edit/Delete Handlers
@@ -480,43 +515,21 @@ const Index = () => {
     }
   };
 
-  const handlePostUpdated = async () => {
+  const handlePostUpdated = () => {
     if (!selectedPostId) return;
 
-    try {
-      const freshForum = await forumService.getForumById(selectedPostId);
-      const truncatedPreview =
-        (freshForum.fullContent || "").substring(0, 150) +
-        ((freshForum.fullContent || "").length > 150 ? "..." : "");
+    // Remove the post from the feed (it's now pending and will be revalidated)
+    setForums((prev) => prev.filter((f) => f.id !== selectedPostId));
 
-      setForums((prev) =>
-        prev.map((f) =>
-          f.id === freshForum.id
-            ? {
-                ...f,
-                title: freshForum.title,
-                fullContent: freshForum.fullContent,
-                preview: truncatedPreview,
-                field: freshForum.field,
-                tags: freshForum.tags,
-                documentUrl: freshForum.documentUrl,
-              }
-            : f,
-        ),
-      );
+    toast({
+      title: "Post updated",
+      description:
+        "Your changes are being reviewed. You'll be notified when approved.",
+    });
 
-      toast({ title: "Post updated successfully!" });
-    } catch (err) {
-      console.error("Failed to refresh forum after edit:", err);
-      toast({
-        title: "Post updated but could not refresh display",
-        variant: "destructive",
-      });
-    } finally {
-      setEditModalOpen(false);
-      setSelectedPostId(null);
-      setSelectedPostData(null);
-    }
+    setEditModalOpen(false);
+    setSelectedPostId(null);
+    setSelectedPostData(null);
   };
 
   const handleVoteForum = async (forumId: string, voteType: 1 | -1) => {
@@ -1003,8 +1016,9 @@ const Index = () => {
 
         {/* Right column – AI suggestions (sticky) */}
         <div className="hidden lg:block">
-          <div className="sticky top-24">
-            <AISuggestionPanel />
+          <div className="sticky top-24 space-y-6">
+            <PendingPostsPanel />
+            <AchievementsPanel />
           </div>
         </div>
       </div>

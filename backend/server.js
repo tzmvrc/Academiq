@@ -2,6 +2,7 @@ import app from "./app/app.js";
 import dotenv from "dotenv";
 import http from "http";
 import "./app/services/test/scheduler.js"; // after initSocket() is called
+import { pointValidationJob } from "./app/jobs/pointValidationJob.js";
 import { initSocket } from "./app/middlewares/socket.js";
 
 dotenv.config();
@@ -9,6 +10,9 @@ dotenv.config();
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 initSocket(server); // attaches socket.io to the server
+
+// Start point validation scheduler
+pointValidationJob.start();
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);

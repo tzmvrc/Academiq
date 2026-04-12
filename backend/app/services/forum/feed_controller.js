@@ -3,6 +3,7 @@ import { UserModel } from "../../models/user_model.js";
 import { UserInterestsModel } from "../../models/user_interests_model.js";
 import { ActivityService } from "../activity_service.js";
 import { computeUserInterestVector } from "../embedding/userInterestService.js";
+import { setCacheHeaders, shouldReturn304 } from "../../utils/cacheHeaders.js";
 
 // Helper: get forum details with tags and subject (unchanged)
 const enrichForum = async (forum, currentUserId) => {
@@ -42,7 +43,7 @@ const enrichForum = async (forum, currentUserId) => {
     downvotes_count: forum.downvotes_count,
     comments_count: forum.comments_count,
     created_at: forum.created_at,
-    user: forum.user, // already joined
+    user: forum.user,
     subject,
     tags: tags?.map((t) => t.tag) || [],
     my_vote: myVote,
@@ -51,8 +52,7 @@ const enrichForum = async (forum, currentUserId) => {
 
 export const FeedController = {
   /**
-   * Personalized feed with 30‑minute expiry on interest vector.
-   * Uses semantic similarity + secondary ranking.
+   * Personalized feed – only approved forums.
    */
   async getPersonalizedFeed(req, res) {
     try {
@@ -97,7 +97,7 @@ export const FeedController = {
       let candidateForums = [];
       let total = 0;
 
-      // 2. If we have a vector, get semantically similar forums
+      // 2. If we have a vector, get semantically similar forums (only approved)
       if (userVector) {
         console.log("🔍 Calling get_semantic_suggestions with vector");
         const { data: similar, error: vecErr } = await supabase.rpc(
@@ -111,7 +111,14 @@ export const FeedController = {
           console.error("❌ Vector search error:", vecErr);
         } else if (similar) {
           console.log(`✅ Got ${similar.length} similar forums`);
-          candidateForums = similar.map((item) => ({
+          // Filter out pending/rejected (in case RPC returns them)
+          const approvedSimilar = similar.filter(
+            (item) => item.validation_status === "approved",
+          );
+          console.log(
+            `✅ After approval filter: ${approvedSimilar.length} forums`,
+          );
+          candidateForums = approvedSimilar.map((item) => ({
             id: item.id,
             title: item.title,
             content: item.content,
@@ -129,10 +136,10 @@ export const FeedController = {
         }
       }
 
-      // 3. If no vector or no results, fallback to traditional ranking (fetch all forums)
+      // 3. If no vector or no results, fallback to traditional ranking (fetch all approved forums)
       if (!userVector || candidateForums.length === 0) {
         console.log("🔍 Falling back to traditional ranking");
-        // Fetch all data needed for fallback ranking
+        // Fetch all data needed for fallback ranking – only approved forums
         const [followedSubjectsData, followedUsersData, userInterestsData] =
           await Promise.all([
             supabase
@@ -163,7 +170,9 @@ export const FeedController = {
           subject:subject_id(id, name),
           forum_tags(tag:tag_id(id, name, slug, usage_count))
         `,
-          );
+          )
+          .eq("validation_status", "approved"); // ✅ Only approved forums
+
         if (allErr) throw allErr;
 
         // Score each forum (same as original)
@@ -202,7 +211,7 @@ export const FeedController = {
           return new Date(b.created_at) - new Date(a.created_at);
         });
         total = candidateForums.length;
-        console.log(`📊 Fallback total forums: ${total}`);
+        console.log(`📊 Fallback total approved forums: ${total}`);
       } else {
         // 4. Apply secondary ranking on the candidate set (from vector search)
         console.log("🔍 Applying secondary ranking on vector candidates");
@@ -266,7 +275,7 @@ export const FeedController = {
         });
         candidateForums = scored;
         total = candidateForums.length;
-        console.log(`📊 Vector + ranking total forums: ${total}`);
+        console.log(`📊 Vector + ranking total approved forums: ${total}`);
       }
 
       // 5. Apply pagination
@@ -280,6 +289,34 @@ export const FeedController = {
       const enriched = await Promise.all(
         paginatedForums.map((forum) => enrichForum(forum, userId)),
       );
+
+      let lastModified = new Date();
+      if (enriched.length > 0) {
+        const latestTimestamp = Math.max(
+          ...enriched.map((f) =>
+            new Date(f.updated_at || f.created_at).getTime(),
+          ),
+        );
+        lastModified = new Date(latestTimestamp);
+      }
+
+      // Check conditional request
+      if (
+        shouldReturn304(
+          req,
+          res,
+          { forums: enriched, hasMore, total },
+          lastModified,
+        )
+      ) {
+        return res.status(304).end();
+      }
+
+      // Set cache headers (private, 30 seconds fresh)
+      setCacheHeaders(res, { forums: enriched, hasMore, total }, lastModified, {
+        isPrivate: true,
+        maxAgeSeconds: 30,
+      });
 
       res.json({
         forums: enriched,

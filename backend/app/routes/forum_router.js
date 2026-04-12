@@ -41,6 +41,8 @@ router.get(
   FeedController.getPeopleYouMayKnow,
 );
 
+router.get("/users/me/pending", authMiddleware, ForumsController.getUserPendingForums);
+
 /* -----------------------
    Forums (Public)
 ------------------------ */
@@ -60,7 +62,7 @@ router.get("/:id/save", authMiddleware, ForumSavesController.getSaveStatus);
 /* -----------------------
    Forums (Public by ID)
 ------------------------ */
-router.get("/:id", ForumsController.getForumById);
+router.get("/:id", authMiddleware, ForumsController.getForumById);
 
 /* -----------------------
    Forums (Protected actions)

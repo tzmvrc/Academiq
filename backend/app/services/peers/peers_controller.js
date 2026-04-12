@@ -1,6 +1,7 @@
 import { UserFollowModel } from "../../models/peers_model.js";
 import { UserModel } from "../../models/user_model.js";
 import { NotificationService } from "../../services/notification/notification_service.js";
+import { AchievementService } from "../../services/achievement_service.js";
 import { supabase } from "../../database/supabase.js";
 import { getIO } from "../../middlewares/socket.js";
 
@@ -130,6 +131,11 @@ export const UserFollowsController = {
             profile_url: followerUser.profile_url,
           },
         });
+
+        // Trigger achievement evaluation for followed user
+        AchievementService.triggerOnFollowerAdded(followingId).catch((err) =>
+          console.error("Achievement evaluation error:", err),
+        );
       }
 
       // --- Emit real-time follow event to both users ---

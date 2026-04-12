@@ -426,7 +426,7 @@ const SchoolPage = () => {
       tagIds: data.tagIds,
       file: data.file,
     });
-    navigate(`/post/${newForum.id}`);
+    navigate(`/post/${newForum.forum.id}`);
   };
 
   const getUserRowClasses = (rank: number) => {

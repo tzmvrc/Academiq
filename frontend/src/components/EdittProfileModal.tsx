@@ -1,9 +1,20 @@
 // components/EditProfileModal.tsx
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Upload, Globe, Lock } from "lucide-react";
+import { X, Upload, Globe, Lock, Trophy, Check } from "lucide-react";
 import axiosInstance from "@/integration/axiosInstance";
 import { toast } from "@/hooks/use-toast";
+
+interface Achievement {
+  id: string;
+  achievement_id: string;
+  achievement_name: string;
+  achievement_description: string;
+  achievement_icon: string;
+  achievement_points: number;
+  unlocked_at: string;
+  is_featured: boolean;
+}
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -33,6 +44,9 @@ const EditProfileModal = ({
     (user.privacy === "private" ? "private" : "public") as "public" | "private",
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [selectedFeatured, setSelectedFeatured] = useState<string[]>([]);
+  const [loadingAchievements, setLoadingAchievements] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reset form when modal opens with new user data
@@ -43,8 +57,31 @@ const EditProfileModal = ({
       const privacySetting = user.privacy === "private" ? "private" : "public";
       setPrivacy(privacySetting as "public" | "private");
       setProfilePicture(null);
+      fetchAchievements();
     }
-  }, [isOpen, user.bio, user.profile_url, user.privacy]);
+  }, [isOpen, user.bio, user.profile_url, user.privacy, user.id]);
+
+  const fetchAchievements = async () => {
+    try {
+      setLoadingAchievements(true);
+      const res = await axiosInstance.get(`/achievements/user/${user.id}`);
+      const allAchievements = res.data.achievements || [];
+      setAchievements(allAchievements);
+
+      // Load featured achievements from localStorage
+      const featuredKey = `featured_achievements_${user.id}`;
+      const storedFeatured = localStorage.getItem(featuredKey);
+      const featured = storedFeatured ? JSON.parse(storedFeatured) : [];
+      setSelectedFeatured(featured);
+    } catch (err) {
+      console.error("Failed to fetch achievements", err);
+      // Silently fail - achievements section just won't show achievements
+      // This prevents the entire modal from breaking if achievements aren't available
+      setAchievements([]);
+    } finally {
+      setLoadingAchievements(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -56,6 +93,23 @@ const EditProfileModal = ({
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const toggleFeaturedAchievement = (achievementId: string) => {
+    setSelectedFeatured((prev) => {
+      if (prev.includes(achievementId)) {
+        return prev.filter((id) => id !== achievementId);
+      } else {
+        if (prev.length >= 3) {
+          toast({
+            title: "Maximum 3 featured achievements allowed",
+            variant: "destructive",
+          });
+          return prev;
+        }
+        return [...prev, achievementId];
+      }
+    });
   };
 
   const handleSubmit = async () => {
@@ -82,6 +136,26 @@ const EditProfileModal = ({
         profile_url: profileUrl,
         privacy,
       });
+
+      // Update featured achievements (save to backend)
+      if (
+        selectedFeatured.length > 0 ||
+        achievements.some((a) => a.is_featured)
+      ) {
+        await axiosInstance.put("/achievements/featured", {
+          featuredIds: selectedFeatured,
+        });
+      }
+
+      // Save featured achievements to localStorage for immediate display
+      if (selectedFeatured.length > 0) {
+        localStorage.setItem(
+          `featured_achievements_${user.id}`,
+          JSON.stringify(selectedFeatured),
+        );
+      } else {
+        localStorage.removeItem(`featured_achievements_${user.id}`);
+      }
 
       // Ensure the returned user includes privacy field
       const updatedUserData = {
@@ -212,6 +286,48 @@ const EditProfileModal = ({
                     : "Anyone can see your followers and following lists."}
                 </p>
               </div>
+
+              {/* Featured Achievements */}
+              {!loadingAchievements && achievements.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                    <Trophy className="h-4 w-4 text-yellow-500" />
+                    Featured Achievements (top 3)
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {achievements.map((achievement) => (
+                      <button
+                        key={achievement.achievement_id}
+                        type="button"
+                        onClick={() =>
+                          toggleFeaturedAchievement(achievement.achievement_id)
+                        }
+                        className={`relative p-3 rounded-lg border-2 transition-all ${
+                          selectedFeatured.includes(achievement.achievement_id)
+                            ? "border-primary bg-primary/10"
+                            : "border-border bg-card hover:border-primary/50"
+                        }`}>
+                        <div className="text-2xl text-center mb-1">
+                          {achievement.achievement_icon || "🏆"}
+                        </div>
+                        <p className="text-xs font-medium text-foreground text-center line-clamp-1">
+                          {achievement.achievement_name}
+                        </p>
+                        {selectedFeatured.includes(
+                          achievement.achievement_id,
+                        ) && (
+                          <div className="absolute top-0.5 right-0.5 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Select your 3 best achievements to showcase on your profile
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 p-4 border-t border-border">

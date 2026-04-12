@@ -40,6 +40,8 @@ interface Comment {
   downvotes: number;
   myVote: 1 | -1 | null;
   isVerified?: boolean;
+  verificationSourceUrl?: string | null;
+  pointsAwarded?: number;
   isAuthor?: boolean;
   replies?: Comment[];
 }
@@ -146,12 +148,14 @@ const buildCommentTree = (
       initials: getInitials(comment.users?.name),
       profileUrl: comment.users?.profile_url || null,
       timestamp: formatElapsedTime(comment.created_at),
-      originalCreatedAt: comment.created_at, // <-- new
+      originalCreatedAt: comment.created_at,
       text: comment.content,
       upvotes: comment.upvotes_count || 0,
       downvotes: comment.downvotes_count || 0,
       myVote: comment.myVote ?? null,
-      isVerified: false,
+      isVerified: (comment as any).is_ai_verified || false,
+      verificationSourceUrl: (comment as any).verification_source_url || null,
+      pointsAwarded: (comment as any).points_awarded || 0,
       isAuthor: currentUserId ? comment.user_id === currentUserId : false,
       replies: [],
     });
@@ -351,6 +355,31 @@ const CommentComponent = ({
             <span className="text-xs text-muted-foreground">
               {comment.timestamp}
             </span>
+
+            {/* Points awarded badge */}
+            {comment.pointsAwarded && comment.pointsAwarded > 0 && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-yellow-500/10 text-yellow-600 font-medium flex items-center gap-1">
+                ⭐ {comment.pointsAwarded} pts
+              </span>
+            )}
+
+            {/* Verification badge with source URL */}
+            {comment.isVerified && comment.verificationSourceUrl && (
+              <a
+                href={comment.verificationSourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="This comment or info is verified through this link"
+                className="text-[10px] px-1.5 py-0.5 rounded-full bg-success/10 text-success font-medium flex items-center gap-1 hover:bg-success/20 transition-colors cursor-pointer"
+                onClick={(e) => e.stopPropagation()}>
+                ✓{" "}
+                {new URL(comment.verificationSourceUrl).hostname.replace(
+                  "www.",
+                  "",
+                )}
+              </a>
+            )}
+
             {comment.isVerified && <AIBadge variant="comment" />}
 
             {comment.isAuthor && (
@@ -541,200 +570,6 @@ const PostDetails = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { socket } = useSocket();
 
-  // Socket listeners
-  useEffect(() => {
-    if (!socket || !id) return;
-
-    // Join the room for this post
-    if (socket.connected) {
-      socket.emit("join_post_room", id);
-    } else {
-      socket.once("connect", () => {
-        socket.emit("join_post_room", id);
-      });
-    }
-
-    // Helper to check if a comment already exists (prevents duplicates)
-    const commentExists = (list: Comment[], targetId: string): boolean => {
-      for (const c of list) {
-        if (c.id === targetId) return true;
-        if (c.replies && commentExists(c.replies, targetId)) return true;
-      }
-      return false;
-    };
-
-    // --- New comment ---
-    const onCommentCreated = (comment: BackendComment) => {
-      if (comment.forum_id !== id) return;
-      if (CURRENT_USER.id === comment.user_id) return;
-      setComments((prev) => {
-        // Avoid adding duplicate (from optimistic update)
-        if (commentExists(prev, comment.id)) return prev;
-
-        const newComment: Comment = {
-          id: comment.id,
-          user_id: comment.user_id,
-          author: comment.users?.name || "Unknown User",
-          initials: getInitials(comment.users?.name),
-          profileUrl: comment.users?.profile_url || null,
-          timestamp: formatElapsedTime(comment.created_at),
-          originalCreatedAt: comment.created_at,
-          text: comment.content,
-          upvotes: comment.upvotes_count || 0,
-          downvotes: comment.downvotes_count || 0,
-          myVote: null,
-          isVerified: false,
-          isAuthor: CURRENT_USER.id === comment.user_id,
-          replies: [],
-        };
-
-        // Inside onCommentCreated, when parent_comment_id exists:
-        if (comment.parent_comment_id) {
-          const insertReply = (list: Comment[]): Comment[] =>
-            list.map((c) => {
-              if (c.id === comment.parent_comment_id) {
-                return {
-                  ...c,
-                  replies: [newComment, ...(c.replies || [])], // prepend
-                };
-              }
-              if (c.replies) {
-                return { ...c, replies: insertReply(c.replies) };
-              }
-              return c;
-            });
-          return insertReply(prev);
-        } else {
-          // Top‑level comment – prepend to keep newest first
-          return [newComment, ...prev];
-        }
-      });
-
-      setPostData((prev: any) => ({
-        ...prev,
-        comments: (prev?.comments || 0) + 1,
-      }));
-    };
-
-    // --- Edit comment ---
-    const onCommentUpdated = (updated: BackendComment) => {
-      if (updated.forum_id !== id) return;
-
-      setComments((prev) =>
-        updateCommentInTree(prev, updated.id, (c) => ({
-          ...c,
-          text: updated.content,
-          upvotes: updated.upvotes_count || 0,
-          downvotes: updated.downvotes_count || 0,
-        })),
-      );
-    };
-
-    // --- Delete comment ---
-    const onCommentDeleted = (data: { commentId: string; forumId: string }) => {
-      if (data.forumId !== id) return;
-
-      setComments((prev) => deleteCommentFromTree(prev, data.commentId));
-      setPostData((prev: any) => ({
-        ...prev,
-        comments: Math.max((prev?.comments || 1) - 1, 0),
-      }));
-    };
-
-    // --- Vote on comment ---
-    const onCommentVoted = (data: {
-      commentId: string;
-      voteType: 1 | -1 | null;
-      upvotes: number;
-      downvotes: number;
-      userId: string;
-    }) => {
-      setComments((prev) =>
-        updateCommentInTree(prev, data.commentId, (c) => ({
-          ...c,
-          upvotes: data.upvotes,
-          downvotes: data.downvotes,
-          myVote: data.userId === CURRENT_USER.id ? data.voteType : c.myVote,
-        })),
-      );
-    };
-
-    // Register listeners
-    socket.on("comment_created", onCommentCreated);
-    socket.on("comment_updated", onCommentUpdated);
-    socket.on("comment_deleted", onCommentDeleted);
-    socket.on("comment_voted", onCommentVoted);
-
-    // Cleanup on unmount
-    return () => {
-      socket.off("comment_created", onCommentCreated);
-      socket.off("comment_updated", onCommentUpdated);
-      socket.off("comment_deleted", onCommentDeleted);
-      socket.off("comment_voted", onCommentVoted);
-      socket.emit("leave_post_room", id);
-    };
-  }, [socket, id]);
-
-  const handleReplyToComment = async (
-    parentCommentId: string,
-    text: string,
-  ) => {
-    try {
-      const res = await axiosInstance.post(`/forums/${id}/comments`, {
-        content: text,
-        parent_comment_id: parentCommentId,
-      });
-
-      const created = res.data?.comment;
-
-      const mappedReply: Comment = {
-        id: created.id,
-        user_id: created.user_id,
-        author: created.users?.name || CURRENT_USER.name,
-        initials: getInitials(created.users?.name || CURRENT_USER.name),
-        profileUrl: created.users?.profile_url || CURRENT_USER.profileUrl,
-        timestamp: formatElapsedTime(created.created_at),
-        originalCreatedAt: created.created_at,
-        text: created.content,
-        upvotes: created.upvotes_count || 0,
-        downvotes: created.downvotes_count || 0,
-        myVote: null,
-        isAuthor: true,
-        replies: [],
-      };
-
-      const insertReplyIntoTree = (list: Comment[]): Comment[] =>
-        list.map((comment) => {
-          if (comment.id === parentCommentId) {
-            return {
-              ...comment,
-              replies: [mappedReply, ...(comment.replies || [])], // prepend
-            };
-          }
-          return {
-            ...comment,
-            replies: comment.replies
-              ? insertReplyIntoTree(comment.replies)
-              : [],
-          };
-        });
-
-      setComments((prev) => insertReplyIntoTree(prev));
-      setPostData((prev: any) => ({
-        ...prev,
-        comments: (prev?.comments || 0) + 1,
-      }));
-
-      toast({ title: "Reply posted!" });
-    } catch (err: any) {
-      console.error("Create reply error:", err);
-      toast({
-        title: err?.response?.data?.error || "Failed to post reply",
-        variant: "destructive",
-      });
-    }
-  };
-
   const fetchPostDetails = async () => {
     if (!id) return;
 
@@ -844,6 +679,218 @@ const PostDetails = () => {
       navigate("/feed");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Socket listeners
+  useEffect(() => {
+    if (!socket || !id) return;
+
+    // Join the room for this post
+    if (socket.connected) {
+      socket.emit("join_post_room", id);
+    } else {
+      socket.once("connect", () => {
+        socket.emit("join_post_room", id);
+      });
+    }
+
+    // Helper to check if a comment already exists
+    const commentExists = (list: Comment[], targetId: string): boolean => {
+      for (const c of list) {
+        if (c.id === targetId) return true;
+        if (c.replies && commentExists(c.replies, targetId)) return true;
+      }
+      return false;
+    };
+
+    // --- New comment ---
+    const onCommentCreated = (comment: BackendComment) => {
+      if (comment.forum_id !== id) return;
+      if (CURRENT_USER.id === comment.user_id) return;
+      setComments((prev) => {
+        if (commentExists(prev, comment.id)) return prev;
+        const newComment: Comment = {
+          id: comment.id,
+          user_id: comment.user_id,
+          author: comment.users?.name || "Unknown User",
+          initials: getInitials(comment.users?.name),
+          profileUrl: comment.users?.profile_url || null,
+          timestamp: formatElapsedTime(comment.created_at),
+          originalCreatedAt: comment.created_at,
+          text: comment.content,
+          upvotes: comment.upvotes_count || 0,
+          downvotes: comment.downvotes_count || 0,
+          myVote: null,
+          isVerified: (comment as any).is_ai_verified || false,
+          verificationSourceUrl:
+            (comment as any).verification_source_url || null,
+          pointsAwarded: (comment as any).points_awarded || 0,
+          isAuthor: CURRENT_USER.id === comment.user_id,
+          replies: [],
+        };
+        if (comment.parent_comment_id) {
+          const insertReply = (list: Comment[]): Comment[] =>
+            list.map((c) => {
+              if (c.id === comment.parent_comment_id) {
+                return { ...c, replies: [newComment, ...(c.replies || [])] };
+              }
+              if (c.replies) return { ...c, replies: insertReply(c.replies) };
+              return c;
+            });
+          return insertReply(prev);
+        } else {
+          return [newComment, ...prev];
+        }
+      });
+      setPostData((prev: any) => ({
+        ...prev,
+        comments: (prev?.comments || 0) + 1,
+      }));
+    };
+
+    // --- Edit comment ---
+    const onCommentUpdated = (updated: BackendComment) => {
+      if (updated.forum_id !== id) return;
+      setComments((prev) =>
+        updateCommentInTree(prev, updated.id, (c) => ({
+          ...c,
+          text: updated.content,
+          upvotes: updated.upvotes_count || 0,
+          downvotes: updated.downvotes_count || 0,
+          isVerified: (updated as any).is_ai_verified || c.isVerified,
+          verificationSourceUrl:
+            (updated as any).verification_source_url || c.verificationSourceUrl,
+          pointsAwarded: (updated as any).points_awarded || c.pointsAwarded,
+        })),
+      );
+    };
+
+    // --- Delete comment ---
+    const onCommentDeleted = (data: { commentId: string; forumId: string }) => {
+      if (data.forumId !== id) return;
+      setComments((prev) => deleteCommentFromTree(prev, data.commentId));
+      setPostData((prev: any) => ({
+        ...prev,
+        comments: Math.max((prev?.comments || 1) - 1, 0),
+      }));
+    };
+
+    // --- Vote on comment ---
+    const onCommentVoted = (data: {
+      commentId: string;
+      voteType: 1 | -1 | null;
+      upvotes: number;
+      downvotes: number;
+      userId: string;
+    }) => {
+      setComments((prev) =>
+        updateCommentInTree(prev, data.commentId, (c) => ({
+          ...c,
+          upvotes: data.upvotes,
+          downvotes: data.downvotes,
+          myVote: data.userId === CURRENT_USER.id ? data.voteType : c.myVote,
+        })),
+      );
+    };
+
+    // --- Forum validation completed (for edit approval/rejection) ---
+    const onForumValidationCompleted = (data: {
+      forumId: string;
+      verdict: string;
+      forum: any;
+    }) => {
+      if (data.forumId !== id) return;
+      // Refetch post details to show the reverted/approved version
+      fetchPostDetails();
+      toast({
+        title:
+          data.verdict === "approved"
+            ? "Post update approved!"
+            : "Post update rejected",
+        description:
+          data.verdict === "approved"
+            ? "Your changes have been approved and are now visible."
+            : "Your edit was rejected. The post has been reverted to its previous version.",
+        variant: data.verdict === "approved" ? "default" : "destructive",
+      });
+    };
+
+    // Register all listeners
+    socket.on("comment_created", onCommentCreated);
+    socket.on("comment_updated", onCommentUpdated);
+    socket.on("comment_deleted", onCommentDeleted);
+    socket.on("comment_voted", onCommentVoted);
+    socket.on("forum_validation_completed", onForumValidationCompleted);
+
+    // Cleanup on unmount
+    return () => {
+      socket.off("comment_created", onCommentCreated);
+      socket.off("comment_updated", onCommentUpdated);
+      socket.off("comment_deleted", onCommentDeleted);
+      socket.off("comment_voted", onCommentVoted);
+      socket.off("forum_validation_completed", onForumValidationCompleted);
+      socket.emit("leave_post_room", id);
+    };
+  }, [socket, id, fetchPostDetails]); // Add fetchPostDetails to dependencies if it's not stable
+
+  const handleReplyToComment = async (
+    parentCommentId: string,
+    text: string,
+  ) => {
+    try {
+      const res = await axiosInstance.post(`/forums/${id}/comments`, {
+        content: text,
+        parent_comment_id: parentCommentId,
+      });
+
+      const created = res.data?.comment;
+
+      const mappedReply: Comment = {
+        id: created.id,
+        user_id: created.user_id,
+        author: created.users?.name || CURRENT_USER.name,
+        initials: getInitials(created.users?.name || CURRENT_USER.name),
+        profileUrl: created.users?.profile_url || CURRENT_USER.profileUrl,
+        timestamp: formatElapsedTime(created.created_at),
+        originalCreatedAt: created.created_at,
+        text: created.content,
+        upvotes: created.upvotes_count || 0,
+        downvotes: created.downvotes_count || 0,
+        myVote: null,
+        isAuthor: true,
+        replies: [],
+      };
+
+      const insertReplyIntoTree = (list: Comment[]): Comment[] =>
+        list.map((comment) => {
+          if (comment.id === parentCommentId) {
+            return {
+              ...comment,
+              replies: [mappedReply, ...(comment.replies || [])], // prepend
+            };
+          }
+          return {
+            ...comment,
+            replies: comment.replies
+              ? insertReplyIntoTree(comment.replies)
+              : [],
+          };
+        });
+
+      setComments((prev) => insertReplyIntoTree(prev));
+      setPostData((prev: any) => ({
+        ...prev,
+        comments: (prev?.comments || 0) + 1,
+      }));
+
+      toast({ title: "Reply posted!" });
+    } catch (err: any) {
+      console.error("Create reply error:", err);
+      toast({
+        title: err?.response?.data?.error || "Failed to post reply",
+        variant: "destructive",
+      });
     }
   };
 
@@ -1476,7 +1523,15 @@ const PostDetails = () => {
         }}
         mode="edit"
         forumId={postData.id}
-        onSuccess={fetchPostDetails}
+        onSuccess={() => {
+          toast({
+            title: "Post updated",
+            description:
+              "Your changes are being reviewed by AI and will appear once approved.",
+            duration: 5000,
+          });
+          navigate("/feed");
+        }}
       />
 
       <DeleteConfirmModal

@@ -26,7 +26,7 @@ export interface ForumResponse {
     id: string;
     name: string;
   };
-  tags?: Tag[]; // added
+  tags?: Tag[];
 }
 
 export interface Tag {
@@ -44,20 +44,21 @@ export interface DiscussionCardProps {
   authorInitials: string;
   authorProfileUrl?: string;
   authorSchool?: string;
-  field: string; // subject name
-  tags?: Tag[]; // array of tags
+  field: string;
+  tags?: Tag[];
   preview: string;
   fullContent: string;
   aiSummary?: string;
   upvotes: number;
-  documentUrl?: string | null | undefined;
+  documentUrl?: string | null;
   downvotes: number;
   comments: number;
-  tag: string; // keep for backward compatibility? Actually we might remove and use field+tags
+  tag: string;
   isOwn?: boolean;
   isSaved?: boolean;
   userVoteState?: 1 | -1 | null;
   isAiVerified?: boolean;
+  created_at?: string; // <-- ADDED
 }
 
 export interface ToggleSaveResponse {
@@ -111,6 +112,7 @@ const transformForumToDiscussion = (
     isSaved: false,
     userVoteState: userVoteState ?? null,
     isAiVerified: forum.is_ai_verified ?? false,
+    created_at: forum.created_at, // <-- ADDED
   };
 };
 
@@ -213,7 +215,7 @@ export const forumService = {
     subject?: string;
     tagIds?: string[];
     file?: File;
-  }): Promise<DiscussionCardProps> {
+  }): Promise<{ forum: ForumResponse; message: string }> {
     try {
       const formData = new FormData();
       formData.append("title", data.title);
@@ -233,21 +235,7 @@ export const forumService = {
       }
 
       const response = await axiosInstance.post("/forums", formData);
-      const currentUser = localStorage.getItem("user");
-      const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
-
-      const createdForum = response.data?.forum;
-      if (!createdForum?.id) {
-        throw new Error("Created forum ID was not returned by the API");
-      }
-
-      const fullForumResponse = await axiosInstance.get(
-        `/forums/${createdForum.id}`,
-      );
-      return transformForumToDiscussion(
-        fullForumResponse.data.forum,
-        currentUserId,
-      );
+      return response.data;
     } catch (error) {
       console.error("Failed to create forum:", error);
       throw error;
@@ -288,21 +276,16 @@ export const forumService = {
       }
 
       const response = await axiosInstance.put(`/forums/${id}`, formData);
-      const currentUser = localStorage.getItem("user");
-      const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
-
-      const updatedForum = response.data?.forum;
+      // Backend returns { forum: updatedForum, message: ... }
+      const updatedForum = response.data.forum;
       if (!updatedForum?.id) {
         throw new Error("Updated forum ID was not returned by the API");
       }
 
-      const fullForumResponse = await axiosInstance.get(
-        `/forums/${updatedForum.id}`,
-      );
-      return transformForumToDiscussion(
-        fullForumResponse.data.forum,
-        currentUserId,
-      );
+      // Transform directly without fetching again
+      const currentUser = localStorage.getItem("user");
+      const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
+      return transformForumToDiscussion(updatedForum, currentUserId);
     } catch (error) {
       console.error(`Failed to update forum ${id}:`, error);
       throw error;

@@ -22,52 +22,47 @@ def verify_comment(forum_title: str, forum_content: str, comment: str):
     # Pick first source or None
     primary_source = sources[0] if sources else None
 
-    # 🔹 Step 2: Build the prompt for Qwen
-    prompt = f"""
-You are an AI that verifies a forum comment.
+    # 🔹 Step 2: Build the prompt for Qwen (simplified to ensure valid JSON)
+    prompt = f"""You are an AI that verifies a forum comment.
 
-RULES:
-- Only return strict JSON
-- Keys: status, source_url, reason
-- status = "verified" if comment matches forum topic AND a source URL confirms it
-- status = "not_verified" if comment matches forum topic but no source confirms
-- status = "unrelated" if comment does not match topic
-- source_url = URL if verified, else null
-- reason = short explanation
+FORUM TITLE: {forum_title}
+FORUM CONTENT: {forum_content}
+COMMENT: {comment}
+PRIMARY SOURCE: {primary_source}
 
-FORUM TITLE:
-{forum_title}
-
-FORUM CONTENT:
-{forum_content}
-
-COMMENT:
-{comment}
-
-PRIMARY SOURCE:
-{primary_source}
-
-Return only JSON.
-"""
+Output ONLY this JSON format with no other text:
+{{"status": "verified" or "not_verified" or "unrelated", "source_url": null or "url_string", "reason": "brief explanation"}}"""
 
     # 🔹 Step 3: Call Qwen
     raw = generate_response(prompt)
 
     # 🔹 Step 4: Try parsing AI response
     try:
-        # Sometimes AI outputs extra text, extract the JSON part
-        clean_raw = re.search(r'\{.*\}', raw, re.DOTALL).group()
-        response = json.loads(clean_raw)
+        # Extract JSON from response (handle cases where AI adds extra text)
+        match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', raw, re.DOTALL)
+        if match:
+            clean_raw = match.group()
+            response = json.loads(clean_raw)
+        else:
+            raise ValueError(f"No JSON found in response: {raw[:100]}")
 
-        # Ensure source_url is a string or None
+        # Validate and normalize response
+        response["status"] = response.get("status", "not_verified").lower()
+        if response["status"] not in ["verified", "not_verified", "unrelated"]:
+            response["status"] = "not_verified"
+        
+        response["source_url"] = response.get("source_url") or None
         if isinstance(response.get("source_url"), list):
             response["source_url"] = response["source_url"][0] if response["source_url"] else None
+        
+        response["reason"] = response.get("reason", "Comment verification completed")
 
     except Exception as e:
+        # Fallback response when parsing fails
         response = {
             "status": "not_verified",
             "source_url": None,
-            "reason": f"Failed to parse AI response: {str(e)} | raw: {raw}"
+            "reason": "Unable to verify. Please ensure your comment contains verifiable claims."
         }
 
     return response
