@@ -305,6 +305,9 @@ export const CommentsController = {
       // --- AI REGRADING: Validate edited content ---
       let regradingResult;
       try {
+        console.log(`📝 Regrading comment ${id}...`);
+        console.log(`   Old points: ${originalComment.points_awarded || 0}`);
+
         regradingResult =
           await CommentModerationService.validatePointsImmediately(
             id,
@@ -314,13 +317,20 @@ export const CommentsController = {
             forum?.content || "No content",
             content.trim(),
           );
+
+        console.log(
+          `   New points from AI: ${regradingResult.pointsAwarded || 0}`,
+        );
       } catch (err) {
-        console.error("Regrading validation error:", err);
+        console.error("❌ Regrading validation error:", err);
         // If AI fails, allow update but don't regrade
         regradingResult = {
           approved: true,
           pointsAwarded: originalComment.points_awarded || 0,
         };
+        console.log(
+          `   Using original points due to error: ${regradingResult.pointsAwarded}`,
+        );
       }
 
       // If regrading rejected, don't allow update
@@ -341,52 +351,85 @@ export const CommentsController = {
         });
       if (updateErr) throw updateErr;
 
-      // --- POINTS REGRADING: Recalculate without stacking ---
+      // --- POINTS REGRADING: ALWAYS subtract old first, then add new ---
+      const { data: user } = await UserModel.findById(userId);
       const oldPointsAwarded = originalComment.points_awarded || 0;
       const newPointsAwarded = regradingResult.pointsAwarded || 0;
+      const pointsDifference = newPointsAwarded - oldPointsAwarded;
+
+      console.log(`💰 Point calculation for comment ${id}:`);
+      console.log(
+        `   Old: ${oldPointsAwarded}, New: ${newPointsAwarded}, Difference: ${pointsDifference}`,
+      );
+
+      // ALWAYS update user points: subtract old, then add new
+      let userCurrentPoints = user?.points || 0;
+      let calculatedPoints = Math.max(
+        0,
+        userCurrentPoints - oldPointsAwarded + newPointsAwarded,
+      );
+
+      console.log(
+        `   User points: ${userCurrentPoints} - ${oldPointsAwarded} + ${newPointsAwarded} = ${calculatedPoints}`,
+      );
+
+      // Update comment points_awarded in database
+      await supabase
+        .from("comments")
+        .update({ points_awarded: newPointsAwarded })
+        .eq("id", id);
+
+      // Update user points in database
+      const { error: updateUserErr } = await supabase
+        .from("users")
+        .update({ points: calculatedPoints })
+        .eq("id", userId);
+
+      if (!updateUserErr && pointsDifference !== 0) {
+        // Notify user only if points changed
+        const pointChange =
+          pointsDifference > 0
+            ? `+${pointsDifference}`
+            : String(pointsDifference);
+        await NotificationService.createNotification({
+          userId,
+          type: "points_adjusted",
+          referenceId: id,
+          message: `Your comment points were recalculated: ${pointChange} points. New total: ${calculatedPoints} points (edited: "${content.substring(0, 60)}${content.length > 60 ? "..." : ""}")`,
+          metadata: {
+            points: pointsDifference,
+            newTotal: calculatedPoints,
+            commentId: id,
+          },
+        });
+      }
 
       // Special case: If AI rejects (0 points), delete the comment
       if (newPointsAwarded === 0) {
-        // Delete comment
         await CommentModel.delete(id);
 
-        // Deduct old points if comment had any
-        if (oldPointsAwarded > 0) {
-          const { data: user } = await UserModel.findById(userId);
-          const newUserPoints = Math.max(
-            0,
-            (user?.points || 0) - oldPointsAwarded,
-          );
+        console.log(`❌ Comment ${id} REJECTED and DELETED`);
+        console.log(
+          `   Points already deducted: ${oldPointsAwarded}. New user total: ${calculatedPoints}`,
+        );
 
-          await supabase
-            .from("users")
-            .update({ points: newUserPoints })
-            .eq("id", userId);
+        // Notify about rejection
+        const deductionMessage =
+          oldPointsAwarded > 0
+            ? `-${oldPointsAwarded} points deducted. New total: ${calculatedPoints} points`
+            : "No points were awarded for this comment.";
 
-          // Notify about rejection and deduction
-          await NotificationService.createNotification({
-            userId,
-            type: "comment_rejected",
-            referenceId: id,
-            message: `Your edited comment was rejected by AI validation. -${oldPointsAwarded} points deducted. New total: ${newUserPoints} points`,
-            metadata: {
-              points: -oldPointsAwarded,
-              newTotal: newUserPoints,
-              commentId: id,
-            },
-          });
-        } else {
-          // Notify about rejection without deduction
-          await NotificationService.createNotification({
-            userId,
-            type: "comment_rejected",
-            referenceId: id,
-            message: `Your edited comment was rejected by AI validation. No points were awarded.`,
-            metadata: {
-              commentId: id,
-            },
-          });
-        }
+        await NotificationService.createNotification({
+          userId,
+          type: "comment_rejected",
+          referenceId: id,
+          message: `Your edited comment was rejected by AI validation. ${deductionMessage}`,
+          metadata: {
+            points: -oldPointsAwarded,
+            newTotal: calculatedPoints,
+            commentId: id,
+          },
+        });
 
         // Invalidate forum cache
         await supabase
@@ -407,48 +450,6 @@ export const CommentsController = {
           message: "Comment rejected by AI validation and deleted",
           pointsDeducted: oldPointsAwarded,
         });
-      }
-
-      // Normal case: Points changed (but not 0)
-      const pointsDifference = newPointsAwarded - oldPointsAwarded;
-
-      if (pointsDifference !== 0) {
-        // Update user points
-        const { data: user } = await UserModel.findById(userId);
-        const newUserPoints = Math.max(
-          0,
-          (user?.points || 0) + pointsDifference,
-        );
-
-        const { error: updateUserErr } = await supabase
-          .from("users")
-          .update({ points: newUserPoints })
-          .eq("id", userId);
-
-        if (!updateUserErr) {
-          // Update comment points_awarded
-          await supabase
-            .from("comments")
-            .update({ points_awarded: newPointsAwarded })
-            .eq("id", id);
-
-          // Notify user of point change
-          const pointChange =
-            pointsDifference > 0
-              ? `+${pointsDifference}`
-              : String(pointsDifference);
-          await NotificationService.createNotification({
-            userId,
-            type: "points_adjusted",
-            referenceId: id,
-            message: `Your comment points were recalculated: ${pointChange} points. New total: ${newUserPoints} points (edited: "${content.substring(0, 60)}${content.length > 60 ? "..." : ""}")`,
-            metadata: {
-              points: pointsDifference,
-              newTotal: newUserPoints,
-              commentId: id,
-            },
-          });
-        }
       }
 
       // Fetch the final updated comment

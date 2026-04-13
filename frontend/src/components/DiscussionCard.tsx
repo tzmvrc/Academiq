@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowBigUp,
@@ -199,10 +199,27 @@ const DiscussionCard = ({
   const [showMenu, setShowMenu] = useState(false);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setSaved(isSaved);
   }, [isSaved]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showMenu]);
 
   const handleUpvote = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -540,7 +557,7 @@ const DiscussionCard = ({
           </div>
 
           {isAuthor && (
-            <div className="relative ml-auto post-menu">
+            <div className="relative ml-auto post-menu" ref={menuRef}>
               <button
                 onClick={(e) => {
                   e.stopPropagation();

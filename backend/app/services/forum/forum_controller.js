@@ -14,6 +14,15 @@ import { updateAchievementProgress } from "../achievement/achievement_service.js
 import { AchievementService } from "../achievement_service.js";
 import { ActivityService } from "../activity_service.js";
 
+// Setup AI Service URL - normalize to ensure /ai suffix
+let AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000/ai";
+AI_SERVICE_URL =
+  AI_SERVICE_URL.replace(/\/ai\/?$/, "").replace(/\/$/, "") + "/ai";
+
+console.log(`🤖 AI Service URL for forum validation: ${AI_SERVICE_URL}`);
+
+const POST_DOCUMENT_BUCKET = "post_document";
+
 const slugifyFileName = (name = "file") => {
   return name
     .replace(/\.[^/.]+$/, "")
@@ -55,7 +64,11 @@ const uploadForumAttachment = async (file, userId, userName, schoolName) => {
       upsert: false,
     });
 
-  if (uploadError) throw uploadError;
+  if (uploadError) {
+    // If bucket doesn't exist or upload fails, log error but continue
+    console.warn(`⚠️ Document upload failed: ${uploadError.message}`);
+    return null; // Return null instead of throwing, allows forum creation to proceed
+  }
 
   const { data: publicUrlData } = supabase.storage
     .from(POST_DOCUMENT_BUCKET)
@@ -346,7 +359,10 @@ export const ForumsController = {
         userId,
         user.name || "User",
         user.school || "School",
-      );
+      ).catch((err) => {
+        console.error("Document upload error:", err);
+        return null; // Continue without document if upload fails
+      });
 
       const payload = {
         title,
@@ -384,14 +400,11 @@ export const ForumsController = {
             tags: tagNames,
           };
 
-          const validationRes = await fetch(
-            "http://127.0.0.1:8000/ai/validate",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(validationPayload),
-            },
-          );
+          const validationRes = await fetch(`${AI_SERVICE_URL}/validate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(validationPayload),
+          });
 
           let validation;
           if (validationRes.ok) {
@@ -556,7 +569,10 @@ export const ForumsController = {
           userId,
           userName,
           schoolName,
-        );
+        ).catch((err) => {
+          console.error("Document upload error during update:", err);
+          return null; // Continue without document if upload fails
+        });
       }
 
       // 6. Apply the update
@@ -589,14 +605,11 @@ export const ForumsController = {
             tags: tagNames,
           };
 
-          const validationRes = await fetch(
-            "http://127.0.0.1:8000/ai/validate",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(validationPayload),
-            },
-          );
+          const validationRes = await fetch(`${AI_SERVICE_URL}/validate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(validationPayload),
+          });
 
           let validation;
           if (validationRes.ok) {

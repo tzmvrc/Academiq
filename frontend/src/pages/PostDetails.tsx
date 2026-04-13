@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useSocket } from "@/components/SocketContext";
@@ -44,6 +44,8 @@ interface Comment {
   pointsAwarded?: number;
   isAuthor?: boolean;
   replies?: Comment[];
+  isPendingValidation?: boolean;
+  previousContent?: string;
 }
 
 interface BackendForum {
@@ -124,6 +126,8 @@ const buildCommentTree = (
       pointsAwarded: (comment as any).points_awarded || 0,
       isAuthor: currentUserId ? comment.user_id === currentUserId : false,
       replies: [],
+      isPendingValidation: false,
+      previousContent: undefined,
     });
   });
 
@@ -253,6 +257,23 @@ const CommentComponent = ({
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showMenu]);
 
   // ... existing handlers (handleReplySubmit, handleSaveEdit) unchanged ...
 
@@ -327,7 +348,11 @@ const CommentComponent = ({
             </span>
 
             {/* Points awarded badge */}
-            {comment.pointsAwarded && comment.pointsAwarded > 0 ? (
+            {comment.isPendingValidation ? (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 font-medium animate-pulse flex items-center gap-1">
+                ⏳ Pending Validation
+              </span>
+            ) : comment.pointsAwarded && comment.pointsAwarded > 0 ? (
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-yellow-500/10 text-yellow-600 font-medium flex items-center gap-1">
                 ⭐ {comment.pointsAwarded} pts
               </span>
@@ -357,7 +382,7 @@ const CommentComponent = ({
             {comment.isVerified && <AIBadge variant="comment" />}
 
             {comment.isAuthor && (
-              <div className="relative ml-auto">
+              <div className="relative ml-auto" ref={menuRef}>
                 <button
                   onClick={() => setShowMenu(!showMenu)}
                   className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
@@ -371,7 +396,17 @@ const CommentComponent = ({
                         setEditing(true);
                         setShowMenu(false);
                       }}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors">
+                      disabled={(comment.pointsAwarded || 0) > 0}
+                      title={
+                        (comment.pointsAwarded || 0) > 0
+                          ? "Cannot edit graded comments"
+                          : "Edit this comment"
+                      }
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors ${
+                        (comment.pointsAwarded || 0) > 0
+                          ? "text-muted-foreground/50 cursor-not-allowed"
+                          : "text-foreground hover:bg-secondary"
+                      }`}>
                       <Pencil className="h-3.5 w-3.5" /> Edit
                     </button>
                     <button
@@ -396,7 +431,7 @@ const CommentComponent = ({
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
               rows={3}
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none font-body"
             />
             <div className="flex gap-2 mt-2">
               <button
@@ -415,7 +450,7 @@ const CommentComponent = ({
             </div>
           </div>
         ) : (
-          <p className="text-sm text-foreground/90 mt-1.5 leading-relaxed">
+          <p className="text-sm text-foreground/90 mt-1.5 leading-relaxed whitespace-pre-wrap break-words">
             {comment.text}
           </p>
         )}
@@ -544,6 +579,26 @@ const PostDetails = () => {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { socket } = useSocket();
+  const postMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close post menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        postMenuRef.current &&
+        !postMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowPostMenu(false);
+      }
+    };
+
+    if (showPostMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showPostMenu]);
 
   // Load current user ID on mount
   useEffect(() => {
@@ -748,6 +803,10 @@ const PostDetails = () => {
     // --- Edit comment ---
     const onCommentUpdated = (updated: BackendComment) => {
       if (updated.forum_id !== id) return;
+
+      // Determine if this was an approved regrading
+      const newPointsAwarded = (updated as any).points_awarded || 0;
+
       setComments((prev) =>
         updateCommentInTree(prev, updated.id, (c) => ({
           ...c,
@@ -757,9 +816,30 @@ const PostDetails = () => {
           isVerified: (updated as any).is_ai_verified || c.isVerified,
           verificationSourceUrl:
             (updated as any).verification_source_url || c.verificationSourceUrl,
-          pointsAwarded: (updated as any).points_awarded || c.pointsAwarded,
+          pointsAwarded: newPointsAwarded,
+          isPendingValidation: false, // Clear pending state on approval
+          previousContent: undefined, // Clear stored previous content
         })),
       );
+
+      // Show validation success if it was pending
+      const wasPending = comments.some((c: Comment) => {
+        const findInTree = (list: Comment[]): boolean => {
+          return list.some((comment) => {
+            if (comment.id === updated.id && comment.isPendingValidation)
+              return true;
+            return findInTree(comment.replies || []);
+          });
+        };
+        return findInTree([c]);
+      });
+
+      if (wasPending && newPointsAwarded > 0) {
+        toast({
+          title: "✓ Comment approved",
+          description: `Your comment was approved by AI validation. +${newPointsAwarded} points awarded.`,
+        });
+      }
     };
 
     // --- Delete comment ---
@@ -1028,26 +1108,88 @@ const PostDetails = () => {
 
   const handleEditComment = async (commentId: string, text: string) => {
     try {
+      // Get the original content before update
+      const findComment = (list: Comment[]): Comment | undefined => {
+        for (const comment of list) {
+          if (comment.id === commentId) return comment;
+          const found = findComment(comment.replies || []);
+          if (found) return found;
+        }
+        return undefined;
+      };
+
+      const originalComment = findComment(comments);
+      if (!originalComment) throw new Error("Comment not found");
+
+      // OPTIMISTIC UPDATE: Show new comment immediately with pending state
+      setComments((prev) =>
+        updateCommentInTree(prev, commentId, (comment) => ({
+          ...comment,
+          text: text,
+          isPendingValidation: true,
+          previousContent: originalComment.text,
+        })),
+      );
+
+      toast({
+        title: "Comment updated",
+        description: "⏳ Waiting for validation...",
+      });
+
+      // Then send update to server
       const res = await axiosInstance.put(`/comments/${commentId}`, {
         content: text,
       });
 
       const updated = res.data?.comment;
 
+      // Update with server response (in case server changed anything)
       setComments((prev) =>
         updateCommentInTree(prev, commentId, (comment) => ({
           ...comment,
           text: updated?.content || text,
+          isPendingValidation: true,
+          previousContent: originalComment.text,
         })),
       );
-
-      toast({ title: "Comment updated!" });
     } catch (err: any) {
       console.error("Update comment error:", err);
-      toast({
-        title: err?.response?.data?.error || "Failed to update comment",
-        variant: "destructive",
-      });
+
+      // Handle AI rejection (422 status)
+      if (err?.response?.status === 422) {
+        // Revert comment to previous content
+        setComments((prev) =>
+          updateCommentInTree(prev, commentId, (comment) => ({
+            ...comment,
+            text: comment.previousContent || comment.text,
+            isPendingValidation: false,
+            previousContent: undefined,
+          })),
+        );
+
+        toast({
+          title: "Edit rejected by AI",
+          description:
+            err?.response?.data?.reason ||
+            "Your edited comment did not meet quality standards",
+          variant: "destructive",
+        });
+      } else {
+        // Revert on any other error
+        setComments((prev) =>
+          updateCommentInTree(prev, commentId, (comment) => ({
+            ...comment,
+            text: comment.previousContent || comment.text,
+            isPendingValidation: false,
+            previousContent: undefined,
+          })),
+        );
+
+        toast({
+          title: err?.response?.data?.error || "Failed to update comment",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -1243,7 +1385,7 @@ const PostDetails = () => {
           {postData.isAiVerified && <AIBadge variant="verified" />}
 
           {isPostAuthor && (
-            <div className="relative ml-auto">
+            <div className="relative ml-auto" ref={postMenuRef}>
               <button
                 onClick={() => setShowPostMenu(!showPostMenu)}
                 className="rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
