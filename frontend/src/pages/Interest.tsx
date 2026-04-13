@@ -283,7 +283,7 @@ const Interests = () => {
               Trending Subjects
             </h2>
           </div>
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-2 md:gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
             {topTrendingSubjects.map((subject) => {
               const Icon = getIconForSubject(subject.name);
               const isFollowed = followedSubjectIds.has(subject.id);
@@ -291,33 +291,33 @@ const Interests = () => {
                 <div
                   key={subject.id}
                   onClick={() => handleSubjectClick(subject.id)}
-                  className={`flex flex-col rounded-xl border p-4 transition-all cursor-pointer hover:shadow-md ${
+                  className={`flex flex-col rounded-lg border p-2 md:p-4 transition-all cursor-pointer hover:shadow-md ${
                     isFollowed
                       ? "border-primary bg-primary/5"
                       : "border-border bg-card"
                   }`}>
-                  <div className="flex items-start gap-3 mb-3">
+                  <div className="flex items-start gap-2 mb-2">
                     <div
-                      className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${
+                      className={`h-8 w-8 md:h-10 md:w-10 rounded-lg flex items-center justify-center shrink-0 ${
                         isFollowed ? "bg-primary/10" : "bg-secondary"
                       }`}>
                       <Icon
-                        className={`h-5 w-5 ${isFollowed ? "text-primary" : "text-muted-foreground"}`}
+                        className={`h-4 w-4 md:h-5 md:w-5 ${isFollowed ? "text-primary" : "text-muted-foreground"}`}
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-heading font-semibold text-foreground text-sm truncate">
+                      <h3 className="font-heading font-semibold text-foreground text-xs md:text-sm truncate">
                         {subject.name}
                       </h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {subject.discussion_count} discussions
+                      <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">
+                        {subject.discussion_count} discuss
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={(e) => toggleFollow(subject.id, subject.name, e)}
                     disabled={saving}
-                    className={`mt-auto w-full flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
+                    className={`mt-auto w-full flex items-center justify-center gap-1 rounded-lg py-1 md:py-1.5 text-[10px] md:text-xs font-medium transition-colors disabled:opacity-50 ${
                       isFollowed
                         ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                         : "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -393,31 +393,31 @@ const Interests = () => {
               </button>
             )}
           </div>
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-2 md:gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
             {visibleFollowed.map((subject) => {
               const Icon = getIconForSubject(subject.name);
               return (
                 <div
                   key={subject.id}
                   onClick={() => handleSubjectClick(subject.id)}
-                  className="flex flex-col rounded-xl border border-primary bg-primary/5 p-4 transition-all cursor-pointer hover:shadow-md">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Icon className="h-5 w-5 text-primary" />
+                  className="flex flex-col rounded-lg border border-primary bg-primary/5 p-2 md:p-4 transition-all cursor-pointer hover:shadow-md">
+                  <div className="flex items-start gap-2 mb-2">
+                    <div className="h-8 w-8 md:h-10 md:w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-heading font-semibold text-foreground text-sm truncate">
+                      <h3 className="font-heading font-semibold text-foreground text-xs md:text-sm truncate">
                         {subject.name}
                       </h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {subject.discussion_count} discussions
+                      <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">
+                        {subject.discussion_count} discuss
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={(e) => toggleFollow(subject.id, subject.name, e)}
                     disabled={saving}
-                    className="mt-auto w-full flex items-center justify-center gap-1.5 rounded-lg bg-secondary py-1.5 text-xs font-medium text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50">
+                    className="mt-auto w-full flex items-center justify-center gap-1 rounded-lg bg-secondary py-1 md:py-1.5 text-[10px] md:text-xs font-medium text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50">
                     <Check className="h-3 w-3" /> Following
                   </button>
                 </div>
@@ -456,31 +456,31 @@ const Interests = () => {
             />
           </div>
 
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-2 md:gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
             {visibleDiscover.map((subject) => {
               const Icon = getIconForSubject(subject.name);
               return (
                 <div
                   key={subject.id}
                   onClick={() => handleSubjectClick(subject.id)}
-                  className="flex flex-col rounded-xl border border-border bg-card p-4 transition-all cursor-pointer hover:shadow-md">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                      <Icon className="h-5 w-5 text-muted-foreground" />
+                  className="flex flex-col rounded-lg border border-border bg-card p-2 md:p-4 transition-all cursor-pointer hover:shadow-md">
+                  <div className="flex items-start gap-2 mb-2">
+                    <div className="h-8 w-8 md:h-10 md:w-10 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                      <Icon className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-heading font-semibold text-foreground text-sm truncate">
+                      <h3 className="font-heading font-semibold text-foreground text-xs md:text-sm truncate">
                         {subject.name}
                       </h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {subject.discussion_count} discussions
+                      <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">
+                        {subject.discussion_count} discuss
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={(e) => toggleFollow(subject.id, subject.name, e)}
                     disabled={saving}
-                    className="mt-auto w-full flex items-center justify-center gap-1.5 rounded-lg bg-primary py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+                    className="mt-auto w-full flex items-center justify-center gap-1 rounded-lg bg-primary py-1 md:py-1.5 text-[10px] md:text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
                     <UserPlus className="h-3 w-3" /> Follow
                   </button>
                 </div>

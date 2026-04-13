@@ -5,8 +5,6 @@ import {
   Search,
   Bell,
   ChevronDown,
-  Menu,
-  X,
   Settings,
   LogOut,
   Sun,
@@ -58,7 +56,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
@@ -222,9 +219,8 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Close mobile menu on route change
+  // Close mobile search on route change
   useEffect(() => {
-    setMobileMenuOpen(false);
     setMobileSearchOpen(false);
   }, [location.pathname]);
 
@@ -355,8 +351,8 @@ const Navbar = () => {
             </span>
           </Link>
 
-          {/* Center Tabs */}
-          <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
+          {/* Center Tabs - Hidden on md, shown on desktop */}
+          <div className="hidden lg:flex items-center gap-1 flex-1 justify-center">
             {navTabs.map((tab) => {
               const isActive = location.pathname === tab.path;
               return (
@@ -586,17 +582,6 @@ const Navbar = () => {
               </div>
             )}
           </div>
-
-          {/* Mobile menu toggle */}
-          <button
-            className="md:hidden p-1.5 sm:p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
-          </button>
         </div>
 
         {/* Mobile search dropdown */}
@@ -626,36 +611,6 @@ const Navbar = () => {
                     <SuggestionsList />
                   </div>
                 )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Mobile menu */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="md:hidden border-t border-border overflow-hidden">
-              <div className="px-4 py-3 space-y-1">
-                {navTabs.map((tab) => {
-                  const isActive = location.pathname === tab.path;
-                  return (
-                    <Link
-                      key={tab.path}
-                      to={tab.path}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                        isActive
-                          ? "bg-secondary text-foreground"
-                          : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                      }`}>
-                      {tab.label}
-                    </Link>
-                  );
-                })}
               </div>
             </motion.div>
           )}

@@ -322,11 +322,20 @@ const Signup = () => {
   const progressWidth = `${(step / 3) * 100}%`;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
+    <div className="min-h-screen bg-background flex items-center justify-center px-6 py-12 relative overflow-hidden">
+      {/* Background Icon */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <img
+          src={Icon}
+          alt=""
+          className="h-screen w-screen opacity-5 object-contain"
+        />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md">
+        className="w-full max-w-md relative z-10">
         <div className="flex items-center justify-center gap-2 mb-8">
           <img src={Icon} alt="Academiq Logo" className="h-15 w-15" />
           <span className="text-2xl font-heading font-bold text-foreground">

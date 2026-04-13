@@ -710,4 +710,126 @@ export const AuthController = {
       return res.status(500).json({ error: "Search failed" });
     }
   },
+
+  // =============================
+  // Change/Setup Password
+  // =============================
+  async changePassword(req, res) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const { currentPassword, newPassword } = req.body;
+
+      if (!newPassword || newPassword.trim().length < 6) {
+        return res.status(400).json({
+          error: "Password must be at least 6 characters long",
+        });
+      }
+
+      // Get user
+      const user = await UserModel.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // If user has a password (manual signup), verify current password
+      if (user.password) {
+        if (!currentPassword) {
+          return res.status(400).json({
+            error: "Current password is required for manual signup users",
+          });
+        }
+
+        const isPasswordValid = await bcrypt.compare(
+          currentPassword,
+          user.password,
+        );
+        if (!isPasswordValid) {
+          return res
+            .status(400)
+            .json({ error: "Current password is incorrect" });
+        }
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update password
+      await UserModel.updateProfile(userId, { password: hashedPassword });
+
+      res.json({ message: "Password updated successfully" });
+    } catch (err) {
+      console.error("Change password error:", err);
+      res.status(500).json({ error: "Password update failed" });
+    }
+  },
+
+  // =============================
+  // Update Theme Preference
+  // =============================
+  async updateTheme(req, res) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const { theme } = req.body;
+
+      if (!theme || !["light", "dark"].includes(theme)) {
+        return res.status(400).json({
+          error: "Theme must be either 'light' or 'dark'",
+        });
+      }
+
+      // Update user theme preference
+      await UserModel.updateProfile(userId, { theme });
+
+      res.json({ message: "Theme updated successfully", theme });
+    } catch (err) {
+      console.error("Update theme error:", err);
+      res.status(500).json({ error: "Theme update failed" });
+    }
+  },
+
+  // =============================
+  // Setup First Admin
+  // =============================
+  async setupFirstAdmin(req, res) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      // Check if any admin already exists
+      const { data: admins } = await supabase
+        .from("users")
+        .select("id")
+        .eq("role", "admin")
+        .limit(1);
+
+      if (admins && admins.length > 0) {
+        return res.status(400).json({
+          error:
+            "An admin already exists. Use the admin panel to manage roles.",
+        });
+      }
+
+      // Set current user as admin
+      const { data, error } = await supabase
+        .from("users")
+        .update({ role: "admin" })
+        .eq("id", userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.json({
+        message: "You have been set as admin",
+        user: data,
+      });
+    } catch (err) {
+      console.error("Setup first admin error:", err);
+      res.status(500).json({ error: "Failed to setup admin" });
+    }
+  },
 };

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import EditProfileModal from "@/components/EdittProfileModal";
-import AchievementsDisplay from "@/components/AchievementsDisplay";
 import {
   Star,
   MessageCircle,
@@ -13,6 +12,7 @@ import {
   Edit3,
   X,
   Search,
+  Trophy,
 } from "lucide-react";
 import axiosInstance from "@/integration/axiosInstance";
 import { toast } from "@/hooks/use-toast";
@@ -827,7 +827,25 @@ const Profile = () => {
       }
 
       case "achievements":
-        return <AchievementsDisplay userId={user.id} isOwn={isOwnProfile} />;
+        return (
+          <div className="rounded-lg border border-dashed border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/20 p-8 text-center">
+            <Trophy className="h-12 w-12 mx-auto text-amber-600 dark:text-amber-400 mb-3" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              Achievements Coming Soon
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              We're working hard to bring you detailed achievement tracking and
+              profiles. This feature will be available very soon!
+            </p>
+            <div className="inline-flex items-center gap-2 rounded-full bg-amber-600/10 px-3 py-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-600 dark:bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-600 dark:bg-amber-400"></span>
+              </span>
+              Upcoming Feature
+            </div>
+          </div>
+        );
 
       default:
         return null;
@@ -922,7 +940,7 @@ const Profile = () => {
       </motion.div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+      <div className="grid grid-cols-3 md:grid-cols-4 gap-2 md:gap-4 mb-6 sm:mb-8">
         {stats.map((s) => (
           <motion.div
             key={s.label}
@@ -931,12 +949,12 @@ const Profile = () => {
             transition={{
               delay: stats.findIndex((item) => item.label === s.label) * 0.05,
             }}
-            className="rounded-xl border border-border bg-card p-3 sm:p-4 text-center">
-            <s.icon className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-accent mb-1.5 sm:mb-2" />
-            <p className="text-lg sm:text-xl font-heading font-bold text-foreground">
+            className="rounded-xl border border-border bg-card p-2 md:p-4 text-center">
+            <s.icon className="h-3 w-3 md:h-5 md:w-5 mx-auto text-accent mb-1" />
+            <p className="text-sm md:text-xl font-heading font-bold text-foreground">
               {s.value}
             </p>
-            <p className="text-[10px] sm:text-xs text-muted-foreground">
+            <p className="text-[8px] md:text-xs text-muted-foreground truncate">
               {s.label}
             </p>
           </motion.div>

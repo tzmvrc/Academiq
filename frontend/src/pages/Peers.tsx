@@ -179,7 +179,7 @@ const Peers = () => {
               </button>
             )}
           </div>
-          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-2 md:gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {visibleFollowed.map((user) => {
               const initials = user.name
                 .split(" ")
@@ -193,12 +193,12 @@ const Peers = () => {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="rounded-xl border border-border bg-card p-4 sm:p-5 text-center transition-all hover:shadow-md hover:border-primary/10">
+                  className="rounded-lg border border-border bg-card p-2 md:p-4 text-center transition-all hover:shadow-md hover:border-primary/10">
                   <Link
                     to={`/${encodeURIComponent(user.name)}`}
                     className="block"
                     onClick={(e) => e.stopPropagation()}>
-                    <div className="mx-auto mb-3 h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                    <div className="mx-auto mb-2 h-10 w-10 md:h-12 md:w-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                       {user.profile_url ? (
                         <img
                           src={user.profile_url}
@@ -206,28 +206,30 @@ const Peers = () => {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <span className="text-base sm:text-lg font-semibold text-primary">
+                        <span className="text-sm md:text-base font-semibold text-primary">
                           {initials}
                         </span>
                       )}
                     </div>
-                    <h3 className="font-heading font-semibold text-foreground text-sm">
+                    <h3 className="font-heading font-semibold text-foreground text-xs md:text-sm line-clamp-1">
                       {user.name}
                     </h3>
                   </Link>
                   {user.school && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 text-[10px]">
                       {user.school}
                     </p>
                   )}
-                  <div className="flex items-center justify-center gap-1 mt-3 text-xs text-muted-foreground">
+                  <div className="flex items-center justify-center gap-1 mt-2 text-xs text-muted-foreground">
                     <Star className="h-3 w-3 text-accent" />
-                    <span>{user.points?.toLocaleString() || 0} points</span>
+                    <span className="text-[10px] md:text-xs">
+                      {user.points?.toLocaleString() || 0} pts
+                    </span>
                   </div>
                   <button
                     onClick={() => toggleFollow(user.id, user.name, true)}
                     disabled={loadingUserId === user.id}
-                    className="mt-4 w-full flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80">
+                    className="mt-2 w-full flex items-center justify-center gap-1 rounded-lg py-1.5 md:py-2 text-[10px] md:text-xs font-medium transition-colors disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80">
                     {loadingUserId === user.id ? (
                       "Unfollowing..."
                     ) : (
@@ -279,7 +281,7 @@ const Peers = () => {
           </div>
         ) : (
           <>
-            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-2 md:gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {visibleDiscover.map((user) => {
                 const initials = user.name
                   .split(" ")
@@ -294,12 +296,12 @@ const Peers = () => {
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="rounded-xl border border-border bg-card p-4 sm:p-5 text-center transition-all hover:shadow-md hover:border-primary/10">
+                    className="rounded-lg border border-border bg-card p-2 md:p-4 text-center transition-all hover:shadow-md hover:border-primary/10">
                     <Link
                       to={`/${encodeURIComponent(user.name)}`}
                       className="block"
                       onClick={(e) => e.stopPropagation()}>
-                      <div className="mx-auto mb-3 h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                      <div className="mx-auto mb-2 h-10 w-10 md:h-12 md:w-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                         {user.profile_url ? (
                           <img
                             src={user.profile_url}
@@ -307,32 +309,29 @@ const Peers = () => {
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <span className="text-base sm:text-lg font-semibold text-primary">
+                          <span className="text-sm md:text-base font-semibold text-primary">
                             {initials}
                           </span>
                         )}
                       </div>
-                      <h3 className="font-heading font-semibold text-foreground text-sm">
+                      <h3 className="font-heading font-semibold text-foreground text-xs md:text-sm line-clamp-1">
                         {user.name}
                       </h3>
                     </Link>
                     {user.school && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 text-[10px]">
                         {user.school}
                       </p>
                     )}
 
-                    <div className="flex flex-col gap-1 mt-2">
+                    <div className="flex flex-col gap-0.5 mt-1">
                       {(user.mutual_count ?? 0) > 0 ? (
-                        <p className="text-[10px] text-accent font-medium">
-                          {user.mutual_count} mutual{" "}
-                          {user.mutual_count === 1
-                            ? "connection"
-                            : "connections"}
+                        <p className="text-[8px] md:text-[10px] text-accent font-medium truncate">
+                          {user.mutual_count} mutual
                         </p>
                       ) : (
-                        <div className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
-                          <Star className="h-2.5 w-2.5 text-accent" />
+                        <div className="flex items-center justify-center gap-0.5 text-[8px] md:text-[10px] text-muted-foreground">
+                          <Star className="h-2 w-2 text-accent" />
                           <span>
                             {user.followers_count?.toLocaleString() || 0}{" "}
                             followers
@@ -346,7 +345,7 @@ const Peers = () => {
                         toggleFollow(user.id, user.name, isFollowed)
                       }
                       disabled={loadingUserId === user.id}
-                      className="mt-4 w-full flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-colors disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90">
+                      className="mt-2 w-full flex items-center justify-center gap-1 rounded-lg py-1.5 md:py-2 text-[10px] md:text-xs font-medium transition-colors disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90">
                       {loadingUserId === user.id ? (
                         "Following..."
                       ) : (

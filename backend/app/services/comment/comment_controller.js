@@ -505,15 +505,11 @@ export const CommentsController = {
       if (pointsToDeduct > 0) {
         try {
           // Fetch current user
-          const { data: user, error: userFetchErr } =
-            await UserModel.findById(userId);
+          const user = await UserModel.findById(userId);
 
-          if (userFetchErr) {
-            console.error(
-              `  ⚠️  Failed to fetch user for points deduction:`,
-              userFetchErr,
-            );
-          } else if (user) {
+          if (!user) {
+            console.error(`  ⚠️  Failed to fetch user for points deduction`);
+          } else {
             // Get user's current points (ensure it's a number)
             const currentUserPoints = user.points || 0;
             // Subtract only this comment's points

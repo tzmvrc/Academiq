@@ -14,31 +14,35 @@ import profileRouter from "./routes/profile_router.js";
 import leaderboardRouter from "./routes/leaderboard_router.js";
 import notificationRouter from "./routes/notification_router.js";
 import achievementRouter from "./routes/achievements_router.js";
+import adminRouter from "./routes/admin_router.js";
 
 dotenv.config();
 const app = express();
 
 // CORS configuration
 const allowedOrigins = [
-  'https://academiqme.vercel.app',
-  'http://16.176.23.175:8080',  // Vite default dev port
-  'http://localhost:8080'   // Alternative dev port
+  "https://academiqme.vercel.app",
+  "http://16.176.23.175:8080", // Vite default dev port
+  "http://localhost:8080", // Alternative dev port
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, Postman, or curl)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true,   // If your frontend sends cookies or Authorization headers
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, Postman, or curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg =
+          "The CORS policy for this site does not allow access from the specified Origin.";
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+    credentials: true, // If your frontend sends cookies or Authorization headers
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 app.use(express.json());
 
@@ -55,6 +59,7 @@ app.use("/api/tags", tagrouter);
 app.use("/api/peers", peersRouter);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/profile", profileRouter);
+app.use("/api/admin", adminRouter);
 
 app.get("/", (req, res) => {
   res.send("Academiq Backend is running!");

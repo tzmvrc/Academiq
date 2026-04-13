@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Unlock, Lock, X } from "lucide-react";
+import { Trophy, Unlock, Lock, X, Info, AlertCircle } from "lucide-react";
 import axiosInstance from "@/integration/axiosInstance";
 
 interface Achievement {
@@ -93,7 +93,7 @@ const AchievementsPanel = () => {
   );
 
   // Preview: show completed achievements first (user's done achievements), then upcoming
-  const previewAchievements = [...completed, ...notStarted].slice(0, 5);
+  const previewAchievements = [...completed, ...notStarted].slice(0, 3);
 
   const getProgressText = (ach: Achievement) => {
     let criteriaText = "";
@@ -196,6 +196,15 @@ const AchievementsPanel = () => {
             <h3 className="text-sm font-semibold text-foreground">
               Achievements
             </h3>
+            <div className="group relative">
+              <Info className="h-4 w-4 text-muted-foreground cursor-help hover:text-primary transition-colors" />
+              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-50 pointer-events-none">
+                <div className="rounded-lg bg-foreground text-background px-3 py-2 text-xs font-medium whitespace-nowrap shadow-lg">
+                  Featured achievements coming soon
+                </div>
+                <div className="absolute left-2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-foreground" />
+              </div>
+            </div>
           </div>
           <span className="text-xs text-muted-foreground">
             {completed.length}/{achievements.length}
@@ -340,6 +349,13 @@ const AchievementsPanel = () => {
                   </button>
                 </div>
                 <div className="overflow-y-auto p-4 max-h-[calc(85vh-70px)]">
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 p-3 mb-4">
+                    <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                      Real-time achievement tracking is in development. Progress
+                      will sync automatically as you contribute!
+                    </p>
+                  </div>
                   <div className="space-y-6">
                     {notStarted.length > 0 && (
                       <div>

@@ -9,28 +9,29 @@ export const ForumModel = {
 
   // models/forum_model.js
 
-// Keep findById with author check – single query
-async findById(id, currentUserId = null) {
-  // Fetch the forum without any status filter
-  const { data, error } = await this.findByIdUnfiltered(id);
-  if (error) throw error;
-  if (!data) throw { code: "PGRST116", message: "Forum not found" };
+  // Keep findById with author check – single query
+  async findById(id, currentUserId = null) {
+    // Fetch the forum without any status filter
+    const { data, error } = await this.findByIdUnfiltered(id);
+    if (error) throw error;
+    if (!data) throw { code: "PGRST116", message: "Forum not found" };
 
-  const isApproved = data.validation_status === "approved";
-  const isAuthor = currentUserId && String(data.user_id) === String(currentUserId);
+    const isApproved = data.validation_status === "approved";
+    const isAuthor =
+      currentUserId && String(data.user_id) === String(currentUserId);
 
-  if (!isApproved && !isAuthor) {
-    throw { code: "PGRST116", message: "Forum not found" };
-  }
-  return { data, error: null };
-},
+    if (!isApproved && !isAuthor) {
+      throw { code: "PGRST116", message: "Forum not found" };
+    }
+    return { data, error: null };
+  },
 
-// For internal use only (update, delete)
-async findByIdUnfiltered(id) {
-  const { data, error } = await supabase
-    .from("forums")
-    .select(
-      `
+  // For internal use only (update, delete)
+  async findByIdUnfiltered(id) {
+    const { data, error } = await supabase
+      .from("forums")
+      .select(
+        `
       *,
       user:user_id(id, name, profile_url, school),
       subject:subject_id(id, name),
@@ -38,32 +39,32 @@ async findByIdUnfiltered(id) {
         tag:tag_id(id, name, slug, usage_count)
       )
     `,
-    )
-    .eq("id", id)
-    .single();
+      )
+      .eq("id", id)
+      .single();
 
-  if (error) throw error;
-  if (data) {
-    data.tags = (data.forum_tags || []).map((ft) => ft.tag).filter(Boolean);
-    delete data.forum_tags;
-  }
-  return { data, error: null };
-},
+    if (error) throw error;
+    if (data) {
+      data.tags = (data.forum_tags || []).map((ft) => ft.tag).filter(Boolean);
+      delete data.forum_tags;
+    }
+    return { data, error: null };
+  },
 
-// Update method (no .single() to avoid PGRST116)
-async update(id, updates) {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update(updates)
-    .eq("id", id)
-    .select();
+  // Update method (no .single() to avoid PGRST116)
+  async update(id, updates) {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update(updates)
+      .eq("id", id)
+      .select();
 
-  if (error) throw error;
-  if (!data || data.length === 0) {
-    throw { code: "PGRST116", message: "Forum not found after update" };
-  }
-  return { data: data[0], error: null };
-},
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      throw { code: "PGRST116", message: "Forum not found after update" };
+    }
+    return { data: data[0], error: null };
+  },
 
   // For user's own posts – do NOT filter (show all statuses)
   async findByUserId(userId, limit = 10, offset = 0) {
@@ -187,7 +188,7 @@ async update(id, updates) {
     const { data: forums, error: forumsErr } = await supabase
       .from("forums")
       .select(
-        "id, title, content, upvotes_count, comments_count, created_at, subject_id, user_id",
+        "id, title, content, ai_summary, upvotes_count, comments_count, created_at, subject_id, user_id",
       )
       .eq("validation_status", "approved") // ✅ only approved
       .gte("created_at", cutoff);
@@ -273,6 +274,7 @@ async update(id, updates) {
       id: forum.id,
       title: forum.title,
       content: forum.content,
+      ai_summary: forum.ai_summary,
       upvotes: forum.upvotes_count,
       comments: forum.comments_count,
       created_at: forum.created_at,

@@ -138,13 +138,27 @@ export const forumService = {
         query.append("offset", params.offset.toString());
       const url = `/forums?${query.toString()}`;
 
+      console.log(`[forumService] Calling getAllForums: ${url}`);
       const response = await axiosInstance.get(url);
+      console.log(
+        "[forumService] getAllForums response status:",
+        response.status,
+      );
+      console.log(
+        "[forumService] getAllForums response keys:",
+        Object.keys(response.data),
+      );
+
       const currentUser = localStorage.getItem("user");
       const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
 
       const rawForums = response.data.forums || [];
       const hasMore = response.data.hasMore === true;
       const total = response.data.total || 0;
+
+      console.log(
+        `[forumService] getAllForums: ${rawForums.length} forums, hasMore=${hasMore}, total=${total}`,
+      );
 
       let forums = rawForums.map((forum: ForumResponse) =>
         transformForumToDiscussion(forum, currentUserId),
@@ -164,9 +178,18 @@ export const forumService = {
         forums = forumsWithVotes;
       }
 
+      console.log(
+        `[forumService] getAllForums returning ${forums.length} forums`,
+      );
       return { forums, hasMore, total };
     } catch (error) {
-      console.error("Failed to fetch forums:", error);
+      console.error("[forumService] Failed to fetch forums:", error);
+      if (error instanceof Error) {
+        console.error("[forumService] Error details:", {
+          message: error.message,
+          stack: error.stack,
+        });
+      }
       throw error;
     }
   },
@@ -364,13 +387,27 @@ export const forumService = {
         query.append("offset", params.offset.toString());
       const url = `/forums/feed?${query.toString()}`;
 
+      console.log(`[forumService] Calling getPersonalizedFeed: ${url}`);
       const response = await axiosInstance.get(url);
+      console.log(
+        "[forumService] getPersonalizedFeed response status:",
+        response.status,
+      );
+      console.log(
+        "[forumService] getPersonalizedFeed response keys:",
+        Object.keys(response.data),
+      );
+
       const currentUser = localStorage.getItem("user");
       const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
 
       const rawForums = response.data.forums || [];
       const hasMore = response.data.hasMore === true;
       const total = response.data.total || 0;
+
+      console.log(
+        `[forumService] getPersonalizedFeed: ${rawForums.length} forums, hasMore=${hasMore}, total=${total}`,
+      );
 
       let forums = rawForums.map((forum: ForumResponse) =>
         transformForumToDiscussion(forum, currentUserId),
@@ -390,10 +427,20 @@ export const forumService = {
         forums = forumsWithVotes;
       }
 
+      console.log(
+        `[forumService] getPersonalizedFeed returning ${forums.length} forums`,
+      );
       return { forums, hasMore, total };
     } catch (error) {
-      console.error("Failed to fetch personalized feed:", error);
+      console.error("[forumService] Failed to fetch personalized feed:", error);
+      if (error instanceof Error) {
+        console.error("[forumService] Error details:", {
+          message: error.message,
+          stack: error.stack,
+        });
+      }
       // Fallback to regular forums
+      console.log("[forumService] Falling back to getAllForums...");
       return this.getAllForums(params);
     }
   },

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useSocket } from "@/components/SocketContext";
@@ -99,40 +99,6 @@ const getInitials = (name?: string | null) => {
     .join("")
     .toUpperCase();
 };
-
-const getCurrentUser = () => {
-  try {
-    const rawUser = localStorage.getItem("user");
-    if (rawUser) {
-      const parsed = JSON.parse(rawUser);
-      return {
-        id: parsed?.id || parsed?.user_id || null,
-        name: parsed?.name || "You",
-        initials: getInitials(parsed?.name || "You"),
-        profileUrl: parsed?.profile_url || null,
-      };
-    }
-
-    const id =
-      localStorage.getItem("userId") ||
-      localStorage.getItem("user_id") ||
-      localStorage.getItem("id");
-
-    return {
-      id: id || null,
-      name: "You",
-      initials: "YO",
-    };
-  } catch {
-    return {
-      id: null,
-      name: "You",
-      initials: "YO",
-    };
-  }
-};
-
-const CURRENT_USER = getCurrentUser();
 
 const buildCommentTree = (
   comments: (BackendComment & { myVote?: 1 | -1 | null })[],
@@ -322,12 +288,12 @@ const CommentComponent = ({
       className={`${depth > 0 ? "ml-4 sm:ml-6 pl-3 sm:pl-4 border-l-2 border-border" : ""}`}>
       <div className="py-3 sm:py-4">
         <div className="flex items-start gap-2 sm:gap-3">
-          {/* Avatar + Name (clickable link) */}
+          {/* Avatar */}
           <Link
             to={`/${encodeURIComponent(comment.author)}`}
-            className="flex items-center gap-2 sm:gap-3 shrink-0"
+            className="shrink-0 mt-0.5"
             onClick={(e) => e.stopPropagation()}>
-            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 overflow-hidden">
+            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
               {comment.profileUrl ? (
                 <img
                   src={comment.profileUrl}
@@ -340,13 +306,17 @@ const CommentComponent = ({
                 </span>
               )}
             </div>
-            <span className="text-sm font-medium text-foreground">
-              {comment.author}
-            </span>
           </Link>
 
-          {/* Rest of the row (badges, timestamp, menu) */}
+          {/* Name + badges together */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap flex-1">
+            <Link
+              to={`/${encodeURIComponent(comment.author)}`}
+              className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+              onClick={(e) => e.stopPropagation()}>
+              {comment.author}
+            </Link>
+
             {comment.isAuthor && (
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
                 You
@@ -357,9 +327,13 @@ const CommentComponent = ({
             </span>
 
             {/* Points awarded badge */}
-            {comment.pointsAwarded && comment.pointsAwarded > 0 && (
+            {comment.pointsAwarded && comment.pointsAwarded > 0 ? (
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-yellow-500/10 text-yellow-600 font-medium flex items-center gap-1">
                 ⭐ {comment.pointsAwarded} pts
+              </span>
+            ) : (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-500/10 text-orange-600 font-medium">
+                ⏳ Pending Validation
               </span>
             )}
 
@@ -556,6 +530,7 @@ const PostDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [postData, setPostData] = useState<any>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [saved, setSaved] = useState(false);
@@ -570,18 +545,36 @@ const PostDetails = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { socket } = useSocket();
 
-  const fetchPostDetails = async () => {
+  // Load current user ID on mount
+  useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const parsed = JSON.parse(userStr);
+        setCurrentUserId(parsed?.id || null);
+      } catch {
+        setCurrentUserId(null);
+      }
+    }
+  }, []);
+
+  // Memoize fetchPostDetails with currentUserId in dependencies
+  const fetchPostDetailsCallback = useCallback(async () => {
     if (!id) return;
 
     try {
       setIsLoading(true);
+
+      // Get current user ID directly from localStorage to ensure it's fresh
+      const userStr = localStorage.getItem("user");
+      const userId = userStr ? JSON.parse(userStr)?.id : null;
 
       const requests: Promise<any>[] = [
         axiosInstance.get(`/forums/${id}`),
         axiosInstance.get(`/forums/${id}/comments`),
       ];
 
-      if (CURRENT_USER.id) {
+      if (userId) {
         requests.push(
           axiosInstance
             .get(`/forums/${id}/save`)
@@ -604,7 +597,7 @@ const PostDetails = () => {
 
       const commentsWithVoteState = await Promise.all(
         rawComments.map(async (comment) => {
-          if (!CURRENT_USER.id) {
+          if (!userId) {
             return { ...comment, myVote: null as 1 | -1 | null };
           }
 
@@ -646,7 +639,8 @@ const PostDetails = () => {
       };
 
       setPostData(mappedPost);
-      const tree = buildCommentTree(commentsWithVoteState, CURRENT_USER.id);
+      setCurrentUserId(userId);
+      const tree = buildCommentTree(commentsWithVoteState, userId);
       // Sort top-level comments by originalCreatedAt descending (newest first)
       tree.sort(
         (a, b) =>
@@ -680,7 +674,9 @@ const PostDetails = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id, navigate, toast]);
+
+  const fetchPostDetails = fetchPostDetailsCallback;
 
   // Socket listeners
   useEffect(() => {
@@ -707,7 +703,7 @@ const PostDetails = () => {
     // --- New comment ---
     const onCommentCreated = (comment: BackendComment) => {
       if (comment.forum_id !== id) return;
-      if (CURRENT_USER.id === comment.user_id) return;
+      if (currentUserId === comment.user_id) return;
       setComments((prev) => {
         if (commentExists(prev, comment.id)) return prev;
         const newComment: Comment = {
@@ -726,7 +722,7 @@ const PostDetails = () => {
           verificationSourceUrl:
             (comment as any).verification_source_url || null,
           pointsAwarded: (comment as any).points_awarded || 0,
-          isAuthor: CURRENT_USER.id === comment.user_id,
+          isAuthor: currentUserId === comment.user_id,
           replies: [],
         };
         if (comment.parent_comment_id) {
@@ -789,7 +785,7 @@ const PostDetails = () => {
           ...c,
           upvotes: data.upvotes,
           downvotes: data.downvotes,
-          myVote: data.userId === CURRENT_USER.id ? data.voteType : c.myVote,
+          myVote: data.userId === currentUserId ? data.voteType : c.myVote,
         })),
       );
     };
@@ -846,12 +842,18 @@ const PostDetails = () => {
 
       const created = res.data?.comment;
 
+      const userStr = localStorage.getItem("user");
+      const currentUser = userStr ? JSON.parse(userStr) : null;
+
       const mappedReply: Comment = {
         id: created.id,
         user_id: created.user_id,
-        author: created.users?.name || CURRENT_USER.name,
-        initials: getInitials(created.users?.name || CURRENT_USER.name),
-        profileUrl: created.users?.profile_url || CURRENT_USER.profileUrl,
+        author: created.users?.name || currentUser?.name || "You",
+        initials: getInitials(
+          created.users?.name || currentUser?.name || "You",
+        ),
+        profileUrl:
+          created.users?.profile_url || currentUser?.profile_url || null,
         timestamp: formatElapsedTime(created.created_at),
         originalCreatedAt: created.created_at,
         text: created.content,
@@ -935,9 +937,9 @@ const PostDetails = () => {
 
   useEffect(() => {
     fetchPostDetails();
-  }, [id]);
+  }, [fetchPostDetails]);
 
-  const isPostAuthor = postData?.user_id === CURRENT_USER.id;
+  const isPostAuthor = postData?.user_id === currentUserId;
 
   const handleAddComment = async () => {
     if (isSubmittingComment) return;
@@ -956,12 +958,18 @@ const PostDetails = () => {
 
       const created = res.data?.comment;
 
+      const userStr = localStorage.getItem("user");
+      const currentUser = userStr ? JSON.parse(userStr) : null;
+
       const mappedComment: Comment = {
         id: created.id,
         user_id: created.user_id,
-        author: created.users?.name || CURRENT_USER.name,
-        initials: getInitials(created.users?.name || CURRENT_USER.name),
-        profileUrl: created.users?.profile_url || CURRENT_USER.profileUrl,
+        author: created.users?.name || currentUser?.name || "You",
+        initials: getInitials(
+          created.users?.name || currentUser?.name || "You",
+        ),
+        profileUrl:
+          created.users?.profile_url || currentUser?.profile_url || null,
         timestamp: formatElapsedTime(created.created_at),
         originalCreatedAt: created.created_at,
         text: created.content,
@@ -1455,22 +1463,23 @@ const PostDetails = () => {
           </h2>
 
           <div className="flex gap-2 sm:gap-3 mb-6">
-            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <span className="text-[10px] sm:text-xs font-semibold text-primary">
-                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-                  {CURRENT_USER.profileUrl ? (
-                    <img
-                      src={CURRENT_USER.profileUrl}
-                      alt={CURRENT_USER.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-[10px] sm:text-xs font-semibold text-primary">
-                      {CURRENT_USER.initials}
-                    </span>
-                  )}
-                </div>
-              </span>
+            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+              {(() => {
+                const userStr = localStorage.getItem("user");
+                const user = userStr ? JSON.parse(userStr) : null;
+                const initials = user ? getInitials(user.name) : "YO";
+                return user?.profile_url ? (
+                  <img
+                    src={user.profile_url}
+                    alt={user.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-[10px] sm:text-xs font-semibold text-primary">
+                    {initials}
+                  </span>
+                );
+              })()}
             </div>
             <div className="flex-1 min-w-0">
               <textarea

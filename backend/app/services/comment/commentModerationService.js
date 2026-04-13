@@ -160,6 +160,7 @@ export const CommentModerationService = {
               points: pointsAwarded,
               reason: reason.substring(0, 100),
               commentId,
+              commentPreview: commentContent.substring(0, 200),
             },
           });
         }

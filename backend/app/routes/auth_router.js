@@ -18,6 +18,11 @@ router.post("/signup/complete", AuthController.completeSignup);
 // Protected route for current user
 router.get("/me", authMiddleware, AuthController.getMe);
 router.post("/logout", authMiddleware, AuthController.logout);
+
+// Password and theme management (protected routes)
+router.put("/change-password", authMiddleware, AuthController.changePassword);
+router.put("/theme", authMiddleware, AuthController.updateTheme);
+
 // In auth_router.js
 router.get("/users", authMiddleware, AuthController.getAllUsers);
 // Get user by ID (must come after the specific /users route to avoid conflict)
@@ -31,5 +36,12 @@ router.get(
   AuthController.getSuggestions,
 );
 router.get("/search", authMiddleware, AuthController.search);
+
+// Setup first admin (only if no admins exist)
+router.post(
+  "/setup-first-admin",
+  authMiddleware,
+  AuthController.setupFirstAdmin,
+);
 
 export default router;

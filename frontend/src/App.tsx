@@ -16,6 +16,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import axiosInstance from "@/integration/axiosInstance";
 
 import Navbar from "@/components/Navbar";
+import BottomNav from "@/components/BottomNav";
 import ProtectedRoute from "@/components/protectRoute/protectedRoute";
 import PublicRoute from "@/components/protectRoute/publicRoute";
 
@@ -34,6 +35,7 @@ import Settings from "./pages/Settings";
 import PostDetails from "./pages/PostDetails";
 import Notifications from "./pages/Notifications";
 import Open from "./pages/open";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +50,7 @@ const AppRoutes = () => {
     "/signup",
     "/onboarding",
     "/acad-chat",
+    "/admin",
   ];
 
   const showNavbar = !noNavbarRoutes.includes(location.pathname);
@@ -212,8 +215,19 @@ const AppRoutes = () => {
           }
         />
 
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <Admin />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
+
+      {showNavbar && <BottomNav />}
     </>
   );
 };

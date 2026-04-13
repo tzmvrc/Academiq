@@ -8,6 +8,7 @@ interface TrendingForum {
   id: string;
   title: string;
   content: string;
+  ai_summary?: string;
   upvotes: number;
   comments: number;
   subject: { id: string; name: string };
@@ -84,10 +85,8 @@ const FeaturedSection = () => {
           const tag = forum.subject?.name || "General";
           const authorName = forum.user?.name || "Anonymous";
           const field = forum.subject?.name || "Academic";
-          const summary =
-            forum.content?.substring(0, 120) +
-              (forum.content?.length > 120 ? "..." : "") ||
-            "No preview available.";
+          const aiSummary =
+            forum.ai_summary || "AI summary is not yet available";
           const engagement = `${forum.upvotes || 0} upvotes · ${forum.comments || 0} comments`;
 
           return (
@@ -121,7 +120,7 @@ const FeaturedSection = () => {
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
-                  {summary}
+                  {aiSummary}
                 </p>
               </div>
 

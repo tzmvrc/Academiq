@@ -109,11 +109,11 @@ export const ForumCard: React.FC<ForumCardProps> = ({
   return (
     <div className="brutal-card flex overflow-hidden">
       {/* Main Content */}
-      <div className="flex-1 p-5">
+      <div className="flex-1 p-3 md:p-5">
         {/* Header */}
         <div className="flex items-start gap-3 mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-muted rounded-full border-2 border-foreground overflow-hidden">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-muted rounded-full border-2 border-foreground overflow-hidden shrink-0">
               {avatar ? (
                 <img
                   src={avatar}
@@ -121,12 +121,14 @@ export const ForumCard: React.FC<ForumCardProps> = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                <div className="w-full h-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs md:text-sm">
                   {author.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
-            <span className="font-semibold text-sm">{author}</span>
+            <span className="font-semibold text-xs md:text-sm truncate">
+              {author}
+            </span>
           </div>
           <div className="flex items-center gap-2 ml-auto">
             <BrutalTag color="violet">{subject}</BrutalTag>
@@ -140,10 +142,14 @@ export const ForumCard: React.FC<ForumCardProps> = ({
         </div>
 
         {/* Title */}
-        <h3 className="text-xl font-bold mb-2 leading-tight">{title}</h3>
+        <h3 className="text-base md:text-lg lg:text-xl font-bold mb-2 leading-tight line-clamp-2">
+          {title}
+        </h3>
 
         {/* Content Preview */}
-        <p className="text-muted-foreground line-clamp-2 mb-4">{content}</p>
+        <p className="text-xs md:text-sm text-muted-foreground line-clamp-1 mb-3">
+          {content}
+        </p>
 
         {documentUrl && (
           <div
@@ -151,19 +157,18 @@ export const ForumCard: React.FC<ForumCardProps> = ({
               e.stopPropagation(); // prevent opening main forum
               window.open(documentUrl, "_blank", "noopener,noreferrer");
             }}
-            className="mb-4 cursor-pointer border-2 border-foreground rounded-lg p-3 bg-muted/30 hover:bg-muted/50 transition-all flex items-center gap-3"
-          >
-            <div className="w-8 h-8 border-2 border-foreground rounded-md flex items-center justify-center bg-background text-sm font-bold">
+            className="mb-3 cursor-pointer border-2 border-foreground rounded-lg p-2 md:p-3 bg-muted/30 hover:bg-muted/50 transition-all flex items-center gap-2">
+            <div className="w-6 h-6 md:w-8 md:h-8 border-2 border-foreground rounded-md flex items-center justify-center bg-background text-xs md:text-sm font-bold shrink-0">
               📄
             </div>
-            <span className="text-sm font-semibold truncate">
+            <span className="text-xs md:text-sm font-semibold truncate">
               {getFileNameFromUrl(documentUrl)}
             </span>
           </div>
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-4 text-sm">
+        <div className="flex items-center justify-between gap-2 md:gap-4 text-xs md:text-sm">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-muted-foreground">
               <MessageCircle className="w-4 h-4" />
@@ -175,15 +180,14 @@ export const ForumCard: React.FC<ForumCardProps> = ({
           <button
             onClick={handleSave}
             className={cn(
-              "p-2 rounded-lg border-2 transition-all hover:shadow-brutal",
+              "p-1.5 md:p-2 rounded-lg border-2 transition-all hover:shadow-brutal shrink-0",
               isSaved
                 ? "border-mint bg-mint text-foreground"
                 : "border-foreground bg-background text-foreground hover:border-mint",
             )}
-            title={isSaved ? "Unsave forum" : "Save forum"}
-          >
+            title={isSaved ? "Unsave forum" : "Save forum"}>
             <Bookmark
-              className="w-4 h-4"
+              className="w-3 h-3 md:w-4 md:h-4"
               fill={isSaved ? "currentColor" : "none"}
             />
           </button>
@@ -193,36 +197,33 @@ export const ForumCard: React.FC<ForumCardProps> = ({
       {/* Vote Panel */}
       <div
         className={cn(
-          "self-stretch flex flex-col items-center justify-start gap-2 pt-[clamp(16px,3vh,40px)] pb-4 px-4 min-w-[80px] border-l-[3px] border-foreground",
+          "self-stretch flex flex-col items-center justify-start gap-1 md:gap-2 pt-[clamp(12px,3vh,30px)] md:pt-[clamp(16px,3vh,40px)] pb-3 md:pb-4 px-2 md:px-4 min-w-[50px] md:min-w-[80px] border-l-[3px] border-foreground",
           voteColorStyles[voteColor],
-        )}
-      >
+        )}>
         <button
           onClick={handleUpvote}
           className={cn(
-            "w-10 h-10 bg-background border-2 border-foreground rounded-lg shadow-brutal-sm flex items-center justify-center hover:translate-y-[-2px] hover:shadow-brutal transition-all active:translate-y-[2px] active:shadow-none",
+            "w-8 h-8 md:w-10 md:h-10 bg-background border-2 border-foreground rounded-lg shadow-brutal-sm flex items-center justify-center hover:translate-y-[-2px] hover:shadow-brutal transition-all active:translate-y-[2px] active:shadow-none",
             userVote === 1 && "ring-2 ring-foreground bg-teal/20",
-          )}
-        >
+          )}>
           <ArrowUp
             className={cn(
-              "w-5 h-5",
+              "w-4 h-4 md:w-5 md:h-5",
               userVote === 1 ? "text-foreground" : "text-teal",
             )}
           />
         </button>
 
-        <span className="text-xl font-bold">{voteCount}</span>
+        <span className="text-lg md:text-xl font-bold">{voteCount}</span>
         <button
           onClick={handleDownvote}
           className={cn(
-            "w-10 h-10 bg-background border-2 border-foreground rounded-lg shadow-brutal-sm flex items-center justify-center hover:translate-y-[-2px] hover:shadow-brutal transition-all active:translate-y-[2px] active:shadow-none",
+            "w-8 h-8 md:w-10 md:h-10 bg-background border-2 border-foreground rounded-lg shadow-brutal-sm flex items-center justify-center hover:translate-y-[-2px] hover:shadow-brutal transition-all active:translate-y-[2px] active:shadow-none",
             userVote === -1 && "ring-2 ring-foreground bg-destructive/20",
-          )}
-        >
+          )}>
           <ArrowDown
             className={cn(
-              "w-5 h-5",
+              "w-4 h-4 md:w-5 md:h-5",
               userVote === -1 ? "text-foreground" : "text-destructive",
             )}
           />

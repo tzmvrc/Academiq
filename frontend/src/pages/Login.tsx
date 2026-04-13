@@ -48,12 +48,20 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-6">
+    <div className="min-h-screen bg-background flex items-center justify-center px-6 relative overflow-hidden">
+      {/* Background Icon */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <img
+          src={Icon}
+          alt=""
+          className="h-screen w-screen opacity-5 object-contain"
+        />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
+        className="w-full max-w-md relative z-10">
         <div className="flex items-center justify-center gap-2 mb-8">
           <img src={Icon} alt="Academiq Logo" className="h-15 w-15" />
           <span className="text-2xl font-heading font-bold text-foreground">
@@ -73,8 +81,7 @@ const Login = () => {
             type="button"
             onClick={loginWithGoogle}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 text-sm font-medium text-foreground hover:bg-secondary transition-colors mb-4 disabled:opacity-60 disabled:cursor-not-allowed"
-          >
+            className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 text-sm font-medium text-foreground hover:bg-secondary transition-colors mb-4 disabled:opacity-60 disabled:cursor-not-allowed">
             <svg className="h-4 w-4" viewBox="0 0 24 24">
               <path
                 fill="currentColor"
@@ -133,8 +140,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
                   ) : (
@@ -146,13 +152,12 @@ const Login = () => {
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                <input type="checkbox" className="rounded border-border" />
-                Remember me
+                {/* <input type="checkbox" className="rounded border-border" />
+                Remember me */}
               </label>
               <Link
                 to="/forgot-password"
-                className="text-sm text-primary hover:underline"
-              >
+                className="text-sm text-primary hover:underline">
                 Forgot password?
               </Link>
             </div>
@@ -160,8 +165,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={useloading}
-              className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-            >
+              className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
               {useloading ? "Signing in..." : "Sign In"}
             </button>
           </form>
@@ -171,8 +175,7 @@ const Login = () => {
           Don&apos;t have an account?{" "}
           <Link
             to="/signup"
-            className="text-primary hover:underline font-medium"
-          >
+            className="text-primary hover:underline font-medium">
             Sign up
           </Link>
         </p>

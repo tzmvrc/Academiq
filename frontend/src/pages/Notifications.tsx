@@ -778,9 +778,18 @@ const Notifications = () => {
                       href={verifiedData.sourceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-2 inline-flex items-center gap-2 text-sm text-primary hover:underline truncate">
-                      {verifiedData.sourceUrl}
-                      <span className="text-xs">↗</span>
+                      className="mt-2 inline-flex items-center gap-2 text-sm text-primary hover:underline truncate max-w-full"
+                      title={verifiedData.sourceUrl}>
+                      {(() => {
+                        try {
+                          return new URL(
+                            verifiedData.sourceUrl,
+                          ).hostname.replace(/^www\./, "");
+                        } catch {
+                          return verifiedData.sourceUrl;
+                        }
+                      })()}
+                      <span className="text-xs shrink-0">↗</span>
                     </a>
                   </div>
                 )}

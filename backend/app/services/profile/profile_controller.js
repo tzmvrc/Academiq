@@ -44,24 +44,44 @@ export const getUserProfile = async (req, res) => {
   const { id } = req.params;
 
   if (!id) {
-    return res.status(400).json({ success: false, message: 'User ID is required.' });
+    return res
+      .status(400)
+      .json({ success: false, message: "User ID is required." });
   }
 
   const { data, error } = await findById(id);
 
   if (error || !data) {
-    return res.status(404).json({ success: false, message: 'User not found.' });
+    return res.status(404).json({ success: false, message: "User not found." });
   }
 
   // Get privacy setting
   const settings = await UserSettingsModel.getOrCreate(id);
   const privacy = settings.profile_privacy;
 
-  const { name, bio, profile_url, school, followers_count, following_count, points } = data;
+  const {
+    name,
+    bio,
+    profile_url,
+    school,
+    followers_count,
+    following_count,
+    points,
+  } = data;
 
   return res.status(200).json({
     success: true,
-    data: { id, name, bio, profile_url, school, followers_count, following_count, points, privacy },
+    data: {
+      id,
+      name,
+      bio,
+      profile_url,
+      school,
+      followers_count,
+      following_count,
+      points,
+      privacy,
+    },
   });
 };
 
@@ -70,22 +90,31 @@ export const updateUserProfile = async (req, res) => {
   const { name, bio, profile_url, school } = req.body;
 
   if (!id) {
-    return res.status(400).json({ success: false, message: 'User ID is required.' });
+    return res
+      .status(400)
+      .json({ success: false, message: "User ID is required." });
   }
 
   const allowedFields = { name, bio, profile_url, school };
   const updates = Object.fromEntries(
-    Object.entries(allowedFields).filter(([_, value]) => value !== undefined)
+    Object.entries(allowedFields).filter(([_, value]) => value !== undefined),
   );
 
   if (Object.keys(updates).length === 0) {
-    return res.status(400).json({ success: false, message: 'No valid fields provided for update.' });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: "No valid fields provided for update.",
+      });
   }
 
   const { data, error } = await update(id, updates);
 
   if (error || !data) {
-    return res.status(500).json({ success: false, message: 'Failed to update profile.' });
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to update profile." });
   }
 
   // Get privacy setting to include in response
@@ -94,7 +123,7 @@ export const updateUserProfile = async (req, res) => {
 
   return res.status(200).json({
     success: true,
-    message: 'Profile updated successfully.',
+    message: "Profile updated successfully.",
     data: {
       id,
       name: data.name,
@@ -110,13 +139,15 @@ export const getUserStats = async (req, res) => {
   const { id } = req.params;
 
   if (!id) {
-    return res.status(400).json({ success: false, message: 'User ID is required.' });
+    return res
+      .status(400)
+      .json({ success: false, message: "User ID is required." });
   }
 
   const { data, error } = await findById(id);
 
   if (error || !data) {
-    return res.status(404).json({ success: false, message: 'User not found.' });
+    return res.status(404).json({ success: false, message: "User not found." });
   }
 
   const { followers_count, following_count, points } = data;
@@ -157,9 +188,10 @@ export const updateFullProfile = async (req, res) => {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    const { bio, profile_url, privacy } = req.body;
+    const { name, bio, profile_url, privacy } = req.body;
 
     const updates = {};
+    if (name !== undefined) updates.name = name;
     if (bio !== undefined) updates.bio = bio;
     if (profile_url !== undefined) updates.profile_url = profile_url;
 

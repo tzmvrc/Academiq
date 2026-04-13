@@ -8,7 +8,6 @@ import {
   Check,
   X,
   ArrowRight,
-  Plus,
   ChevronLeft,
   ChevronRight,
   Star,
@@ -18,6 +17,7 @@ import DiscussionCard from "@/components/DiscussionCard";
 import AchievementsPanel from "@/components/AchievementsPanel";
 import CreatePostModal from "@/components/CreatePostModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
+import FloatingActionButton from "@/components/FloatingActionButton";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import PendingPostsPanel from "@/components/PendingPostsPanel";
 import { toast } from "@/hooks/use-toast";
@@ -146,6 +146,63 @@ const Index = () => {
   const isLoadingMoreRef = useRef(false);
   const hasMoreRef = useRef(true);
 
+  // Cache configuration
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+  const getCacheKey = useCallback(() => {
+    const key = subjectId
+      ? `feed_subject_${subjectId}`
+      : tagId
+        ? `feed_tag_${tagId}`
+        : "feed_personalized";
+    return key;
+  }, [subjectId, tagId]);
+
+  const getCache = useCallback(() => {
+    try {
+      const cacheKey = getCacheKey();
+      const cached = localStorage.getItem(`cache_${cacheKey}`);
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        const isExpired = Date.now() - timestamp > CACHE_DURATION;
+        if (!isExpired) {
+          return data;
+        }
+        // Remove expired cache
+        localStorage.removeItem(`cache_${cacheKey}`);
+      }
+    } catch (err) {
+      console.error("Error reading cache:", err);
+    }
+    return null;
+  }, [getCacheKey]);
+
+  const setCache = useCallback(
+    (forums: DiscussionCardProps[], hasMore: boolean, page: number) => {
+      try {
+        const cacheKey = getCacheKey();
+        localStorage.setItem(
+          `cache_${cacheKey}`,
+          JSON.stringify({
+            data: { forums, hasMore, page },
+            timestamp: Date.now(),
+          }),
+        );
+      } catch (err) {
+        console.error("Error writing cache:", err);
+      }
+    },
+    [getCacheKey],
+  );
+
+  const clearCache = useCallback(() => {
+    try {
+      const cacheKey = getCacheKey();
+      localStorage.removeItem(`cache_${cacheKey}`);
+    } catch (err) {
+      console.error("Error clearing cache:", err);
+    }
+  }, [getCacheKey]);
+
   // Peers state
   const [peers, setPeers] = useState<PeerUser[]>([]);
   const [peersLoading, setPeersLoading] = useState(true);
@@ -206,10 +263,23 @@ const Index = () => {
 
   // Load forums function
   const loadForums = useCallback(
-    async (reset = false) => {
+    async (reset = false, skipCache = false) => {
       // Prevent duplicate requests
       if (isLoadingMoreRef.current && !reset) {
         return;
+      }
+
+      // Check cache on initial load
+      if (reset && !skipCache) {
+        const cached = getCache();
+        if (cached) {
+          console.log("Using cached data");
+          setForums(cached.forums);
+          pageRef.current = cached.page;
+          hasMoreRef.current = cached.hasMore;
+          setInitialLoading(false);
+          return;
+        }
       }
 
       try {
@@ -240,42 +310,88 @@ const Index = () => {
         let newForums;
         let more;
 
-        if (!subjectId && !tagId) {
-          // Personalized feed
-          const result = await forumService.getPersonalizedFeed(filters);
-          newForums = result.forums;
-          more = result.hasMore;
-        } else {
-          // Filtered by subject or tag
-          const filterParams = {
-            ...(subjectId ? { subjectId } : {}),
-            ...(tagId ? { tagId } : {}),
-            ...filters,
-          };
-          const result = await forumService.getAllForums(filterParams);
-          newForums = result.forums;
-          more = result.hasMore;
+        try {
+          if (!subjectId && !tagId) {
+            // Personalized feed
+            console.log("📡 Fetching personalized feed...");
+            const result = await forumService.getPersonalizedFeed(filters);
+            console.log("📡 Feed result:", {
+              forumsCount: result?.forums?.length,
+              hasMore: result?.hasMore,
+              resultKeys: result ? Object.keys(result) : "null",
+            });
+            newForums = result?.forums;
+            more = result?.hasMore;
+
+            if (!newForums) {
+              console.error("❌ Feed returned empty forums:", result);
+              throw new Error(
+                "Feed API returned invalid structure: missing forums array",
+              );
+            }
+          } else {
+            // Filtered by subject or tag
+            console.log("📡 Fetching filtered forums...", {
+              subjectId,
+              tagId,
+            });
+            const filterParams = {
+              ...(subjectId ? { subjectId } : {}),
+              ...(tagId ? { tagId } : {}),
+              ...filters,
+            };
+            const result = await forumService.getAllForums(filterParams);
+            console.log("📡 Filtered result:", {
+              forumsCount: result?.forums?.length,
+              hasMore: result?.hasMore,
+              resultKeys: result ? Object.keys(result) : "null",
+            });
+            newForums = result?.forums;
+            more = result?.hasMore;
+
+            if (!newForums) {
+              console.error("❌ Filtered fetch returned empty forums:", result);
+              throw new Error(
+                "Forums API returned invalid structure: missing forums array",
+              );
+            }
+          }
+        } catch (fetchErr) {
+          console.error("❌ Critical error in forum fetch:", fetchErr);
+          setError("Failed to load forums.");
+          throw fetchErr;
         }
 
         // Add saved state
+        console.log(
+          `✅ Processing ${newForums.length} forums for saved state...`,
+        );
         const forumsWithSaved = await Promise.all(
           newForums.map(async (forum) => {
             if (!forum.id) return { ...forum, isSaved: false };
             try {
               const saveRes = await forumService.getSaveStatus(forum.id);
               return { ...forum, isSaved: !!saveRes.saved };
-            } catch {
+            } catch (err) {
+              console.warn(
+                `⚠️ Failed to get save status for forum ${forum.id}:`,
+                err,
+              );
               return { ...forum, isSaved: false };
             }
           }),
+        );
+        console.log(
+          `✅ Processed ${forumsWithSaved.length} forums with saved state`,
         );
 
         // Update forums - APPEND if loading more, REPLACE if resetting
         // Deduplicate: filter out forums that already exist
         setForums((prev) => {
+          let updated: DiscussionCardProps[];
           if (reset) {
             console.log(`Reset: Loading ${forumsWithSaved.length} new forums`);
-            return forumsWithSaved;
+            updated = forumsWithSaved;
           } else {
             const existingIds = new Set(prev.map((f) => f.id));
             const uniqueNewForums = forumsWithSaved.filter(
@@ -284,8 +400,15 @@ const Index = () => {
             console.log(
               `Appending ${uniqueNewForums.length} new forums (filtered from ${forumsWithSaved.length})`,
             );
-            return [...prev, ...uniqueNewForums];
+            updated = [...prev, ...uniqueNewForums];
           }
+
+          // Cache the updated forums
+          if (reset) {
+            setCache(updated, more, 0);
+          }
+
+          return updated;
         });
 
         // Update refs and state
@@ -296,8 +419,16 @@ const Index = () => {
           pageRef.current += 1;
         }
       } catch (err) {
-        console.error("Error loading forums:", err);
-        setError("Failed to load forums.");
+        console.error("❌ Error loading forums - Full error details:", {
+          message: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : "no stack",
+          err: err,
+        });
+        if (err instanceof Error) {
+          setError(`Failed to load forums: ${err.message}`);
+        } else {
+          setError("Failed to load forums.");
+        }
       } finally {
         if (reset) {
           setInitialLoading(false);
@@ -307,7 +438,7 @@ const Index = () => {
         }
       }
     },
-    [subjectId, tagId],
+    [subjectId, tagId, getCache, setCache],
   );
 
   useEffect(() => {
@@ -320,12 +451,13 @@ const Index = () => {
       // Only refresh if the post belongs to the current user (optional, but safe)
       // We can simply refresh the feed to show the updated content.
       console.log("Validation completed for forum", data.forumId, data.verdict);
-      // Reset and reload feed
+      // Reset and reload feed, skip cache to get fresh data
       setForums([]);
       pageRef.current = 0;
       hasMoreRef.current = true;
       setInitialLoading(true);
-      loadForums(true);
+      clearCache();
+      loadForums(true, true);
     };
 
     socket.on("forum_validation_completed", handleValidationCompleted);
@@ -333,7 +465,7 @@ const Index = () => {
     return () => {
       socket.off("forum_validation_completed", handleValidationCompleted);
     };
-  }, [socket, loadForums]);
+  }, [socket, loadForums, clearCache]);
 
   // Initial load
   useEffect(() => {
@@ -502,6 +634,7 @@ const Index = () => {
     try {
       await axiosInstance.delete(`/forums/${selectedPostId}`);
       setForums((prev) => prev.filter((f) => f.id !== selectedPostId));
+      clearCache();
       toast({ title: "Post deleted." });
     } catch (err) {
       console.error("Delete error:", err);
@@ -547,6 +680,7 @@ const Index = () => {
             : forum,
         ),
       );
+      clearCache();
       toast({
         title: voteType === 1 ? "Upvoted!" : "Downvoted!",
       });
@@ -575,6 +709,7 @@ const Index = () => {
             : forum,
         ),
       );
+      clearCache();
       toast({ title: "Vote removed" });
     } catch (err) {
       console.error("Error removing vote:", err);
@@ -599,6 +734,7 @@ const Index = () => {
             : forum,
         ),
       );
+      clearCache();
       toast({
         title: result.saved ? "Forum saved" : "Forum unsaved",
       });
@@ -921,32 +1057,44 @@ const Index = () => {
           <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground mb-4">
             Topics You May Like
           </h2>
-          <div
-            ref={topicsScrollRef}
-            className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scroll-smooth"
-            style={{ scrollbarWidth: "thin" }}>
-            {topics.slice(0, 18).map((item, i) => (
-              <motion.button
-                key={`${item.type}-${item.id}`}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.03 }}
-                onClick={() => handleTopicClick(item)}
-                className={`shrink-0 flex items-center gap-2 rounded-lg border px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium transition-all ${
-                  followedTopics.has(item.name)
-                    ? "border-primary bg-primary/5 text-primary"
-                    : "border-border bg-card text-foreground hover:border-primary/15 hover:shadow-sm"
-                }`}>
-                {item.type === "tag" && "#"}
-                {item.name}
-                <span className="text-xs text-muted-foreground ml-1">
-                  {item.discussionCount} posts
-                </span>
-                {followedTopics.has(item.name) && (
-                  <Check className="h-3.5 w-3.5" />
-                )}
-              </motion.button>
-            ))}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => scroll(topicsScrollRef, "left")}
+              className="shrink-0 rounded-full border border-border bg-background p-1 hover:bg-secondary transition-colors">
+              <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <div
+              ref={topicsScrollRef}
+              className="flex gap-2 sm:gap-3 overflow-x-hidden scroll-smooth flex-1"
+              style={{ scrollbarWidth: "none" }}>
+              {topics.slice(0, 18).map((item, i) => (
+                <motion.button
+                  key={`${item.type}-${item.id}`}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  onClick={() => handleTopicClick(item)}
+                  className={`shrink-0 flex items-center gap-2 rounded-lg border px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium transition-all ${
+                    followedTopics.has(item.name)
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-border bg-card text-foreground hover:border-primary/15 hover:shadow-sm"
+                  }`}>
+                  {item.type === "tag" && "#"}
+                  {item.name}
+                  <span className="text-xs text-muted-foreground ml-1">
+                    {item.discussionCount} posts
+                  </span>
+                  {followedTopics.has(item.name) && (
+                    <Check className="h-3.5 w-3.5" />
+                  )}
+                </motion.button>
+              ))}
+            </div>
+            <button
+              onClick={() => scroll(topicsScrollRef, "right")}
+              className="shrink-0 rounded-full border border-border bg-background p-1 hover:bg-secondary transition-colors">
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </button>
           </div>
         </section>
       )}
@@ -955,15 +1103,15 @@ const Index = () => {
       <div className="grid gap-6 lg:gap-8 lg:grid-cols-[1fr_280px]">
         {/* Left column – discussions */}
         <div className="space-y-4 min-w-0">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground">
-              {subjectId || tagId ? "" : "Latest Discussions"}
+              {subjectId || tagId ? "" : "Recommended Discussions"}
             </h2>
-            <button
+            {/* <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors">
               <Plus className="h-4 w-4" /> New Post
-            </button>
+            </button> */}
           </div>
 
           {error && (
@@ -1057,6 +1205,8 @@ const Index = () => {
         title="Delete Post"
         message="Are you sure you want to delete this post? This action cannot be undone. All comments and attached files will be removed."
       />
+
+      <FloatingActionButton onClick={() => setShowCreateModal(true)} />
     </div>
   );
 };
