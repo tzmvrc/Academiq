@@ -44,7 +44,7 @@ interface Subject {
 interface Tag {
   id: string;
   name: string;
-  usage_count?: number;
+  discussion_count?: number;
 }
 
 const normalizeSubject = (value: string) => value.trim().replace(/\s+/g, " ");
@@ -167,7 +167,7 @@ const CreatePostModal = ({
     const fetchTags = async () => {
       try {
         setLoadingTags(true);
-        const res = await axiosInstance.get("/tags?sort=popular");
+        const res = await axiosInstance.get("/tags/with-count?limit=100");
         setAllTags(res.data?.tags || []);
       } catch (err) {
         console.error("Fetch tags error:", err);
@@ -654,9 +654,9 @@ const CreatePostModal = ({
                                   <Hash className="h-3 w-3 text-muted-foreground" />
                                   {tag.name}
                                 </span>
-                                {tag.usage_count !== undefined && (
+                                {tag.discussion_count !== undefined && (
                                   <span className="text-xs text-muted-foreground">
-                                    {tag.usage_count} used
+                                    {tag.discussion_count} posts
                                   </span>
                                 )}
                               </button>
