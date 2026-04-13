@@ -250,6 +250,26 @@ const Index = () => {
     [displayForums],
   );
 
+  // Alternate between subjects and tags sorted by discussion count
+  const alternatingTopics = useMemo(() => {
+    // Separate and sort subjects and tags by discussionCount
+    const subjects = topics
+      .filter((t) => t.type === "subject")
+      .sort((a, b) => (b.discussionCount || 0) - (a.discussionCount || 0));
+    const tags = topics
+      .filter((t) => t.type === "tag")
+      .sort((a, b) => (b.discussionCount || 0) - (a.discussionCount || 0));
+
+    // Interleave subjects and tags alternately
+    const alternating: TopicItem[] = [];
+    for (let i = 0; i < Math.max(subjects.length, tags.length); i++) {
+      if (i < subjects.length) alternating.push(subjects[i]);
+      if (i < tags.length) alternating.push(tags[i]);
+    }
+
+    return alternating.slice(0, 18);
+  }, [topics]);
+
   // Reset pagination when filters change
   useEffect(() => {
     setForums([]);
@@ -1067,34 +1087,7 @@ const Index = () => {
               ref={topicsScrollRef}
               className="flex gap-2 sm:gap-3 overflow-x-hidden scroll-smooth flex-1"
               style={{ scrollbarWidth: "none" }}>
-              {useMemo(() => {
-                // Separate and sort subjects and tags by discussionCount
-                const subjects = topics
-                  .filter((t) => t.type === "subject")
-                  .sort(
-                    (a, b) =>
-                      (b.discussionCount || 0) - (a.discussionCount || 0),
-                  );
-                const tags = topics
-                  .filter((t) => t.type === "tag")
-                  .sort(
-                    (a, b) =>
-                      (b.discussionCount || 0) - (a.discussionCount || 0),
-                  );
-
-                // Interleave subjects and tags alternately
-                const alternating: TopicItem[] = [];
-                for (
-                  let i = 0;
-                  i < Math.max(subjects.length, tags.length);
-                  i++
-                ) {
-                  if (i < subjects.length) alternating.push(subjects[i]);
-                  if (i < tags.length) alternating.push(tags[i]);
-                }
-
-                return alternating.slice(0, 18);
-              }, [topics]).map((item, i) => (
+              {alternatingTopics.map((item, i) => (
                 <motion.button
                   key={`${item.type}-${item.id}`}
                   initial={{ opacity: 0, scale: 0.95 }}
