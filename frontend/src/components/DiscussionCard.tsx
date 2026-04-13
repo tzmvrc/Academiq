@@ -205,6 +205,12 @@ const DiscussionCard = ({
     setSaved(isSaved);
   }, [isSaved]);
 
+  // Sync upvoted/downvoted state with userVoteState prop
+  useEffect(() => {
+    setUpvoted(userVoteState === 1);
+    setDownvoted(userVoteState === -1);
+  }, [userVoteState]);
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

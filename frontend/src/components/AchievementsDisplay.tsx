@@ -16,17 +16,10 @@ interface Achievement {
 
 interface AchievementsDisplayProps {
   userId: string;
-  isOwn?: boolean;
 }
 
-const AchievementsDisplay = ({
-  userId,
-  isOwn = false,
-}: AchievementsDisplayProps) => {
+const AchievementsDisplay = ({ userId }: AchievementsDisplayProps) => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [featuredAchievements, setFeaturedAchievements] = useState<
-    Achievement[]
-  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -40,12 +33,6 @@ const AchievementsDisplay = ({
       const res = await axiosInstance.get(`/achievements/user/${userId}`);
       const allAchievements = res.data.achievements || [];
       setAchievements(allAchievements);
-
-      // Filter featured achievements (max 3)
-      const featured = allAchievements.filter(
-        (a: Achievement) => a.is_featured,
-      );
-      setFeaturedAchievements(featured.slice(0, 3));
     } catch (err) {
       console.error("Failed to fetch achievements", err);
       toast({
@@ -86,44 +73,6 @@ const AchievementsDisplay = ({
 
   return (
     <div className="space-y-6">
-      {/* Featured Achievements Section */}
-      {featuredAchievements.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-yellow-500" />
-            Featured Achievements
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {featuredAchievements.map((achievement) => (
-              <div
-                key={achievement.achievement_id}
-                className="rounded-lg border border-border bg-card p-4 hover:shadow-md transition-shadow">
-                <div className="text-3xl mb-2">
-                  {achievement.achievement_icon || "🏆"}
-                </div>
-                <h4 className="text-sm font-semibold text-foreground truncate">
-                  {achievement.achievement_name}
-                </h4>
-                <p className="text-xs text-foreground/70 line-clamp-2 mt-1">
-                  {achievement.achievement_description}
-                </p>
-                {achievement.achievement_points > 0 && (
-                  <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-yellow-500/10 px-2 py-1">
-                    <span className="text-xs font-medium text-yellow-600">
-                      +{achievement.achievement_points} pts
-                    </span>
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground mt-2">
-                  Unlocked{" "}
-                  {new Date(achievement.unlocked_at).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* All Achievements Section */}
       <div>
         <button
@@ -181,14 +130,6 @@ const AchievementsDisplay = ({
           </div>
         )}
       </div>
-
-      {/* Edit Featured Note */}
-      {isOwn && (
-        <div className="text-xs text-muted-foreground italic">
-          Tip: Edit your profile to select your 3 featured achievements to
-          showcase!
-        </div>
-      )}
     </div>
   );
 };
