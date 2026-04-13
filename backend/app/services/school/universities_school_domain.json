@@ -54463,7 +54463,17 @@
     "name": "Colegio de San Juan de Letran",
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
-    "domains": ["letran.edu"],
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/4/44/Logo_of_Colegio_de_San_Juan_de_Letran-Calamba.png",
+    "domains": ["letran.edu.ph"],
+    "country": "Philippines"
+  },
+   {
+    "web_pages": ["https://mac.edu.ph/"],
+    "name": "Manila Adventist College",
+    "alpha_two_code": "PH",
+    "state-province": "National Capital Region",
+    "logo": "https://static.wixstatic.com/media/00ba7a_0074eb5a58444d199b0211199a22cda8~mv2.jpg/v1/fill/w_131,h_131,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/19_%20Manila%20Adventist%20College.jpg",
+    "domains": ["mac.edu.ph"],
     "country": "Philippines"
   },
   {
@@ -54539,6 +54549,15 @@
     "state-province": "National Capital Region",
     "domains": ["feu.edu.ph"],
     "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/d/d7/Far_Easter_University_Logo.svg/250px-Far_Easter_University_Logo.svg.png",
+    "country": "Philippines"
+  },
+   {
+    "web_pages": ["http://www.ntc.edu.ph/"],
+    "name": "National Teachers College",
+    "alpha_two_code": "PH",
+    "state-province": "National Capital Region",
+    "domains": ["ntc.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/7/72/National_Teachers_College_logo.png",
     "country": "Philippines"
   },
   {
@@ -54667,6 +54686,7 @@
     "name": "Mapúa University",
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
+    "logo": "https://static.wikia.nocookie.net/logopedia/images/6/6a/1587224178653.png/revision/latest?cb=20200419070541",
     "domains": ["mapua.edu.ph"],
     "country": "Philippines"
   },
@@ -54960,6 +54980,7 @@
     "name": "Taguig City University",
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/3/3c/TCU_logo_updated_PNG.png",
     "domains": ["tcu.edu.ph"],
     "country": "Philippines"
   },
@@ -55274,6 +55295,33 @@
     "state-province": "Davao",
     "domains": ["upmin.edu.ph"],
     "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/3/3d/University_of_The_Philippines_seal.svg/250px-University_of_The_Philippines_seal.svg.png",
+    "country": "Philippines"
+  },
+   {
+    "web_pages": ["http://www.up.edu.ph/"],
+    "name": "University of the Philippines",
+    "alpha_two_code": "PH",
+    "state-province": "Davao",
+    "domains": ["up.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/3/3d/University_of_The_Philippines_seal.svg/250px-University_of_The_Philippines_seal.svg.png",
+    "country": "Philippines"
+  },
+  {
+    "web_pages": ["https://www.feutech.edu.ph/"],
+    "name": "FEU Institute of Technology",
+    "alpha_two_code": "PH",
+    "state-province": "NCR",
+    "domains": ["fit.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/6/62/FEU_Tech_official_seal.png/250px-FEU_Tech_official_seal.png",
+    "country": "Philippines"
+  },
+  {
+    "web_pages": ["https://www.pnu.edu.ph/"],
+    "name": "Philippine Normal University",
+    "alpha_two_code": "PH",
+    "state-province": "NCR",
+    "domains": ["pnu.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/d/df/PNU_Official_Seal.png/250px-PNU_Official_Seal.png",
     "country": "Philippines"
   },
   {

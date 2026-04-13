@@ -49,11 +49,12 @@ export const SubjectModel = {
   },
 
   async getTrendingTopics(limit = 18) {
-    // 1. Get subjects with count of approved forums
+    // 1. Get subjects with count of approved & verified forums
     const { data: subjects, error: subjErr } = await supabase
       .from("forums")
       .select("subject_id, subjects(id, name)", { count: "exact" })
       .eq("validation_status", "approved")
+      .eq("is_ai_verified", true)
       .not("subject_id", "is", null);
 
     if (subjErr) throw subjErr;
@@ -80,11 +81,14 @@ export const SubjectModel = {
       discussionCount: s.count,
     }));
 
-    // 2. Get tags with count of approved forums (via forum_tags → forums)
+    // 2. Get tags with count of approved & verified forums (via forum_tags → forums)
     const { data: tagsWithCount, error: tagErr } = await supabase
       .from("forum_tags")
-      .select("tag_id, tags(id, name), forums!inner(validation_status)")
-      .eq("forums.validation_status", "approved");
+      .select(
+        "tag_id, tags(id, name), forums!inner(validation_status, is_ai_verified)",
+      )
+      .eq("forums.validation_status", "approved")
+      .eq("forums.is_ai_verified", true);
 
     if (tagErr) throw tagErr;
 
@@ -118,11 +122,17 @@ export const SubjectModel = {
   },
 
   async findAllWithCount() {
-    const { data, error } = await supabase.from("subjects").select(`
+    const { data, error } = await supabase
+      .from("subjects")
+      .select(
+        `
       id,
       name,
       forums:forums(count)
-    `);
+    `,
+      )
+      .eq("forums.validation_status", "approved")
+      .eq("forums.is_ai_verified", true);
     if (error) throw error;
     return data.map((s) => ({
       id: s.id,

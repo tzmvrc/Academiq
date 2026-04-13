@@ -382,6 +382,13 @@ const Index = () => {
           throw fetchErr;
         }
 
+        // Filter out rejected and unverified forums (defensive frontend filter)
+        newForums = newForums.filter(
+          (forum: any) =>
+            forum.validation_status !== "rejected" &&
+            forum.is_ai_verified !== false,
+        );
+
         // Add saved state
         console.log(
           `✅ Processing ${newForums.length} forums for saved state...`,
@@ -685,6 +692,8 @@ const Index = () => {
     setSelectedPostData(null);
   };
 
+  // In Index.tsx
+
   const handleVoteForum = async (forumId: string, voteType: 1 | -1) => {
     try {
       const result = await forumService.voteForum(forumId, voteType);
@@ -701,9 +710,7 @@ const Index = () => {
         ),
       );
       clearCache();
-      toast({
-        title: voteType === 1 ? "Upvoted!" : "Downvoted!",
-      });
+      toast({ title: voteType === 1 ? "Upvoted!" : "Downvoted!" });
     } catch (err) {
       console.error("Error voting:", err);
       toast({
@@ -746,18 +753,11 @@ const Index = () => {
       const result = await forumService.toggleSaveForum(forumId);
       setForums((prevForums) =>
         prevForums.map((forum) =>
-          forum.id === forumId
-            ? {
-                ...forum,
-                isSaved: result.saved,
-              }
-            : forum,
+          forum.id === forumId ? { ...forum, isSaved: result.saved } : forum,
         ),
       );
       clearCache();
-      toast({
-        title: result.saved ? "Forum saved" : "Forum unsaved",
-      });
+      toast({ title: result.saved ? "Forum saved" : "Forum unsaved" });
       return result.saved;
     } catch (err) {
       console.error("Error saving forum:", err);

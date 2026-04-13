@@ -13,6 +13,7 @@ import { setCacheHeaders, shouldReturn304 } from "../../utils/cacheHeaders.js";
 import { updateAchievementProgress } from "../achievement/achievement_service.js";
 import { AchievementService } from "../achievement_service.js";
 import { ActivityService } from "../activity_service.js";
+import { getIO } from "../../middlewares/socket.js";
 
 // Setup AI Service URL - normalize to ensure /ai suffix
 let AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000/ai";
@@ -148,6 +149,11 @@ export const ForumsController = {
         query = query.in("id", ids);
       }
 
+      // Filter to only approved & verified forums
+      query = query
+        .eq("validation_status", "approved")
+        .eq("is_ai_verified", true);
+
       const { data, error, count } = await query
         .order("created_at", { ascending: false })
         .range(parsedOffset, parsedOffset + parsedLimit - 1);
@@ -256,11 +262,30 @@ export const ForumsController = {
       if (!userId) {
         return res.status(400).json({ error: "userId is required" });
       }
-      const { data, error } = await ForumModel.findByUserId(
-        userId,
-        parseInt(limit),
-        parseInt(offset),
-      );
+
+      // Check if the current user is viewing their own profile
+      const currentUserId = req.user?.id;
+      const isOwnProfile = String(currentUserId) === String(userId);
+
+      // Use appropriate method based on ownership
+      let result;
+      if (isOwnProfile) {
+        // Show all statuses for own profile (pending, approved, rejected)
+        result = await ForumModel.findByUserIdAll(
+          userId,
+          parseInt(limit),
+          parseInt(offset),
+        );
+      } else {
+        // Show only approved for other users' profiles
+        result = await ForumModel.findByUserId(
+          userId,
+          parseInt(limit),
+          parseInt(offset),
+        );
+      }
+
+      const { data, error } = result;
       if (error) throw error;
       res.json({ forums: data });
     } catch (err) {
@@ -441,6 +466,35 @@ export const ForumsController = {
               reason: validation.reason,
             },
           });
+
+          // If rejected, delete the forum from database
+          if (validation.verdict === "rejected") {
+            try {
+              // Delete forum tags first and update usage counts
+              const { data: tags } = await supabase
+                .from("forum_tags")
+                .select("tag_id")
+                .eq("forum_id", forum.id);
+              const tagIds = tags?.map((t) => t.tag_id) || [];
+
+              // Delete the forum
+              await ForumModel.delete(forum.id);
+
+              // Update tag usage counts
+              for (const tagId of tagIds) {
+                await TagModel.updateUsageCount(tagId, -1);
+              }
+
+              console.log(
+                `🗑️ Rejected forum ${forum.id} has been deleted from database`,
+              );
+            } catch (deleteErr) {
+              console.error(
+                `Failed to delete rejected forum ${forum.id}:`,
+                deleteErr,
+              );
+            }
+          }
 
           // --- Trigger achievement evaluation after post creation ---
           AchievementService.triggerOnPostCreated(userId).catch((err) =>
@@ -867,6 +921,20 @@ export const ForumsController = {
           downvotes: forum.downvotes_count,
         },
       });
+
+      // Emit socket event to update all connected clients
+      try {
+        const io = getIO();
+        io.emit("forum_voted", {
+          forumId,
+          userId,
+          voteType: voteRow.vote_type,
+          upvotes: forum.upvotes_count,
+          downvotes: forum.downvotes_count,
+        });
+      } catch (err) {
+        console.error("Failed to emit socket event:", err);
+      }
     } catch (err) {
       console.error("Vote Forum Error:", err);
       res.status(500).json({ error: "Failed to vote forum" });
@@ -899,6 +967,20 @@ export const ForumsController = {
           downvotes: forum.downvotes_count,
         },
       });
+
+      // Emit socket event to update all connected clients
+      try {
+        const io = getIO();
+        io.emit("forum_voted", {
+          forumId,
+          userId,
+          voteType: null,
+          upvotes: forum.upvotes_count,
+          downvotes: forum.downvotes_count,
+        });
+      } catch (err) {
+        console.error("Failed to emit socket event:", err);
+      }
     } catch (err) {
       console.error("Unvote Forum Error:", err);
       res.status(500).json({ error: "Failed to unvote forum" });

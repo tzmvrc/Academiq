@@ -66,7 +66,7 @@ export const ForumModel = {
     return { data: data[0], error: null };
   },
 
-  // For user's own posts – do NOT filter (show all statuses)
+  // For public viewing – only show approved & verified posts (exclude rejected & unverified)
   async findByUserId(userId, limit = 10, offset = 0) {
     const { data, error } = await supabase
       .from("forums")
@@ -78,10 +78,38 @@ export const ForumModel = {
       upvotes_count,
       comments_count,
       created_at,
+      is_ai_verified,
       subject:subject_id ( id, name )
     `,
       )
       .eq("user_id", userId)
+      .eq("validation_status", "approved")
+      .eq("is_ai_verified", true)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+    if (error) throw error;
+    return { data, error: null };
+  },
+
+  // For user's own profile – show all statuses (pending, approved, rejected) but exclude unverified
+  async findByUserIdAll(userId, limit = 10, offset = 0) {
+    const { data, error } = await supabase
+      .from("forums")
+      .select(
+        `
+      id,
+      title,
+      content,
+      upvotes_count,
+      comments_count,
+      created_at,
+      validation_status,
+      is_ai_verified,
+      subject:subject_id ( id, name )
+    `,
+      )
+      .eq("user_id", userId)
+      .eq("is_ai_verified", true)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
     if (error) throw error;
@@ -107,7 +135,7 @@ export const ForumModel = {
       .order("created_at", { ascending: false });
   },
 
-  // User's own posts (detailed) – do NOT filter
+  // User's own posts (detailed) – only show approved for public viewing
   async findByUserIdWithDetails(userId) {
     const { data, error } = await supabase
       .from("forums")
@@ -122,6 +150,7 @@ export const ForumModel = {
     `,
       )
       .eq("user_id", userId)
+      .eq("validation_status", "approved")
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -184,13 +213,14 @@ export const ForumModel = {
       Date.now() - 30 * 24 * 60 * 60 * 1000,
     ).toISOString();
 
-    // 1. Fetch approved forums from last 30 days
+    // 1. Fetch approved & verified forums from last 30 days
     const { data: forums, error: forumsErr } = await supabase
       .from("forums")
       .select(
         "id, title, content, ai_summary, upvotes_count, comments_count, created_at, subject_id, user_id",
       )
       .eq("validation_status", "approved") // ✅ only approved
+      .eq("is_ai_verified", true) // ✅ only verified
       .gte("created_at", cutoff);
     if (forumsErr) throw forumsErr;
     if (!forums || forums.length === 0) return [];

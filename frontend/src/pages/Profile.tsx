@@ -267,7 +267,13 @@ const Profile = () => {
           results;
 
         if (postsRes.status === "fulfilled") {
-          setPosts(postsRes.value.data.forums || []);
+          // Filter out rejected posts and unverified posts
+          const filteredPosts = (postsRes.value.data.forums || []).filter(
+            (forum: any) =>
+              forum.validation_status !== "rejected" &&
+              forum.is_ai_verified !== false,
+          );
+          setPosts(filteredPosts);
         } else {
           console.error("Failed to fetch posts:", postsRes.reason);
         }

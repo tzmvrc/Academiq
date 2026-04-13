@@ -8,6 +8,8 @@ import axios from "axios";
 import sgMail from "@sendgrid/mail";
 import { title } from "process";
 import { findSchoolByDomain } from "../../services/school/schoolValidator.js";
+import dotenv from "dotenv";
+dotenv.config();
 import { supabase } from "../../database/supabase.js";
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -659,7 +661,7 @@ export const AuthController = {
 
       if (tagsError) throw tagsError;
 
-      // 4. Search forums (approved only) – IMPROVED: join user details
+      // 4. Search forums (approved & verified only) – IMPROVED: join user details, exclude rejected & unverified
       const { data: forums, error: forumsError } = await supabase
         .from("forums")
         .select(
@@ -671,12 +673,14 @@ export const AuthController = {
         upvotes_count,
         downvotes_count,
         comments_count,
+        is_ai_verified,
         user_id,
         user:user_id (id, name, profile_url, school),
         subject:subject_id (id, name)
       `,
         )
         .eq("validation_status", "approved")
+        .eq("is_ai_verified", true)
         .or(`title.ilike.%${searchTerm}%, content.ilike.%${searchTerm}%`)
         .order("created_at", { ascending: false })
         .limit(20);

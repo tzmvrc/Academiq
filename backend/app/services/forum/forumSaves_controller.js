@@ -2,6 +2,7 @@ import { ForumSavesModel } from "../../models/forumSaves_model.js";
 import { ActivityService } from "../activity_service.js";
 import { ForumModel } from "../../models/forum_model.js";
 import { AchievementService } from "../achievement_service.js";
+import { getIO } from "../../middlewares/socket.js";
 
 export const ForumSavesController = {
   // POST /api/forums/:id/save
@@ -48,6 +49,18 @@ export const ForumSavesController = {
       }
 
       res.json({ message, saved });
+
+      // Emit socket event to update all connected clients
+      try {
+        const io = getIO();
+        io.emit("forum_saved", {
+          forumId,
+          userId,
+          saved,
+        });
+      } catch (err) {
+        console.error("Failed to emit socket event:", err);
+      }
     } catch (err) {
       console.error("Toggle Save Forum Error:", err);
       res.status(500).json({ error: "Failed to save forum" });

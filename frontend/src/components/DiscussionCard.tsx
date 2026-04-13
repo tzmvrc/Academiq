@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AIBadge from "./AIBadge";
+import axiosInstance from "@/integration/axiosInstance";
+import { useSocket } from "@/components/SocketContext";
 
 interface Tag {
   id: string;
@@ -86,7 +88,6 @@ const getFileNameFromUrl = (url: string): string => {
   }
 };
 
-// Helper to format creation date
 const formatCreationDate = (dateString?: string) => {
   if (!dateString) return null;
   const date = new Date(dateString);
@@ -114,7 +115,6 @@ const formatCreationDate = (dateString?: string) => {
   }
 };
 
-// Helper to render document preview (unchanged)
 const renderDocumentPreview = (url: string) => {
   const lowerUrl = url.toLowerCase();
   if (lowerUrl.endsWith(".pdf")) {
@@ -192,24 +192,124 @@ const DiscussionCard = ({
   created_at,
 }: DiscussionCardProps) => {
   const navigate = useNavigate();
-  const [upvoted, setUpvoted] = useState<boolean>(userVoteState === 1);
-  const [downvoted, setDownvoted] = useState<boolean>(userVoteState === -1);
-  const [saved, setSaved] = useState<boolean>(isSaved);
   const [isVoting, setIsVoting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // Local state for vote and save status - will be synced from props via useEffect
+  const [upvoted, setUpvoted] = useState(userVoteState === 1);
+  const [downvoted, setDownvoted] = useState(userVoteState === -1);
+  const [saved, setSaved] = useState(isSaved);
+  const [upvotesCount, setUpvotesCount] = useState(upvotes);
+  const [downvotesCount, setDownvotesCount] = useState(downvotes);
+
+  // Sync local state with props whenever they change
+  useEffect(() => {
+    setUpvoted(userVoteState === 1);
+    setDownvoted(userVoteState === -1);
+    setUpvotesCount(upvotes);
+    setDownvotesCount(downvotes);
+  }, [userVoteState, upvotes, downvotes]);
+
+  // Sync saved state when prop changes
   useEffect(() => {
     setSaved(isSaved);
   }, [isSaved]);
 
-  // Sync upvoted/downvoted state with userVoteState prop
+  const { socket } = useSocket();
+
+  // Load initial vote and save state from backend
   useEffect(() => {
-    setUpvoted(userVoteState === 1);
-    setDownvoted(userVoteState === -1);
-  }, [userVoteState]);
+    if (!id) return;
+
+    const loadInitialState = async () => {
+      try {
+        const [forumRes, voteRes, saveRes] = await Promise.all([
+          axiosInstance
+            .get(`/forums/${id}`)
+            .catch(() => ({ data: { forum: {} } })),
+          axiosInstance
+            .get(`/forums/${id}/my-vote`)
+            .catch(() => ({ data: { voteType: null } })),
+          axiosInstance
+            .get(`/forums/${id}/save`)
+            .catch(() => ({ data: { saved: false } })),
+        ]);
+
+        // Update vote and counts
+        const voteType = voteRes.data?.voteType;
+        setUpvoted(voteType === 1);
+        setDownvoted(voteType === -1);
+
+        // Update counts from forum data
+        const forum = forumRes.data?.forum;
+        if (forum) {
+          setUpvotesCount(forum.upvotes_count || 0);
+          setDownvotesCount(forum.downvotes_count || 0);
+        }
+
+        // Update save state
+        setSaved(!!saveRes.data?.saved);
+      } catch (err) {
+        console.error("Failed to load forum state:", err);
+      }
+    };
+
+    loadInitialState();
+  }, [id]);
+
+  // Socket listeners for real-time updates
+  useEffect(() => {
+    if (!socket || !id) return;
+
+    // Listen for vote changes on any forum
+    const handleForumVoted = (data: {
+      forumId: string;
+      userId: string;
+      voteType: 1 | -1 | null;
+      upvotes: number;
+      downvotes: number;
+    }) => {
+      if (data.forumId !== id) return;
+
+      // Update vote state if this is from current user
+      const currentUser = localStorage.getItem("user");
+      const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
+      if (data.userId === currentUserId) {
+        setUpvoted(data.voteType === 1);
+        setDownvoted(data.voteType === -1);
+      }
+
+      // Always update counts
+      setUpvotesCount(data.upvotes);
+      setDownvotesCount(data.downvotes);
+    };
+
+    // Listen for save changes on any forum
+    const handleForumSaved = (data: {
+      forumId: string;
+      userId: string;
+      saved: boolean;
+    }) => {
+      if (data.forumId !== id) return;
+
+      const currentUser = localStorage.getItem("user");
+      const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
+      if (data.userId === currentUserId) {
+        setSaved(data.saved);
+      }
+    };
+
+    socket.on("forum_voted", handleForumVoted);
+    socket.on("forum_saved", handleForumSaved);
+
+    return () => {
+      socket.off("forum_voted", handleForumVoted);
+      socket.off("forum_saved", handleForumSaved);
+    };
+  }, [socket, id]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -234,12 +334,20 @@ const DiscussionCard = ({
     setIsVoting(true);
     try {
       if (upvoted) {
-        await onUnvote();
+        // Remove upvote
         setUpvoted(false);
+        setUpvotesCount((prev) => Math.max(0, prev - 1));
+        await onUnvote();
       } else {
-        await onVote(1);
+        // Add upvote - remove downvote if exists
+        const wasDownvoted = downvoted;
         setUpvoted(true);
-        if (downvoted) setDownvoted(false);
+        setDownvoted(false);
+        setUpvotesCount((prev) => prev + 1);
+        if (wasDownvoted) {
+          setDownvotesCount((prev) => Math.max(0, prev - 1));
+        }
+        await onVote(1);
       }
     } catch (error) {
       console.error("Error voting:", error);
@@ -255,12 +363,20 @@ const DiscussionCard = ({
     setIsVoting(true);
     try {
       if (downvoted) {
-        await onUnvote();
+        // Remove downvote
         setDownvoted(false);
+        setDownvotesCount((prev) => Math.max(0, prev - 1));
+        await onUnvote();
       } else {
-        await onVote(-1);
+        // Add downvote - remove upvote if exists
+        const wasUpvoted = upvoted;
         setDownvoted(true);
-        if (upvoted) setUpvoted(false);
+        setUpvoted(false);
+        setDownvotesCount((prev) => prev + 1);
+        if (wasUpvoted) {
+          setUpvotesCount((prev) => Math.max(0, prev - 1));
+        }
+        await onVote(-1);
       }
     } catch (error) {
       console.error("Error voting:", error);
@@ -274,12 +390,9 @@ const DiscussionCard = ({
     e.stopPropagation();
     if (!onSave) return;
     try {
-      const result = await onSave();
-      if (typeof result === "boolean") {
-        setSaved(result);
-      } else {
-        setSaved((prev) => !prev);
-      }
+      // Optimistic update
+      setSaved((prev) => !prev);
+      await onSave();
     } catch (error) {
       console.error("Error saving:", error);
     }
@@ -372,7 +485,6 @@ const DiscussionCard = ({
               <X className="h-5 w-5" />
             </button>
             <div className="p-6">
-              {/* ... modal content same as before ... */}
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                   {authorProfileUrl ? (
@@ -644,9 +756,8 @@ const DiscussionCard = ({
           </div>
         )}
 
-        {/* Action buttons with date beside save icon */}
+        {/* Action buttons */}
         <div className="flex items-center gap-0.5 sm:gap-1">
-          {/* Left side: upvote, downvote, comment buttons */}
           <button
             onClick={handleUpvote}
             disabled={isVoting}
@@ -658,7 +769,7 @@ const DiscussionCard = ({
             <ArrowBigUp
               className={`h-4 w-4 ${upvoted ? "fill-primary" : ""}`}
             />
-            <span className="text-xs font-semibold">{upvotes}</span>
+            <span className="text-xs font-semibold">{upvotesCount}</span>
           </button>
           <button
             onClick={handleDownvote}
@@ -671,7 +782,7 @@ const DiscussionCard = ({
             <ArrowBigDown
               className={`h-4 w-4 ${downvoted ? "fill-destructive" : ""}`}
             />
-            <span className="text-xs font-semibold">{downvotes}</span>
+            <span className="text-xs font-semibold">{downvotesCount}</span>
           </button>
           <button
             onClick={() => navigate(`/post/${id}`)}
@@ -680,7 +791,6 @@ const DiscussionCard = ({
             <span className="text-xs font-medium">{comments}</span>
           </button>
 
-          {/* Right side: date + save button */}
           <div className="ml-auto flex items-center gap-2">
             {formattedDate && (
               <span className="text-xs text-muted-foreground whitespace-nowrap">

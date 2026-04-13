@@ -111,9 +111,11 @@ export const FeedController = {
           console.error("❌ Vector search error:", vecErr);
         } else if (similar) {
           console.log(`✅ Got ${similar.length} similar forums`);
-          // Filter out pending/rejected (in case RPC returns them)
+          // Filter out pending/rejected and unverified (in case RPC returns them)
           const approvedSimilar = similar.filter(
-            (item) => item.validation_status === "approved",
+            (item) =>
+              item.validation_status === "approved" &&
+              item.is_ai_verified === true,
           );
           console.log(
             `✅ After approval filter: ${approvedSimilar.length} forums`,
@@ -171,7 +173,8 @@ export const FeedController = {
           forum_tags(tag:tag_id(id, name, slug, usage_count))
         `,
           )
-          .eq("validation_status", "approved"); // ✅ Only approved forums
+          .eq("validation_status", "approved")
+          .eq("is_ai_verified", true); // ✅ Only approved & verified forums
 
         if (allErr) throw allErr;
 

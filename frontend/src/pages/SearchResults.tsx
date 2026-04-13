@@ -431,9 +431,13 @@ const SearchResults = () => {
               const subjectForumsRes = await axiosInstance.get(
                 `/forums?subjectId=${subject.id}`,
               );
-              const transformed = (subjectForumsRes.data.forums || []).map(
-                transformForumFromApi,
-              );
+              const transformed = (subjectForumsRes.data.forums || [])
+                .filter(
+                  (forum: any) =>
+                    forum.validation_status !== "rejected" &&
+                    forum.is_ai_verified !== false,
+                )
+                .map(transformForumFromApi);
               subjectForums.push(...transformed);
             } catch (err) {
               console.error(
@@ -452,8 +456,13 @@ const SearchResults = () => {
               const userForumsRes = await axiosInstance.get(
                 `/forums/user?userId=${user.id}`,
               );
-              const forumsWithUser = (userForumsRes.data.forums || []).map(
-                (forum: any) => ({
+              const forumsWithUser = (userForumsRes.data.forums || [])
+                .filter(
+                  (forum: any) =>
+                    forum.validation_status !== "rejected" &&
+                    forum.is_ai_verified !== false,
+                )
+                .map((forum: any) => ({
                   ...forum,
                   user: {
                     id: user.id,
@@ -461,8 +470,7 @@ const SearchResults = () => {
                     profile_url: user.profile_url,
                     school: user.school,
                   },
-                }),
-              );
+                }));
               const transformed = forumsWithUser.map(transformForumFromApi);
               userForums.push(...transformed);
             } catch (err) {
