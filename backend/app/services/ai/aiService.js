@@ -1,6 +1,12 @@
 import axios from "axios";
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000/ai";
+// Normalize AI_SERVICE_URL to always include /ai suffix
+let AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000/ai";
+// Remove trailing /ai if present, then add it back to ensure consistency
+AI_SERVICE_URL =
+  AI_SERVICE_URL.replace(/\/ai\/?$/, "").replace(/\/$/, "") + "/ai";
+
+console.log(`🤖 AI Service initialized with URL: ${AI_SERVICE_URL}`);
 
 /**
  * AI Service wrapper - communicates with FastAPI AI service
