@@ -54551,6 +54551,15 @@
     "logo": "https://upload.wikimedia.org/wikipedia/en/thumb/d/d7/Far_Easter_University_Logo.svg/250px-Far_Easter_University_Logo.svg.png",
     "country": "Philippines"
   },
+  {
+    "web_pages": ["http://www.feu.edu.ph/"],
+    "name": "Technological Institute of the Philippines",
+    "alpha_two_code": "PH",
+    "state-province": "National Capital Region",
+    "domains": ["tip.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/fe/T.I.P._Logo.png",
+    "country": "Philippines"
+  },
    {
     "web_pages": ["http://www.ntc.edu.ph/"],
     "name": "National Teachers College",
@@ -54856,7 +54865,7 @@
     "name": "Philippine Women's University",
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
-    "domains": ["pwu.edu"],
+    "domains": ["pwu.edu.ph"],
     "logo": "https://upload.wikimedia.org/wikipedia/en/3/3d/Philippine_Womens_University.png",
     "country": "Philippines"
   },
@@ -54869,6 +54878,15 @@
     "logo": "https://www.pup.edu.ph/about/images/PUPLogo.png",
     "country": "Philippines"
   },
+   {
+    "web_pages": ["http://www.pup.edu.ph/"],
+    "name": "Pamantasan ng Lungsod ng Muntinlupa",
+    "alpha_two_code": "PH",
+    "state-province": "National Capital Region",
+    "domains": ["plmun.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/b/b1/Pamantasan_ng_Lungsod_ng_Muntinlupa_logo.png",
+    "country": "Philippines"
+  },
   {
     "web_pages": ["http://www.rtu.edu.ph/"],
     "name": "Rizal Technological University",
@@ -54876,6 +54894,24 @@
     "state-province": "National Capital Region",
     "domains": ["rtu.edu.ph"],
     "logo": "https://www.rtu.edu.ph/card/wp-content/uploads/2021/10/Rizal_Technological_University.png",
+    "country": "Philippines"
+  },
+   {
+    "web_pages": ["http://www.rtu.edu.ph/"],
+    "name": "University of La Sallete Inc.",
+    "alpha_two_code": "PH",
+    "state-province": "National Capital Region",
+    "domains": ["uls.edu.ph"],
+    "logo": "https://uls.edu.ph/wp-content/uploads/2021/09/368053076_1061095151575363_5019018372726901847_n.png",
+    "country": "Philippines"
+  },
+  {
+    "web_pages": ["http://www.rtu.edu.ph/"],
+    "name": "Southern City Colleges",
+    "alpha_two_code": "PH",
+    "state-province": "National Capital Region",
+    "domains": ["scci.edu.ph"],
+    "logo": "https://scci.edu.ph/wp-content/uploads/2020/10/SCC-logo-PNG.png",
     "country": "Philippines"
   },
   {
@@ -55026,6 +55062,15 @@
     "country": "Philippines"
   },
   {
+    "web_pages": ["http://www.ub.edu.ph/"],
+    "name": "Batangas State University",
+    "alpha_two_code": "PH",
+    "state-province": "Calabarzon",
+    "domains": ["batstate-u.edu.ph"],
+    "logo": "https://aims-rihed.net/wp-content/uploads/bfi_thumb/logo-qrwfw8qdjr3bk3ova5n3ms8jvz3jnousym7phauzne.png",
+    "country": "Philippines"
+  },
+  {
     "web_pages": ["http://www.universityofbohol.com/"],
     "name": "University of Bohol",
     "alpha_two_code": "PH",
@@ -55148,18 +55193,20 @@
   },
   {
     "web_pages": ["http://www.uphr.edu.ph/"],
-    "name": "University of Perpetual Help",
+    "name": "University of Perpetual Help System Laguna",
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
-    "domains": ["uphr.edu.ph"],
+    "domains": ["uphsl.edu.ph"],
+    "logo":"https://uphsl.edu.ph/assets/images/Logos/Logo2025.png",
     "country": "Philippines"
   },
   {
     "web_pages": ["http://www.perpetualdalta.edu.ph/"],
-    "name": "University of Perpetual Help, System Dalta",
+    "name": "University of Perpetual Help System Dalta",
     "alpha_two_code": "PH",
     "state-province": "National Capital Region",
     "domains": ["perpetualdalta.edu.ph"],
+    "logo": "https://upload.wikimedia.org/wikipedia/en/2/2d/University_of_Perpetual_Help_System_DALTA_logo.png",
     "country": "Philippines"
   },
   {
