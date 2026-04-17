@@ -70,7 +70,7 @@ export const SchoolModel = {
     if (error) throw error;
   },
 
-  async getTopSchoolsWithContributors(limit = 10) {
+  async getTopSchoolsWithContributors(limit = 10, offset = 0) {
     const { data: usersData, error: usersError } = await supabase
       .from("users")
       .select("school, points, id, name, profile_url")
@@ -108,10 +108,17 @@ export const SchoolModel = {
       },
     );
 
-    const sorted = schoolsWithInfo
-      .sort((a, b) => b.totalPoints - a.totalPoints)
-      .slice(0, limit);
-    return sorted.map((item, idx) => ({ ...item, rank: idx + 1 }));
+    const sorted = schoolsWithInfo.sort(
+      (a, b) => b.totalPoints - a.totalPoints,
+    );
+
+    // Apply pagination after sorting
+    const paginatedSchools = sorted.slice(offset, offset + limit);
+
+    return paginatedSchools.map((item, idx) => ({
+      ...item,
+      rank: offset + idx + 1,
+    }));
   },
 
   async getUsersBySchool(schoolName, limit = 50, offset = 0) {
@@ -150,5 +157,82 @@ export const SchoolModel = {
       .range(offset, offset + limit - 1);
     if (forumsError) throw forumsError;
     return forums;
+  },
+
+  async searchTopSchools(searchTerm, limit = 10, offset = 0) {
+    if (!searchTerm.trim()) {
+      return [];
+    }
+
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    const { data: usersData, error: usersError } = await supabase
+      .from("users")
+      .select("school, points, id, name, profile_url")
+      .not("school", "is", null);
+
+    if (usersError) throw usersError;
+
+    const schoolMap = new Map();
+    for (const user of usersData) {
+      const school = user.school;
+      if (!schoolMap.has(school)) {
+        schoolMap.set(school, { totalPoints: 0, users: [] });
+      }
+      const entry = schoolMap.get(school);
+      entry.totalPoints += user.points || 0;
+      entry.users.push({
+        id: user.id,
+        name: user.name,
+        profile_url: user.profile_url,
+        points: user.points,
+      });
+    }
+
+    // Build full sorted list of all schools
+    const allSchoolsWithInfo = Array.from(schoolMap.entries()).map(
+      ([school, data]) => {
+        const logo = getSchoolLogo(school);
+        return {
+          school,
+          totalPoints: data.totalPoints,
+          users: data.users
+            .sort((a, b) => (b.points || 0) - (a.points || 0))
+            .slice(0, 3),
+          logo: logo || null,
+        };
+      },
+    );
+
+    const allSorted = allSchoolsWithInfo.sort(
+      (a, b) => b.totalPoints - a.totalPoints,
+    );
+
+    // Filter schools by search term, keeping track of global index
+    const filteredWithGlobalRank = allSorted
+      .map((school, globalIdx) => ({
+        globalRank: globalIdx + 1,
+        school: school,
+      }))
+      .filter(({ school }) => {
+        const schoolNameMatches = school.school
+          .toLowerCase()
+          .includes(lowerSearchTerm);
+        const userNameMatches = school.users.some((u) =>
+          u.name.toLowerCase().includes(lowerSearchTerm),
+        );
+        return schoolNameMatches || userNameMatches;
+      });
+
+    // Apply pagination after filtering
+    const paginatedResults = filteredWithGlobalRank.slice(
+      offset,
+      offset + limit,
+    );
+
+    // Return with global ranks preserved
+    return paginatedResults.map(({ school, globalRank }) => ({
+      ...school,
+      rank: globalRank, // Use global rank, not search position
+    }));
   },
 };

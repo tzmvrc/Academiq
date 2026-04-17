@@ -11,6 +11,8 @@ import {
   ChevronRight,
   Building,
   Users,
+  Search,
+  X,
 } from "lucide-react";
 import { LeaderboardRowSkeleton } from "@/components/SkeletonLoaders";
 import axiosInstance from "@/integration/axiosInstance";
@@ -107,8 +109,26 @@ const Leaderboards = () => {
   const [topSchools, setTopSchools] = useState<TopSchool[]>([]);
   const [expandedSchool, setExpandedSchool] = useState<string | null>(null);
   const [isLoadingTopSchools, setIsLoadingTopSchools] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<LeaderboardEntry[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchOffset, setSearchOffset] = useState(0);
+  const [hasMoreSearch, setHasMoreSearch] = useState(true);
+  const [isLoadingMoreSearch, setIsLoadingMoreSearch] = useState(false);
+  const [topSchoolsSearchResults, setTopSchoolsSearchResults] = useState<
+    TopSchool[]
+  >([]);
+  const [isSearchingTopSchools, setIsSearchingTopSchools] = useState(false);
+  const [topSchoolsSearchOffset, setTopSchoolsSearchOffset] = useState(0);
+  const [hasMoreTopSchoolsSearch, setHasMoreTopSchoolsSearch] = useState(true);
+  const [isLoadingMoreTopSchoolsSearch, setIsLoadingMoreTopSchoolsSearch] =
+    useState(false);
+  const [topSchoolsOffset, setTopSchoolsOffset] = useState(0);
+  const [hasMoreTopSchools, setHasMoreTopSchools] = useState(true);
+  const [isLoadingMoreTopSchools, setIsLoadingMoreTopSchools] = useState(false);
 
   const LIMIT = 10;
+  const TOP_SCHOOLS_LIMIT = 10;
   const fetchLeaderboardRef =
     useRef<(reset?: boolean, school?: string | null) => Promise<void>>(null);
   const prevCategoryRef = useRef<Category>("global");
@@ -116,13 +136,13 @@ const Leaderboards = () => {
 
   const fetchLeaderboard = useCallback(
     async (reset: boolean = false, school?: string | null) => {
-      const currentOffset = reset ? 0 : offset;
       if (!reset && (!hasMore || isLoadingMore)) return;
 
       setIsLoadingMore(!reset);
       if (reset) setIsLoading(true);
 
       try {
+        const currentOffset = reset ? 0 : offset;
         const params: any = { limit: LIMIT, offset: currentOffset };
         if (school) params.school = school;
 
@@ -162,21 +182,178 @@ const Leaderboards = () => {
     }
   }, []);
 
-  const fetchTopSchools = async () => {
-    setIsLoadingTopSchools(true);
+  const fetchTopSchools = async (reset: boolean = false) => {
+    const currentOffset = reset ? 0 : topSchoolsOffset;
+    if (!reset && (!hasMoreTopSchools || isLoadingMoreTopSchools)) return;
+
+    setIsLoadingMoreTopSchools(!reset);
+    if (reset) setIsLoadingTopSchools(true);
+
     try {
-      const res = await axiosInstance.get("/leaderboard/top");
-      setTopSchools(res.data.schools);
+      const res = await axiosInstance.get("/leaderboard/top", {
+        params: { limit: TOP_SCHOOLS_LIMIT, offset: currentOffset },
+      });
+      const newSchools: TopSchool[] = res.data.schools;
+      const hasMoreData = newSchools.length === TOP_SCHOOLS_LIMIT;
+
+      if (reset) {
+        setTopSchools(newSchools);
+        setTopSchoolsOffset(TOP_SCHOOLS_LIMIT);
+        setHasMoreTopSchools(hasMoreData);
+      } else {
+        setTopSchools((prev) => [...prev, ...newSchools]);
+        setTopSchoolsOffset((prev) => prev + TOP_SCHOOLS_LIMIT);
+        setHasMoreTopSchools(hasMoreData);
+      }
     } catch (err) {
       console.error("Failed to fetch top schools", err);
     } finally {
       setIsLoadingTopSchools(false);
+      setIsLoadingMoreTopSchools(false);
     }
   };
+
+  const performSearch = async (term: string, reset: boolean = false) => {
+    if (!term.trim()) {
+      setSearchResults([]);
+      setSearchOffset(0);
+      setHasMoreSearch(true);
+      setIsSearching(false);
+      return;
+    }
+
+    const currentOffset = reset ? 0 : searchOffset;
+    setIsSearching(true);
+
+    try {
+      const params: any = {
+        search: term,
+        limit: LIMIT * 2,
+        offset: currentOffset,
+      };
+      if (activeCategory === "school" && myInfo?.school) {
+        params.school = myInfo.school;
+      }
+
+      const res = await axiosInstance.get("/leaderboard/search", { params });
+      const newEntries: LeaderboardEntry[] = res.data.users;
+      const hasMoreData = newEntries.length === LIMIT * 2;
+
+      if (reset) {
+        setSearchResults(newEntries);
+        setSearchOffset(LIMIT * 2);
+        setHasMoreSearch(hasMoreData);
+      } else {
+        setSearchResults((prev) => [...prev, ...newEntries]);
+        setSearchOffset((prev) => prev + LIMIT * 2);
+        setHasMoreSearch(hasMoreData);
+      }
+    } catch (err) {
+      console.error("Failed to search leaderboard", err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const performTopSchoolsSearch = async (
+    term: string,
+    reset: boolean = false,
+  ) => {
+    if (!term.trim()) {
+      setTopSchoolsSearchResults([]);
+      setTopSchoolsSearchOffset(0);
+      setHasMoreTopSchoolsSearch(true);
+      setIsSearchingTopSchools(false);
+      return;
+    }
+
+    const currentOffset = reset ? 0 : topSchoolsSearchOffset;
+    setIsSearchingTopSchools(true);
+
+    try {
+      const params: any = {
+        search: term,
+        limit: TOP_SCHOOLS_LIMIT * 2,
+        offset: currentOffset,
+      };
+
+      const res = await axiosInstance.get("/leaderboard/search/schools", {
+        params,
+      });
+      const newSchools: TopSchool[] = res.data.schools;
+      const hasMoreData = newSchools.length === TOP_SCHOOLS_LIMIT * 2;
+
+      if (reset) {
+        setTopSchoolsSearchResults(newSchools);
+        setTopSchoolsSearchOffset(TOP_SCHOOLS_LIMIT * 2);
+        setHasMoreTopSchoolsSearch(hasMoreData);
+      } else {
+        setTopSchoolsSearchResults((prev) => [...prev, ...newSchools]);
+        setTopSchoolsSearchOffset((prev) => prev + TOP_SCHOOLS_LIMIT * 2);
+        setHasMoreTopSchoolsSearch(hasMoreData);
+      }
+    } catch (err) {
+      console.error("Failed to search top schools", err);
+    } finally {
+      setIsSearchingTopSchools(false);
+    }
+  };
+
+  const getFilteredData = useCallback(() => {
+    // If searching for global/school categories, use server-side search results
+    if (
+      searchTerm.trim() &&
+      (activeCategory === "global" || activeCategory === "school")
+    ) {
+      return searchResults;
+    }
+
+    // If searching for top schools, use server-side search results
+    if (searchTerm.trim() && activeCategory === "schools") {
+      return topSchoolsSearchResults;
+    }
+
+    let filtered = (() => {
+      if (activeCategory === "global") return leaderboardData;
+      if (activeCategory === "school") return leaderboardData;
+      if (activeCategory === "schools") return topSchools;
+      return countryLeaders;
+    })();
+
+    if (!searchTerm.trim()) return filtered;
+
+    // Client-side filtering for Country (not using server-side search)
+    return filtered.filter((item: any) => {
+      const name = (item.name || "").toLowerCase();
+      const school =
+        (item.school || "").toLowerCase() || (item.field || "").toLowerCase();
+      return (
+        name.includes(searchTerm.toLowerCase()) ||
+        school.includes(searchTerm.toLowerCase())
+      );
+    });
+  }, [
+    leaderboardData,
+    topSchools,
+    searchResults,
+    topSchoolsSearchResults,
+    activeCategory,
+    searchTerm,
+  ]);
 
   useEffect(() => {
     const categoryChanged = prevCategoryRef.current !== activeCategory;
     prevCategoryRef.current = activeCategory;
+
+    // Clear search when switching tabs
+    setSearchTerm("");
+    setSearchResults([]);
+    setSearchOffset(0);
+    setHasMoreSearch(true);
+    setTopSchoolsSearchResults([]);
+    setTopSchoolsSearchOffset(0);
+    setHasMoreTopSchoolsSearch(true);
+    setExpandedSchool(null);
 
     if (activeCategory === "global") {
       if (categoryChanged || !hasFetchedMyInfoRef.current) {
@@ -205,8 +382,12 @@ const Leaderboards = () => {
         setIsLoading(false);
       }
     } else if (activeCategory === "schools") {
-      if (topSchools.length === 0 && !isLoadingTopSchools) {
-        fetchTopSchools();
+      if (categoryChanged) {
+        setTopSchoolsOffset(0);
+        setHasMoreTopSchools(true);
+        fetchTopSchools(true);
+      } else if (topSchools.length === 0 && !isLoadingTopSchools) {
+        fetchTopSchools(true);
       }
       setLeaderboardData([]);
       setHasMore(false);
@@ -218,13 +399,59 @@ const Leaderboards = () => {
     }
   }, [activeCategory, myInfo?.school, fetchMyInfo]);
 
-  const handleViewMore = () => {
-    if (!isLoadingMore && hasMore) {
-      if (activeCategory === "school" && myInfo?.school) {
-        fetchLeaderboard(false, myInfo.school);
-      } else if (activeCategory === "global") {
-        fetchLeaderboard(false);
+  // Handle search term changes
+  useEffect(() => {
+    if (activeCategory === "global" || activeCategory === "school") {
+      if (searchTerm.trim()) {
+        performSearch(searchTerm, true);
+      } else {
+        setSearchResults([]);
+        setSearchOffset(0);
+        setHasMoreSearch(true);
       }
+    } else if (activeCategory === "schools") {
+      if (searchTerm.trim()) {
+        performTopSchoolsSearch(searchTerm, true);
+      } else {
+        setTopSchoolsSearchResults([]);
+        setTopSchoolsSearchOffset(0);
+        setHasMoreTopSchoolsSearch(true);
+      }
+    }
+  }, [searchTerm, activeCategory, myInfo?.school]);
+
+  const handleViewMore = () => {
+    if (activeCategory === "schools") {
+      // Handle Top Schools pagination
+      if (searchTerm.trim()) {
+        if (!isLoadingMoreTopSchoolsSearch && hasMoreTopSchoolsSearch) {
+          performTopSchoolsSearch(searchTerm, false);
+        }
+      } else {
+        if (!isLoadingMoreTopSchools && hasMoreTopSchools) {
+          fetchTopSchools(false);
+        }
+      }
+    } else if (searchTerm.trim()) {
+      // Handle user search results pagination
+      if (!isLoadingMoreSearch && hasMoreSearch) {
+        performSearch(searchTerm, false);
+      }
+    } else {
+      // Handle regular user leaderboard pagination
+      if (!isLoadingMore && hasMore) {
+        if (activeCategory === "school" && myInfo?.school) {
+          fetchLeaderboard(false, myInfo.school);
+        } else if (activeCategory === "global") {
+          fetchLeaderboard(false);
+        }
+      }
+    }
+  };
+
+  const handleViewMoreTopSchools = () => {
+    if (!isLoadingMoreTopSchools && hasMoreTopSchools) {
+      fetchTopSchools(false);
     }
   };
 
@@ -240,16 +467,28 @@ const Leaderboards = () => {
     setExpandedSchool(expandedSchool === schoolName ? null : schoolName);
   };
 
-  const displayData = (() => {
-    if (activeCategory === "global") return leaderboardData;
-    if (activeCategory === "school") return leaderboardData;
-    if (activeCategory === "schools") return topSchools;
-    return countryLeaders;
-  })();
+  const displayData = getFilteredData();
 
   const isDynamic = activeCategory === "global" || activeCategory === "school";
-  const showViewMore = isDynamic && !isLoading && hasMore;
-  const showSkeletons = isLoading && isDynamic;
+  const hasActiveSearch =
+    searchTerm.trim() &&
+    (activeCategory === "global" || activeCategory === "school");
+  const hasActiveTopSchoolsSearch =
+    searchTerm.trim() && activeCategory === "schools";
+  const showViewMore =
+    isDynamic &&
+    !isLoading &&
+    ((hasActiveSearch && hasMoreSearch) || (!hasActiveSearch && hasMore));
+  const showTopSchoolsViewMore =
+    activeCategory === "schools" &&
+    ((hasActiveTopSchoolsSearch &&
+      !isSearchingTopSchools &&
+      hasMoreTopSchoolsSearch) ||
+      (!hasActiveTopSchoolsSearch &&
+        !isLoadingTopSchools &&
+        hasMoreTopSchools));
+  const showSkeletons =
+    (isLoading || isSearching || isSearchingTopSchools) && isDynamic;
 
   const pointsToTop10 = (() => {
     if (activeCategory !== "global" || !myInfo || myInfo.rank <= 10)
@@ -274,19 +513,38 @@ const Leaderboards = () => {
         contributions.
       </p>
 
-      <div className="flex gap-2 mb-6 sm:mb-8 overflow-x-auto pb-1 scrollbar-hide">
-        {categories.map((cat) => (
-          <button
-            key={cat.key}
-            onClick={() => setActiveCategory(cat.key)}
-            className={`shrink-0 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-              activeCategory === cat.key
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-            }`}>
-            {cat.label}
-          </button>
-        ))}
+      <div className="flex gap-2 mb-6 sm:mb-8 overflow-x-auto pb-1 scrollbar-hide items-center justify-between">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {categories.map((cat) => (
+            <button
+              key={cat.key}
+              onClick={() => setActiveCategory(cat.key)}
+              className={`shrink-0 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                activeCategory === cat.key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              }`}>
+              {cat.label}
+            </button>
+          ))}
+        </div>
+        <div className="relative ml-2 shrink-0">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-8 py-2 h-9 rounded-lg bg-secondary text-secondary-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Your School Banner with Logo */}
@@ -358,10 +616,10 @@ const Leaderboards = () => {
 
                 return (
                   <motion.div
-                    key={school.school}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
+                    key={`school-${school.school}`}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.03, duration: 0.3 }}
                     className={`relative overflow-hidden rounded-xl ${rankBorderClass} ${rankBgClass} ${rankShadow}`}>
                     {isTopThree && (
                       <div
@@ -599,9 +857,37 @@ const Leaderboards = () => {
           <div className="flex justify-center pt-4 pb-2">
             <button
               onClick={handleViewMore}
-              disabled={isLoadingMore}
+              disabled={hasActiveSearch ? isLoadingMoreSearch : isLoadingMore}
               className="flex items-center gap-2 px-5 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm font-medium disabled:opacity-50">
-              {isLoadingMore ? "Loading..." : "View more"}
+              {hasActiveSearch
+                ? isLoadingMoreSearch
+                  ? "Loading..."
+                  : "View more"
+                : isLoadingMore
+                  ? "Loading..."
+                  : "View more"}
+              <ChevronDown className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {showTopSchoolsViewMore && (
+          <div className="flex justify-center pt-4 pb-2">
+            <button
+              onClick={handleViewMore}
+              disabled={
+                hasActiveTopSchoolsSearch
+                  ? isLoadingMoreTopSchoolsSearch
+                  : isLoadingMoreTopSchools
+              }
+              className="flex items-center gap-2 px-5 py-2 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm font-medium disabled:opacity-50">
+              {hasActiveTopSchoolsSearch
+                ? isLoadingMoreTopSchoolsSearch
+                  ? "Loading..."
+                  : "View more"
+                : isLoadingMoreTopSchools
+                  ? "Loading..."
+                  : "View more"}
               <ChevronDown className="h-4 w-4" />
             </button>
           </div>

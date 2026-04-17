@@ -174,8 +174,9 @@ export const UserModel = {
   async getLeaderboard(limit, offset, school = null) {
     let query = supabase
       .from(TABLE)
-      .select("id, name, profile_url, school, points")
-      .order("points", { ascending: false, nullsLast: true });
+      .select("id, name, profile_url, school, points, created_at")
+      .order("points", { ascending: false, nullsLast: true })
+      .order("created_at", { ascending: true }); // Tiebreaker for consistent ordering
 
     if (school) {
       query = query.eq("school", school);
@@ -187,21 +188,29 @@ export const UserModel = {
     return data.map((user, idx) => ({ ...user, rank: offset + idx + 1 }));
   },
 
-  // Get current user's rank (1-based)
+  // Get current user's rank (1-based, positional ranking)
   async getUserRank(userId) {
     const { data: user } = await supabase
       .from(TABLE)
-      .select("points")
+      .select("points, created_at")
       .eq("id", userId)
       .single();
     if (!user) return null;
 
-    const { count } = await supabase
+    // Count users with more points (higher score = better rank)
+    const { count: usersWithMorePoints } = await supabase
       .from(TABLE)
       .select("*", { count: "exact", head: true })
       .gt("points", user.points || 0);
 
-    return (count || 0) + 1;
+    // Count users with same points but created earlier (consistent tiebreaker)
+    const { count: usersWithSamePointsEarlier } = await supabase
+      .from(TABLE)
+      .select("*", { count: "exact", head: true })
+      .eq("points", user.points || 0)
+      .lt("created_at", user.created_at);
+
+    return (usersWithMorePoints || 0) + (usersWithSamePointsEarlier || 0) + 1;
   },
 
   // Get points of the 100th ranked user (or 0 if less than 100 users)
@@ -251,5 +260,34 @@ export const UserModel = {
       .eq("id", userId);
     if (updateError) throw updateError;
     return newCount;
+  },
+
+  // Search leaderboard by name or school
+  async searchLeaderboard(searchTerm, limit, offset, school = null) {
+    const lowerSearchTerm = searchTerm.toLowerCase();
+
+    let query = supabase
+      .from(TABLE)
+      .select("id, name, profile_url, school, points, created_at")
+      .or(`name.ilike.%${lowerSearchTerm}%,school.ilike.%${lowerSearchTerm}%`)
+      .order("points", { ascending: false, nullsLast: true })
+      .order("created_at", { ascending: true }); // Tiebreaker
+
+    if (school) {
+      query = query.eq("school", school);
+    }
+
+    const { data, error } = await query.range(offset, offset + limit - 1);
+    if (error) throw error;
+
+    // Calculate actual global rank for each user (not just search position)
+    const resultsWithRanks = await Promise.all(
+      data.map(async (user) => {
+        const rank = await this.getUserRank(user.id);
+        return { ...user, rank };
+      }),
+    );
+
+    return resultsWithRanks;
   },
 };

@@ -51,8 +51,12 @@ export const LeaderboardController = {
 
   async getTopSchools(req, res) {
     try {
-      const limit = Math.min(parseInt(req.query.limit) || 10, 50);
-      const schools = await SchoolModel.getTopSchoolsWithContributors(limit);
+      const limit = Math.min(parseInt(req.query.limit) || 10, 100);
+      const offset = parseInt(req.query.offset) || 0;
+      const schools = await SchoolModel.getTopSchoolsWithContributors(
+        limit,
+        offset,
+      );
       res.json({ schools });
     } catch (err) {
       console.error("Top schools error:", err);
@@ -103,6 +107,52 @@ export const LeaderboardController = {
     } catch (err) {
       console.error("Get school logo error:", err);
       res.status(500).json({ error: "Failed to fetch school logo" });
+    }
+  },
+
+  async searchLeaderboard(req, res) {
+    try {
+      const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+      const offset = parseInt(req.query.offset) || 0;
+      const school = req.query.school || null;
+      const searchTerm = (req.query.search || "").trim();
+
+      if (!searchTerm) {
+        return res.status(400).json({ error: "Search term is required" });
+      }
+
+      const users = await UserModel.searchLeaderboard(
+        searchTerm,
+        limit,
+        offset,
+        school,
+      );
+      res.json({ users });
+    } catch (err) {
+      console.error("Leaderboard search error:", err);
+      res.status(500).json({ error: "Failed to search leaderboard" });
+    }
+  },
+
+  async searchTopSchools(req, res) {
+    try {
+      const limit = Math.min(parseInt(req.query.limit) || 10, 100);
+      const offset = parseInt(req.query.offset) || 0;
+      const searchTerm = (req.query.search || "").trim();
+
+      if (!searchTerm) {
+        return res.status(400).json({ error: "Search term is required" });
+      }
+
+      const schools = await SchoolModel.searchTopSchools(
+        searchTerm,
+        limit,
+        offset,
+      );
+      res.json({ schools });
+    } catch (err) {
+      console.error("Top schools search error:", err);
+      res.status(500).json({ error: "Failed to search top schools" });
     }
   },
 };
