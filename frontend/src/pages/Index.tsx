@@ -876,7 +876,6 @@ const Index = () => {
     return items;
   };
 
-  const peopleScrollRef = useRef<HTMLDivElement | null>(null);
   const topicsScrollRef = useRef<HTMLDivElement | null>(null);
 
   const scroll = useCallback(
@@ -892,25 +891,6 @@ const Index = () => {
       }
     },
     [],
-  );
-
-  const ScrollButtons = ({
-    scrollRef,
-  }: {
-    scrollRef: React.RefObject<HTMLDivElement | null>;
-  }) => (
-    <div className="flex gap-1">
-      <button
-        onClick={() => scroll(scrollRef, "left")}
-        className="rounded-full border border-border bg-background p-1 hover:bg-secondary transition-colors">
-        <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-      </button>
-      <button
-        onClick={() => scroll(scrollRef, "right")}
-        className="rounded-full border border-border bg-background p-1 hover:bg-secondary transition-colors">
-        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-      </button>
-    </div>
   );
 
   const PeopleVerticalSection = () => {
