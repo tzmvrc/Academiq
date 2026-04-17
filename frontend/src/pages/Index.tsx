@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import FeaturedSection from "@/components/FeaturedSection";
 import DiscussionCard from "@/components/DiscussionCard";
-import AchievementsPanel from "@/components/AchievementsPanel";
 import CreatePostModal from "@/components/CreatePostModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import FloatingActionButton from "@/components/FloatingActionButton";
@@ -868,10 +867,10 @@ const Index = () => {
         </div>,
       );
 
-      // Insert people section after 3rd real post (excluding skeleton)
-      if (i === 2) {
-        items.push(<PeopleSection key="people-section" />);
-      }
+      // People section moved to right column as vertical list
+      // if (i === 2) {
+      //   items.push(<PeopleSection key="people-section" />);
+      // }
     }
 
     return items;
@@ -914,26 +913,19 @@ const Index = () => {
     </div>
   );
 
-  const PeopleSection = () => {
-    const visiblePeers = peers.slice(0, 10);
-
+  const PeopleVerticalSection = () => {
     if (peersLoading) {
       return (
-        <div className="rounded-xl border border-border bg-card p-4 sm:p-5 my-2">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-heading font-semibold text-foreground">
-              People You May Know
-            </h3>
-            <div className="flex gap-1">
-              <div className="h-6 w-6 rounded-full bg-secondary animate-pulse" />
-              <div className="h-6 w-6 rounded-full bg-secondary animate-pulse" />
-            </div>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="shrink-0 w-40 sm:w-44">
-                <div className="h-32 rounded-xl bg-secondary/50 animate-pulse" />
-              </div>
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
+          <h3 className="text-sm font-heading font-semibold text-foreground mb-4">
+            People You May Know
+          </h3>
+          <div className="flex flex-col gap-3">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="h-16 rounded-lg bg-secondary/50 animate-pulse"
+              />
             ))}
           </div>
         </div>
@@ -943,19 +935,13 @@ const Index = () => {
     if (peers.length === 0) return null;
 
     return (
-      <div className="rounded-xl border border-border bg-card p-4 sm:p-5 my-2">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-heading font-semibold text-foreground">
-            People You May Know
-          </h3>
-          <ScrollButtons scrollRef={peopleScrollRef} />
-        </div>
+      <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
+        <h3 className="text-sm font-heading font-semibold text-foreground mb-4">
+          People You May Know
+        </h3>
 
-        <div
-          ref={peopleScrollRef}
-          className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth"
-          style={{ scrollbarWidth: "thin" }}>
-          {visiblePeers.map((user) => {
+        <div className="max-h-[600px] overflow-y-auto pr-2 flex flex-col gap-3 custom-scrollbar">
+          {peers.map((user) => {
             const initials = user.name
               .split(" ")
               .map((n) => n[0])
@@ -964,50 +950,59 @@ const Index = () => {
               .slice(0, 2);
             const isFollowed = user.is_followed || false;
             return (
-              <div
+              <motion.div
                 key={user.id}
-                className="shrink-0 w-40 sm:w-44 rounded-xl border border-border bg-background p-3 sm:p-4 text-center hover:shadow-sm hover:border-primary/10 transition-all snap-start">
-                <Link
-                  to={`/${encodeURIComponent(user.name)}`}
-                  className="block"
-                  onClick={(e) => e.stopPropagation()}>
-                  <div className="mx-auto mb-2.5 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                    {user.profile_url ? (
-                      <img
-                        src={user.profile_url}
-                        alt={user.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-xs font-semibold text-primary">
-                        {initials}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs font-medium text-foreground truncate">
-                    {user.name}
-                  </p>
-                </Link>
-                {user.school && (
-                  <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
-                    {user.school}
-                  </p>
-                )}
-
-                <div className="flex flex-col gap-1 mt-2">
-                  {(user.mutual_count ?? 0) > 0 ? (
-                    <p className="text-[10px] text-accent font-medium">
-                      {user.mutual_count} mutual{" "}
-                      {user.mutual_count === 1 ? "connection" : "connections"}
-                    </p>
-                  ) : (
-                    <div className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
-                      <Star className="h-2.5 w-2.5 text-accent" />
-                      <span>
-                        {user.followers_count?.toLocaleString() || 0} followers
-                      </span>
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="rounded-lg border border-border bg-background p-3 hover:shadow-sm hover:border-primary/10 transition-all">
+                <div className="flex items-start gap-3 mb-2">
+                  <Link
+                    to={`/${encodeURIComponent(user.name)}`}
+                    className="shrink-0"
+                    onClick={(e) => e.stopPropagation()}>
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                      {user.profile_url ? (
+                        <img
+                          src={user.profile_url}
+                          alt={user.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-xs font-semibold text-primary">
+                          {initials}
+                        </span>
+                      )}
                     </div>
-                  )}
+                  </Link>
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      to={`/${encodeURIComponent(user.name)}`}
+                      className="block"
+                      onClick={(e) => e.stopPropagation()}>
+                      <p className="text-sm font-medium text-foreground truncate hover:text-primary">
+                        {user.name}
+                      </p>
+                    </Link>
+                    {user.school && (
+                      <p className="text-xs text-muted-foreground truncate">
+                        {user.school}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-1 mt-1">
+                      {(user.mutual_count ?? 0) > 0 ? (
+                        <p className="text-[11px] text-accent font-medium">
+                          {user.mutual_count} mutual
+                        </p>
+                      ) : (
+                        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Star className="h-2.5 w-2.5 text-accent" />
+                          <span>
+                            {user.followers_count?.toLocaleString() || 0}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <button
@@ -1015,7 +1010,7 @@ const Index = () => {
                     toggleFollowPeer(user.id, user.name, isFollowed)
                   }
                   disabled={followingUserId === user.id}
-                  className={`mt-3 w-full flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
+                  className={`w-full flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
                     isFollowed
                       ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                       : "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -1032,19 +1027,16 @@ const Index = () => {
                     </>
                   )}
                 </button>
-              </div>
+              </motion.div>
             );
           })}
-
-          <button
-            onClick={() => navigate("/peers")}
-            className="shrink-0 w-40 sm:w-44 rounded-xl border border-dashed border-border bg-background p-3 sm:p-4 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-secondary/30 transition-all snap-start">
-            <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-secondary flex items-center justify-center">
-              <ArrowRight className="h-4 w-4" />
-            </div>
-            <span className="text-xs font-medium">See More</span>
-          </button>
         </div>
+        <button
+          onClick={() => navigate("/peers")}
+          className="mt-4 w-full rounded-lg border border-dashed border-border bg-background p-2 flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-secondary/30 transition-all">
+          <ArrowRight className="h-4 w-4" />
+          <span className="text-xs font-medium">See More</span>
+        </button>
       </div>
     );
   };
@@ -1182,11 +1174,11 @@ const Index = () => {
           )}
         </div>
 
-        {/* Right column – AI suggestions (sticky) */}
+        {/* Right column – People suggestions (sticky) */}
         <div className="hidden lg:block">
           <div className="sticky top-24 space-y-6">
             <PendingPostsPanel />
-            <AchievementsPanel />
+            <PeopleVerticalSection />
           </div>
         </div>
       </div>
