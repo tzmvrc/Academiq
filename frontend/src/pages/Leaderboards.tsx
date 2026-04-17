@@ -114,15 +114,14 @@ const Leaderboards = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchOffset, setSearchOffset] = useState(0);
   const [hasMoreSearch, setHasMoreSearch] = useState(true);
-  const [isLoadingMoreSearch, setIsLoadingMoreSearch] = useState(false);
+  const [isLoadingMoreSearch] = useState(false);
   const [topSchoolsSearchResults, setTopSchoolsSearchResults] = useState<
     TopSchool[]
   >([]);
   const [isSearchingTopSchools, setIsSearchingTopSchools] = useState(false);
   const [topSchoolsSearchOffset, setTopSchoolsSearchOffset] = useState(0);
   const [hasMoreTopSchoolsSearch, setHasMoreTopSchoolsSearch] = useState(true);
-  const [isLoadingMoreTopSchoolsSearch, setIsLoadingMoreTopSchoolsSearch] =
-    useState(false);
+  const [isLoadingMoreTopSchoolsSearch] = useState(false);
   const [topSchoolsOffset, setTopSchoolsOffset] = useState(0);
   const [hasMoreTopSchools, setHasMoreTopSchools] = useState(true);
   const [isLoadingMoreTopSchools, setIsLoadingMoreTopSchools] = useState(false);
@@ -446,12 +445,6 @@ const Leaderboards = () => {
           fetchLeaderboard(false);
         }
       }
-    }
-  };
-
-  const handleViewMoreTopSchools = () => {
-    if (!isLoadingMoreTopSchools && hasMoreTopSchools) {
-      fetchTopSchools(false);
     }
   };
 
