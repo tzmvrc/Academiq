@@ -22,7 +22,7 @@ interface User {
 const Peers = () => {
   const [followedUsers, setFollowedUsers] = useState<User[]>([]);
   const [allSuggestedUsers, setAllSuggestedUsers] = useState<User[]>([]); // Full dataset for search
-  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]); // Currently displayed users
+  const [_suggestedUsers, setSuggestedUsers] = useState<User[]>([]); // Currently displayed users
   const [isLoadingFollowed, setIsLoadingFollowed] = useState(true);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);

@@ -397,7 +397,6 @@ const Index = () => {
 
       // 🔥 DEBUG MODE: Always fetch fresh data - no caching
 
-
       try {
         if (reset) {
           setInitialLoading(true);
@@ -418,8 +417,6 @@ const Index = () => {
           offset,
         };
 
-
-
         // Use personalized feed when no filters, otherwise use filtered forums
         let newForums;
         let more;
@@ -434,7 +431,6 @@ const Index = () => {
             more = result?.hasMore;
 
             if (!newForums) {
-
               throw new Error(
                 "Feed API returned invalid structure: missing forums array",
               );
@@ -453,14 +449,12 @@ const Index = () => {
             more = result?.hasMore;
 
             if (!newForums) {
-
               throw new Error(
                 "Forums API returned invalid structure: missing forums array",
               );
             }
           }
         } catch (fetchErr) {
-
           setError("Failed to load forums.");
           throw fetchErr;
         }
@@ -481,12 +475,10 @@ const Index = () => {
               const saveRes = await forumService.getSaveStatus(forum.id);
               return { ...forum, isSaved: !!saveRes.saved };
             } catch (err) {
-
               return { ...forum, isSaved: false };
             }
           }),
         );
-
 
         // Update forums - APPEND if loading more, REPLACE if resetting
         setForums((prev) => {
@@ -518,11 +510,6 @@ const Index = () => {
           pageRef.current += 1;
         }
       } catch (err) {
-        // Error loading forums
-          message: err instanceof Error ? err.message : String(err),
-          stack: err instanceof Error ? err.stack : "no stack",
-          err: err,
-        });
         if (err instanceof Error) {
           setError(`Failed to load forums: ${err.message}`);
         } else {
@@ -543,7 +530,7 @@ const Index = () => {
   useEffect(() => {
     if (!socket) return;
 
-    const handleValidationCompleted = (data: {
+    const handleValidationCompleted = (_data: {
       forumId: string;
       verdict: string;
     }) => {
@@ -576,8 +563,6 @@ const Index = () => {
       created_at: string;
       timestamp: string;
     }) => {
-
-
       // Map the incoming data to DiscussionCardProps format
       const boostedForum: DiscussionCardProps = {
         id: newForum.forumId,
@@ -610,7 +595,6 @@ const Index = () => {
       setBoostedForums((prev) => {
         const isDuplicate = prev.some((f) => f.id === boostedForum.id);
         if (isDuplicate) {
-
           return prev;
         }
 
@@ -662,7 +646,6 @@ const Index = () => {
         );
         setPeers(sortedUsers);
       } catch (err) {
-
         // Fallback: fetch general users
         try {
           const usersRes = await axiosInstance.get("/peers/users");
@@ -681,7 +664,10 @@ const Index = () => {
           }));
           // Sort by mutual_count for stable ordering
           const sortedUsers = usersWithFollow.sort(
-            (a, b) => (b.mutual_count || 0) - (a.mutual_count || 0),
+            (
+              a: PeerUser & { is_followed: boolean },
+              b: PeerUser & { is_followed: boolean },
+            ) => (b.mutual_count || 0) - (a.mutual_count || 0),
           );
           setPeers(sortedUsers);
         } catch (fallbackErr) {
