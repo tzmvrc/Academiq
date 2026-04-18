@@ -165,19 +165,6 @@ const EditProfileModal = ({
                 </div>
               </div>
 
-              {/* Username */}
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your username"
-                  className="w-full rounded-lg border border-border bg-background p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
 
               {/* Bio */}
               <div>
