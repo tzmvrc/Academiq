@@ -2,7 +2,6 @@ import { VotesModel } from "../../models/votes_model.js";
 import { CommentModel } from "../../models/comment_model.js";
 import { UserModel } from "../../models/user_model.js";
 import { NotificationService } from "../../services/notification/notification_service.js";
-import { AchievementService } from "../../services/achievement_service.js";
 import { getIO } from "../../middlewares/socket.js";
 
 export const CommentVotesController = {
@@ -61,20 +60,6 @@ export const CommentVotesController = {
               forumId: comment.forum_id,
             },
           });
-
-          // Trigger achievements for comment owner when receiving upvote
-          if (voteTypeNum === 1) {
-            AchievementService.triggerOnUpvoteReceived(comment.user_id).catch(
-              (err) => console.error("Achievement evaluation error:", err),
-            );
-          }
-        }
-
-        // Trigger achievements for voter when upvoting
-        if (voteTypeNum === 1) {
-          AchievementService.triggerOnUpvoteGiven(userId).catch((err) =>
-            console.error("Achievement evaluation error:", err),
-          );
         }
 
         const io = getIO();

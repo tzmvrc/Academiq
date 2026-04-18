@@ -121,6 +121,162 @@ const DUMMY_FORUM: DiscussionCardProps = {
 };
 */
 
+// Extracted PeopleVerticalSection component - prevents remounting on parent re-render
+interface PeopleVerticalSectionProps {
+  peersLoading: boolean;
+  peers: PeerUser[];
+  showAllPeers: boolean;
+  followingUserId: string | null;
+  onToggleShowAllPeers: (show: boolean) => void;
+  onToggleFollowPeer: (
+    userId: string,
+    name: string,
+    isFollowed: boolean,
+  ) => void;
+}
+
+const PeopleVerticalSectionComponent = ({
+  peersLoading,
+  peers,
+  showAllPeers,
+  followingUserId,
+  onToggleShowAllPeers,
+  onToggleFollowPeer,
+}: PeopleVerticalSectionProps) => {
+  if (peersLoading) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
+        <h3 className="text-sm font-heading font-semibold text-foreground mb-4">
+          People You May Know
+        </h3>
+        <div className="flex flex-col gap-3">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="h-16 rounded-lg bg-secondary/50 animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (peers.length === 0) return null;
+
+  const visiblePeers = showAllPeers ? peers : peers.slice(0, 6);
+  const hasMore = peers.length > 6;
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
+      <h3 className="text-sm font-heading font-semibold text-foreground mb-4">
+        People You May Know
+      </h3>
+
+      <div className="max-h-[600px] overflow-y-auto pr-2 flex flex-col gap-3 custom-scrollbar">
+        {visiblePeers.map((user) => {
+          const initials = user.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+          const isFollowed = user.is_followed || false;
+          return (
+            <motion.div
+              key={user.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="rounded-lg border border-border bg-background p-3 hover:shadow-sm hover:border-primary/10 transition-all">
+              <div className="flex items-start gap-3 mb-2">
+                <Link
+                  to={`/${encodeURIComponent(user.name)}`}
+                  className="shrink-0"
+                  onClick={(e) => e.stopPropagation()}>
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                    {user.profile_url ? (
+                      <img
+                        src={user.profile_url}
+                        alt={user.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xs font-semibold text-primary">
+                        {initials}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+                <div className="flex-1 min-w-0">
+                  <Link
+                    to={`/${encodeURIComponent(user.name)}`}
+                    className="block"
+                    onClick={(e) => e.stopPropagation()}>
+                    <p className="text-sm font-medium text-foreground truncate hover:text-primary">
+                      {user.name}
+                    </p>
+                  </Link>
+                  {user.school && (
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user.school}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-1 mt-1">
+                    {(user.mutual_count ?? 0) > 0 ? (
+                      <p className="text-[11px] text-accent font-medium">
+                        {user.mutual_count} mutual
+                      </p>
+                    ) : (
+                      <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Star className="h-2.5 w-2.5 text-accent" />
+                        <span>
+                          {user.followers_count?.toLocaleString() || 0}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() =>
+                  onToggleFollowPeer(user.id, user.name, isFollowed)
+                }
+                disabled={followingUserId === user.id}
+                className={`w-full flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
+                  isFollowed
+                    ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
+                }`}>
+                {followingUserId === user.id ? (
+                  "Following..."
+                ) : isFollowed ? (
+                  <>
+                    <Check className="h-3 w-3" /> Following
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-3 w-3" /> Follow
+                  </>
+                )}
+              </button>
+            </motion.div>
+          );
+        })}
+      </div>
+      {hasMore && (
+        <button
+          onClick={() => onToggleShowAllPeers(!showAllPeers)}
+          className="mt-4 w-full rounded-lg border border-dashed border-border bg-background p-2 flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-secondary/30 transition-all">
+          <ArrowRight className="h-4 w-4" />
+          <span className="text-xs font-medium">
+            {showAllPeers ? "Show Less" : "See More"}
+          </span>
+        </button>
+      )}
+    </div>
+  );
+};
+
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -132,6 +288,7 @@ const Index = () => {
   const [followedTopics, _setFollowedTopics] = useState<Set<string>>(new Set());
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [forums, setForums] = useState<DiscussionCardProps[]>([]);
+  const [boostedForums, setBoostedForums] = useState<DiscussionCardProps[]>([]); // 🚀 Feed boost state
   const [topics, setTopics] = useState<TopicItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [filterName, setFilterName] = useState<string>("");
@@ -145,67 +302,13 @@ const Index = () => {
   const isLoadingMoreRef = useRef(false);
   const hasMoreRef = useRef(true);
 
-  // Cache configuration
-  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
-  const getCacheKey = useCallback(() => {
-    const key = subjectId
-      ? `feed_subject_${subjectId}`
-      : tagId
-        ? `feed_tag_${tagId}`
-        : "feed_personalized";
-    return key;
-  }, [subjectId, tagId]);
-
-  const getCache = useCallback(() => {
-    try {
-      const cacheKey = getCacheKey();
-      const cached = localStorage.getItem(`cache_${cacheKey}`);
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        const isExpired = Date.now() - timestamp > CACHE_DURATION;
-        if (!isExpired) {
-          return data;
-        }
-        // Remove expired cache
-        localStorage.removeItem(`cache_${cacheKey}`);
-      }
-    } catch (err) {
-      console.error("Error reading cache:", err);
-    }
-    return null;
-  }, [getCacheKey]);
-
-  const setCache = useCallback(
-    (forums: DiscussionCardProps[], hasMore: boolean, page: number) => {
-      try {
-        const cacheKey = getCacheKey();
-        localStorage.setItem(
-          `cache_${cacheKey}`,
-          JSON.stringify({
-            data: { forums, hasMore, page },
-            timestamp: Date.now(),
-          }),
-        );
-      } catch (err) {
-        console.error("Error writing cache:", err);
-      }
-    },
-    [getCacheKey],
-  );
-
-  const clearCache = useCallback(() => {
-    try {
-      const cacheKey = getCacheKey();
-      localStorage.removeItem(`cache_${cacheKey}`);
-    } catch (err) {
-      console.error("Error clearing cache:", err);
-    }
-  }, [getCacheKey]);
+  // 🔥 DEBUG MODE: No caching - always fetch fresh data
 
   // Peers state
   const [peers, setPeers] = useState<PeerUser[]>([]);
   const [peersLoading, setPeersLoading] = useState(true);
   const [followingUserId, setFollowingUserId] = useState<string | null>(null);
+  const [showAllPeers, setShowAllPeers] = useState(false);
 
   // Edit/Delete state
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -244,10 +347,14 @@ const Index = () => {
   }, [forums, isLoadingMore]);
 
   // Combine with the dummy forum (always last) - COMMENTED OUT FOR NOW
-  const allDiscussions = useMemo(
-    () => [...displayForums], // TEMP: removed DUMMY_FORUM
-    [displayForums],
-  );
+  const allDiscussions = useMemo(() => {
+    // 🚀 Merge boosted forums at the top, preventing duplicates
+    const boostedIds = new Set(boostedForums.map((f) => f.id));
+    const filteredRegularForums = displayForums.filter(
+      (f) => !boostedIds.has(f.id),
+    );
+    return [...boostedForums, ...filteredRegularForums];
+  }, [displayForums, boostedForums]);
 
   // Alternate between subjects and tags sorted by discussion count
   const alternatingTopics = useMemo(() => {
@@ -282,24 +389,14 @@ const Index = () => {
 
   // Load forums function
   const loadForums = useCallback(
-    async (reset = false, skipCache = false) => {
+    async (reset = false, _skipCache = false) => {
       // Prevent duplicate requests
       if (isLoadingMoreRef.current && !reset) {
         return;
       }
 
-      // Check cache on initial load
-      if (reset && !skipCache) {
-        const cached = getCache();
-        if (cached) {
-          console.log("Using cached data");
-          setForums(cached.forums);
-          pageRef.current = cached.page;
-          hasMoreRef.current = cached.hasMore;
-          setInitialLoading(false);
-          return;
-        }
-      }
+      // 🔥 DEBUG MODE: Always fetch fresh data - no caching
+
 
       try {
         if (reset) {
@@ -321,9 +418,7 @@ const Index = () => {
           offset,
         };
 
-        console.log(
-          `Loading forums with offset=${offset}, page=${pageRef.current}`,
-        );
+
 
         // Use personalized feed when no filters, otherwise use filtered forums
         let newForums;
@@ -332,51 +427,40 @@ const Index = () => {
         try {
           if (!subjectId && !tagId) {
             // Personalized feed
-            console.log("📡 Fetching personalized feed...");
+
             const result = await forumService.getPersonalizedFeed(filters);
-            console.log("📡 Feed result:", {
-              forumsCount: result?.forums?.length,
-              hasMore: result?.hasMore,
-              resultKeys: result ? Object.keys(result) : "null",
-            });
+
             newForums = result?.forums;
             more = result?.hasMore;
 
             if (!newForums) {
-              console.error("❌ Feed returned empty forums:", result);
+
               throw new Error(
                 "Feed API returned invalid structure: missing forums array",
               );
             }
           } else {
             // Filtered by subject or tag
-            console.log("📡 Fetching filtered forums...", {
-              subjectId,
-              tagId,
-            });
+
             const filterParams = {
               ...(subjectId ? { subjectId } : {}),
               ...(tagId ? { tagId } : {}),
               ...filters,
             };
             const result = await forumService.getAllForums(filterParams);
-            console.log("📡 Filtered result:", {
-              forumsCount: result?.forums?.length,
-              hasMore: result?.hasMore,
-              resultKeys: result ? Object.keys(result) : "null",
-            });
+
             newForums = result?.forums;
             more = result?.hasMore;
 
             if (!newForums) {
-              console.error("❌ Filtered fetch returned empty forums:", result);
+
               throw new Error(
                 "Forums API returned invalid structure: missing forums array",
               );
             }
           }
         } catch (fetchErr) {
-          console.error("❌ Critical error in forum fetch:", fetchErr);
+
           setError("Failed to load forums.");
           throw fetchErr;
         }
@@ -389,9 +473,7 @@ const Index = () => {
         );
 
         // Add saved state
-        console.log(
-          `✅ Processing ${newForums.length} forums for saved state...`,
-        );
+
         const forumsWithSaved = await Promise.all(
           newForums.map(async (forum) => {
             if (!forum.id) return { ...forum, isSaved: false };
@@ -399,20 +481,14 @@ const Index = () => {
               const saveRes = await forumService.getSaveStatus(forum.id);
               return { ...forum, isSaved: !!saveRes.saved };
             } catch (err) {
-              console.warn(
-                `⚠️ Failed to get save status for forum ${forum.id}:`,
-                err,
-              );
+
               return { ...forum, isSaved: false };
             }
           }),
         );
-        console.log(
-          `✅ Processed ${forumsWithSaved.length} forums with saved state`,
-        );
+
 
         // Update forums - APPEND if loading more, REPLACE if resetting
-        // Deduplicate: filter out forums that already exist
         setForums((prev) => {
           let updated: DiscussionCardProps[];
           if (reset) {
@@ -429,10 +505,7 @@ const Index = () => {
             updated = [...prev, ...uniqueNewForums];
           }
 
-          // Cache the updated forums
-          if (reset) {
-            setCache(updated, more, 0);
-          }
+          // 🔥 DEBUG MODE: No caching in debug mode
 
           return updated;
         });
@@ -445,7 +518,7 @@ const Index = () => {
           pageRef.current += 1;
         }
       } catch (err) {
-        console.error("❌ Error loading forums - Full error details:", {
+        // Error loading forums
           message: err instanceof Error ? err.message : String(err),
           stack: err instanceof Error ? err.stack : "no stack",
           err: err,
@@ -464,7 +537,7 @@ const Index = () => {
         }
       }
     },
-    [subjectId, tagId, getCache, setCache],
+    [subjectId, tagId],
   );
 
   useEffect(() => {
@@ -476,22 +549,83 @@ const Index = () => {
     }) => {
       // Only refresh if the post belongs to the current user (optional, but safe)
       // We can simply refresh the feed to show the updated content.
-      console.log("Validation completed for forum", data.forumId, data.verdict);
+
       // Reset and reload feed, skip cache to get fresh data
       setForums([]);
       pageRef.current = 0;
       hasMoreRef.current = true;
       setInitialLoading(true);
-      clearCache();
       loadForums(true, true);
     };
 
+    // 🚀 Listen for newly approved forums to boost them at the top
+    const handleNewForumApproved = (newForum: {
+      forumId: string;
+      title: string;
+      content: string;
+      user: {
+        id: string;
+        name: string;
+        profile_url?: string;
+        school?: string;
+      };
+      subject?: {
+        id: string;
+        name: string;
+      };
+      created_at: string;
+      timestamp: string;
+    }) => {
+
+
+      // Map the incoming data to DiscussionCardProps format
+      const boostedForum: DiscussionCardProps = {
+        id: newForum.forumId,
+        user_id: newForum.user.id,
+        title: newForum.title,
+        author: newForum.user.name,
+        authorInitials: newForum.user.name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2),
+        authorProfileUrl: newForum.user.profile_url || undefined,
+        authorSchool: newForum.user.school || undefined,
+        preview: newForum.content.substring(0, 100),
+        fullContent: newForum.content,
+        field: newForum.subject?.name || "General",
+        upvotes: 0,
+        downvotes: 0,
+        comments: 0,
+        tag: "New",
+        isOwn: false,
+        isSaved: false,
+        userVoteState: null,
+        isAiVerified: true,
+        created_at: newForum.created_at,
+      };
+
+      // Add to boosted forums (prevent duplicates)
+      setBoostedForums((prev) => {
+        const isDuplicate = prev.some((f) => f.id === boostedForum.id);
+        if (isDuplicate) {
+
+          return prev;
+        }
+
+        return [boostedForum, ...prev];
+      });
+    };
+
     socket.on("forum_validation_completed", handleValidationCompleted);
+    socket.on("forum:new", handleNewForumApproved);
 
     return () => {
       socket.off("forum_validation_completed", handleValidationCompleted);
+      socket.off("forum:new", handleNewForumApproved);
     };
-  }, [socket, loadForums, clearCache]);
+  }, [socket, loadForums]);
 
   // Initial load
   useEffect(() => {
@@ -515,16 +649,20 @@ const Index = () => {
     const fetchPeers = async () => {
       try {
         setPeersLoading(true);
-        // Get 10 random unfollowed users, sorted by mutual connections
-        const suggestedUsers = await forumService.getPeopleYouMayKnow(10);
+        // Get 20 users sorted by mutual connections
+        const suggestedUsers = await forumService.getPeopleYouMayKnow(20);
         const usersWithFollow = suggestedUsers.map((user: any) => ({
           ...user,
           is_followed: false, // These are suggestions, not follows
-          mutual_count: user.mutual_count,
+          mutual_count: user.mutual_count || 0,
         }));
-        setPeers(usersWithFollow);
+        // Sort by mutual_count (descending) for stable ordering
+        const sortedUsers = usersWithFollow.sort(
+          (a, b) => (b.mutual_count || 0) - (a.mutual_count || 0),
+        );
+        setPeers(sortedUsers);
       } catch (err) {
-        console.error("Error fetching peer suggestions:", err);
+
         // Fallback: fetch general users
         try {
           const usersRes = await axiosInstance.get("/peers/users");
@@ -539,14 +677,15 @@ const Index = () => {
           const usersWithFollow = allUsers.map((user: PeerUser) => ({
             ...user,
             is_followed: followingIdsSet.has(user.id),
+            mutual_count: user.mutual_count || 0,
           }));
-          setPeers(usersWithFollow);
+          // Sort by mutual_count for stable ordering
+          const sortedUsers = usersWithFollow.sort(
+            (a, b) => (b.mutual_count || 0) - (a.mutual_count || 0),
+          );
+          setPeers(sortedUsers);
         } catch (fallbackErr) {
           console.error("Fallback peers fetch failed:", fallbackErr);
-          toast({
-            title: "Failed to load people you may know",
-            variant: "destructive",
-          });
         }
       } finally {
         setPeersLoading(false);
@@ -554,7 +693,7 @@ const Index = () => {
     };
 
     fetchPeers();
-  }, [toast]);
+  }, []); // ✅ Empty dependency array - only run once on mount
 
   // Load subjects and popular tags for "Topics You May Like"
   useEffect(() => {
@@ -660,7 +799,6 @@ const Index = () => {
     try {
       await axiosInstance.delete(`/forums/${selectedPostId}`);
       setForums((prev) => prev.filter((f) => f.id !== selectedPostId));
-      clearCache();
       toast({ title: "Post deleted." });
     } catch (err) {
       console.error("Delete error:", err);
@@ -708,7 +846,6 @@ const Index = () => {
             : forum,
         ),
       );
-      clearCache();
       toast({ title: voteType === 1 ? "Upvoted!" : "Downvoted!" });
     } catch (err) {
       console.error("Error voting:", err);
@@ -735,7 +872,6 @@ const Index = () => {
             : forum,
         ),
       );
-      clearCache();
       toast({ title: "Vote removed" });
     } catch (err) {
       console.error("Error removing vote:", err);
@@ -755,7 +891,6 @@ const Index = () => {
           forum.id === forumId ? { ...forum, isSaved: result.saved } : forum,
         ),
       );
-      clearCache();
       toast({ title: result.saved ? "Forum saved" : "Forum unsaved" });
       return result.saved;
     } catch (err) {
@@ -780,19 +915,27 @@ const Index = () => {
     try {
       if (isFollowed) {
         await axiosInstance.delete(`/peers/${userId}/unfollow`);
-        setPeers((prev) =>
-          prev.map((user) =>
+        setPeers((prev) => {
+          const updated = prev.map((user) =>
             user.id === userId ? { ...user, is_followed: false } : user,
-          ),
-        );
+          );
+          // Keep sorted by mutual_count
+          return updated.sort(
+            (a, b) => (b.mutual_count || 0) - (a.mutual_count || 0),
+          );
+        });
         toast({ title: `Unfollowed ${name}` });
       } else {
         await axiosInstance.post(`/peers/${userId}/follow`);
-        setPeers((prev) =>
-          prev.map((user) =>
+        setPeers((prev) => {
+          const updated = prev.map((user) =>
             user.id === userId ? { ...user, is_followed: true } : user,
-          ),
-        );
+          );
+          // Keep sorted by mutual_count
+          return updated.sort(
+            (a, b) => (b.mutual_count || 0) - (a.mutual_count || 0),
+          );
+        });
         toast({ title: `Following ${name}` });
       }
     } catch (err: any) {
@@ -892,134 +1035,6 @@ const Index = () => {
     },
     [],
   );
-
-  const PeopleVerticalSection = () => {
-    if (peersLoading) {
-      return (
-        <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
-          <h3 className="text-sm font-heading font-semibold text-foreground mb-4">
-            People You May Know
-          </h3>
-          <div className="flex flex-col gap-3">
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="h-16 rounded-lg bg-secondary/50 animate-pulse"
-              />
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    if (peers.length === 0) return null;
-
-    return (
-      <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
-        <h3 className="text-sm font-heading font-semibold text-foreground mb-4">
-          People You May Know
-        </h3>
-
-        <div className="max-h-[600px] overflow-y-auto pr-2 flex flex-col gap-3 custom-scrollbar">
-          {peers.map((user) => {
-            const initials = user.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase()
-              .slice(0, 2);
-            const isFollowed = user.is_followed || false;
-            return (
-              <motion.div
-                key={user.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="rounded-lg border border-border bg-background p-3 hover:shadow-sm hover:border-primary/10 transition-all">
-                <div className="flex items-start gap-3 mb-2">
-                  <Link
-                    to={`/${encodeURIComponent(user.name)}`}
-                    className="shrink-0"
-                    onClick={(e) => e.stopPropagation()}>
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                      {user.profile_url ? (
-                        <img
-                          src={user.profile_url}
-                          alt={user.name}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-xs font-semibold text-primary">
-                          {initials}
-                        </span>
-                      )}
-                    </div>
-                  </Link>
-                  <div className="flex-1 min-w-0">
-                    <Link
-                      to={`/${encodeURIComponent(user.name)}`}
-                      className="block"
-                      onClick={(e) => e.stopPropagation()}>
-                      <p className="text-sm font-medium text-foreground truncate hover:text-primary">
-                        {user.name}
-                      </p>
-                    </Link>
-                    {user.school && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {user.school}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-1 mt-1">
-                      {(user.mutual_count ?? 0) > 0 ? (
-                        <p className="text-[11px] text-accent font-medium">
-                          {user.mutual_count} mutual
-                        </p>
-                      ) : (
-                        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                          <Star className="h-2.5 w-2.5 text-accent" />
-                          <span>
-                            {user.followers_count?.toLocaleString() || 0}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() =>
-                    toggleFollowPeer(user.id, user.name, isFollowed)
-                  }
-                  disabled={followingUserId === user.id}
-                  className={`w-full flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
-                    isFollowed
-                      ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                      : "bg-primary text-primary-foreground hover:bg-primary/90"
-                  }`}>
-                  {followingUserId === user.id ? (
-                    "Following..."
-                  ) : isFollowed ? (
-                    <>
-                      <Check className="h-3 w-3" /> Following
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="h-3 w-3" /> Follow
-                    </>
-                  )}
-                </button>
-              </motion.div>
-            );
-          })}
-        </div>
-        <button
-          onClick={() => navigate("/peers")}
-          className="mt-4 w-full rounded-lg border border-dashed border-border bg-background p-2 flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-secondary/30 transition-all">
-          <ArrowRight className="h-4 w-4" />
-          <span className="text-xs font-medium">See More</span>
-        </button>
-      </div>
-    );
-  };
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8">
@@ -1158,7 +1173,14 @@ const Index = () => {
         <div className="hidden lg:block">
           <div className="sticky top-24 space-y-6">
             <PendingPostsPanel />
-            <PeopleVerticalSection />
+            <PeopleVerticalSectionComponent
+              peersLoading={peersLoading}
+              peers={peers}
+              showAllPeers={showAllPeers}
+              followingUserId={followingUserId}
+              onToggleShowAllPeers={setShowAllPeers}
+              onToggleFollowPeer={toggleFollowPeer}
+            />
           </div>
         </div>
       </div>

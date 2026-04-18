@@ -10,8 +10,6 @@ import { supabase } from "../../database/supabase.js";
 import { addWatermarkToPDF } from "../watermark/watermarkService.js";
 import { generateForumEmbedding } from "../embedding/embeddingService.js";
 import { setCacheHeaders, shouldReturn304 } from "../../utils/cacheHeaders.js";
-import { updateAchievementProgress } from "../achievement/achievement_service.js";
-import { AchievementService } from "../achievement_service.js";
 import { ActivityService } from "../activity_service.js";
 import { getIO } from "../../middlewares/socket.js";
 
@@ -249,6 +247,11 @@ export const ForumsController = {
       res.setHeader("Pragma", "no-cache");
       res.setHeader("Expires", "0");
 
+      // 📊 Log view activity for personalization (if user is logged in)
+      if (userId) {
+        ActivityService.logActivityAsync(userId, id, "view", forumToReturn);
+      }
+
       res.json({ forum: forumToReturn });
     } catch (err) {
       console.error("Get Forum Error:", err);
@@ -450,6 +453,70 @@ export const ForumsController = {
           };
           await supabase.from("forums").update(updateData).eq("id", forum.id);
 
+          // --- Generate embedding asynchronously (only if approved) ---
+          if (validation.verdict === "approved") {
+            // 🚀 Emit real-time feed boost event with complete forum data
+            try {
+              const io = getIO();
+              if (io) {
+                // Fetch complete forum data with relations
+                const { data: completeForum } =
+                  await ForumModel.findByIdUnfiltered(forum.id);
+                if (completeForum) {
+                  io.emit("forum:new", {
+                    forumId: completeForum.id,
+                    title: completeForum.title,
+                    content: completeForum.content,
+                    user: {
+                      id: completeForum.user_id,
+                      name: completeForum.user?.name || "Unknown",
+                      profile_url: completeForum.user?.profile_url || null,
+                      school: completeForum.user?.school || null,
+                    },
+                    subject: {
+                      id: completeForum.subject_id,
+                      name: completeForum.subject?.name || "General",
+                    },
+                    created_at: completeForum.created_at,
+                    timestamp: new Date().toISOString(),
+                  });
+                  console.log(
+                    `📢 Emitted forum:new event for forum ${completeForum.id} (${completeForum.title})`,
+                  );
+                }
+              }
+            } catch (socketErr) {
+              console.warn("Failed to emit forum:new event:", socketErr);
+              // Non-critical, continue anyway
+            }
+
+            setImmediate(async () => {
+              try {
+                console.log(`🔄 Generating embedding for forum ${forum.id}...`);
+                const embedding = await generateForumEmbedding(
+                  forum.title,
+                  forum.content,
+                );
+                await ForumModel.saveEmbedding(forum.id, embedding);
+                console.log(`✅ Embedding saved for forum ${forum.id}`);
+
+                // Invalidate user's interest vector to trigger recompute on next feed fetch
+                await UserModel.invalidateInterestVector(userId).catch((err) =>
+                  console.warn(
+                    "Failed to invalidate user interest vector:",
+                    err,
+                  ),
+                );
+              } catch (embErr) {
+                console.error(
+                  `Failed to generate embedding for forum ${forum.id}:`,
+                  embErr,
+                );
+                // Embedding generation failure is non-critical
+              }
+            });
+          }
+
           // --- 3. Notify user (example: create a notification) ---
           await NotificationService.createNotification({
             userId: forum.user_id,
@@ -495,11 +562,6 @@ export const ForumsController = {
               );
             }
           }
-
-          // --- Trigger achievement evaluation after post creation ---
-          AchievementService.triggerOnPostCreated(userId).catch((err) =>
-            console.error("Achievement evaluation error:", err),
-          );
 
           console.log(
             `✅ Validation complete for forum ${forum.id}: ${validation.verdict}`,
@@ -693,6 +755,41 @@ export const ForumsController = {
               .delete()
               .eq("forum_id", id);
 
+            // 🚀 Emit real-time feed boost event for updated forum
+            try {
+              const io = getIO();
+              if (io) {
+                // Fetch the updated forum to get fresh data
+                const { data: updatedForum } =
+                  await ForumModel.findByIdUnfiltered(id);
+                if (updatedForum) {
+                  io.emit("forum:new", {
+                    forumId: updatedForum.id,
+                    title: updatedForum.title,
+                    content: updatedForum.content,
+                    user: {
+                      id: updatedForum.user_id,
+                      name: updatedForum.user?.name || "Unknown",
+                      profile_url: updatedForum.user?.profile_url || null,
+                      school: updatedForum.user?.school || null,
+                    },
+                    subject: {
+                      id: updatedForum.subject_id,
+                      name: updatedForum.subject?.name || "General",
+                    },
+                    created_at: updatedForum.created_at,
+                    timestamp: new Date().toISOString(),
+                  });
+                  console.log(
+                    `📢 Emitted forum:new event for updated forum ${updatedForum.id} (${updatedForum.title})`,
+                  );
+                }
+              }
+            } catch (socketErr) {
+              console.warn("Failed to emit forum:new event:", socketErr);
+              // Non-critical, continue anyway
+            }
+
             await NotificationService.createNotification({
               userId,
               type: "forum_validation",
@@ -838,22 +935,32 @@ export const ForumsController = {
 
   async voteForum(req, res) {
     try {
+      console.log(`\n⭐ [voteForum] REQUEST RECEIVED`);
       const userId = req.user?.id;
       if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
       const forumId = req.params.id;
       const voteTypeNum = Number(req.body?.voteType);
 
+      console.log(
+        `⭐ [voteForum] userId=${userId}, forumId=${forumId}, voteType=${voteTypeNum}`,
+      );
+
       if (voteTypeNum !== 1 && voteTypeNum !== -1) {
         return res.status(400).json({ error: "voteType must be 1 or -1" });
       }
 
+      console.log(`⭐ [voteForum] Calling VotesModel.setVote()`);
       const { data: voteRow, error } = await VotesModel.setVote(
         userId,
         "forum",
         forumId,
         voteTypeNum,
       );
+      console.log(
+        `⭐ [voteForum] VotesModel.setVote() returned: error=${error}`,
+      );
+
       if (error) throw error;
 
       // Invalidate cache
@@ -864,28 +971,6 @@ export const ForumsController = {
 
       const { data: forum, error: fErr } = await ForumModel.findById(forumId);
       if (fErr) throw fErr;
-
-      // --- Achievement updates ---
-      // Voter gave an upvote/downvote (count as upvote_given for achievements)
-      if (voteTypeNum === 1) {
-        await updateAchievementProgress(userId, "upvotes_given", 1);
-        // Trigger full achievement evaluation for voter
-        AchievementService.triggerOnUpvoteGiven(userId).catch((err) =>
-          console.error("Achievement evaluation error:", err),
-        );
-      }
-      // Post owner receives an upvote (only upvotes count for total_upvotes_received)
-      if (forum && forum.user_id !== userId && voteTypeNum === 1) {
-        await updateAchievementProgress(
-          forum.user_id,
-          "total_upvotes_received",
-          1,
-        );
-        // Trigger achievement evaluation for post owner
-        AchievementService.triggerOnUpvoteReceived(forum.user_id).catch((err) =>
-          console.error("Achievement evaluation error:", err),
-        );
-      }
 
       // Log activity
       const actionType = voteTypeNum === 1 ? "upvote" : "downvote";

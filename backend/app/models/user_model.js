@@ -290,4 +290,162 @@ export const UserModel = {
 
     return resultsWithRanks;
   },
+
+  // Interest Vector Methods
+
+  // Get or compute user's interest vector (30-minute cache)
+  async getOrComputeInterestVector(userId) {
+    try {
+      // Check if we have a recent vector (less than 30 minutes old)
+      const { data: stored } = await supabase
+        .from("user_interest_vectors")
+        .select("interest_vector, updated_at")
+        .eq("user_id", userId)
+        .single();
+
+      const vectorAgeMinutes = stored?.updated_at
+        ? (Date.now() - new Date(stored.updated_at).getTime()) / (1000 * 60)
+        : Infinity;
+
+      if (stored?.interest_vector && vectorAgeMinutes < 30) {
+        console.log(
+          `✅ Using cached interest vector (age: ${vectorAgeMinutes.toFixed(1)}min)`,
+        );
+        return stored.interest_vector;
+      }
+
+      // Vector is stale or missing - recompute
+      console.log(
+        `🔄 Computing new interest vector (age: ${vectorAgeMinutes === Infinity ? "none" : vectorAgeMinutes.toFixed(1)}min)`,
+      );
+      return await this.computeInterestVector(userId);
+    } catch (err) {
+      console.error("Failed to get/compute interest vector:", err);
+      return null;
+    }
+  },
+
+  // Compute user's interest vector from recent activities
+  async computeInterestVector(userId) {
+    try {
+      // Dynamically import the required modules
+      const { UserActivityModel } = await import("./user_activity_model.js");
+      const { weightedAverageVectors } =
+        await import("../utils/vector_utils.js");
+
+      // Get user's recent activities (within last 24 hours)
+      const activities = await UserActivityModel.getRecentActivities(
+        userId,
+        1440,
+      );
+
+      if (!activities || activities.length === 0) {
+        console.log("📊 No recent activities for user - returning null vector");
+        return null;
+      }
+
+      // Filter activities that have valid embeddings
+      const activitiesWithEmbeddings = activities
+        .filter((a) => a.forum && a.forum.embedding)
+        .map((a) => ({
+          action_type: a.action_type,
+          embedding: a.forum.embedding,
+        }));
+
+      if (activitiesWithEmbeddings.length === 0) {
+        console.log("📊 No activities with embeddings - returning null vector");
+        return null;
+      }
+
+      // Compute weighted average vector
+      const interestVector = weightedAverageVectors(activitiesWithEmbeddings);
+
+      if (!interestVector) {
+        console.log("📊 Failed to compute vector - returning null");
+        return null;
+      }
+
+      // Save the computed vector
+      await this.saveInterestVector(userId, interestVector);
+
+      console.log(
+        `✅ Computed interest vector from ${activitiesWithEmbeddings.length} activities`,
+      );
+      return interestVector;
+    } catch (err) {
+      console.error("Failed to compute interest vector:", err);
+      return null;
+    }
+  },
+
+  // Save interest vector for user
+  async saveInterestVector(userId, vector) {
+    try {
+      if (!vector || !Array.isArray(vector)) {
+        throw new Error("Invalid vector format");
+      }
+
+      const now = new Date().toISOString();
+
+      // Delete existing record if it exists
+      await supabase
+        .from("user_interest_vectors")
+        .delete()
+        .eq("user_id", userId);
+
+      // Insert new record
+      const { data, error } = await supabase
+        .from("user_interest_vectors")
+        .insert({
+          user_id: userId,
+          interest_vector: vector,
+          updated_at: now,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      console.error("Failed to save interest vector:", err);
+      throw err;
+    }
+  },
+
+  // Invalidate interest vector (force recompute on next fetch)
+  async invalidateInterestVector(userId) {
+    try {
+      const { error } = await supabase
+        .from("user_interest_vectors")
+        .delete()
+        .eq("user_id", userId);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (err) {
+      console.error("Failed to invalidate interest vector:", err);
+      return { success: false };
+    }
+  },
+
+  // Clean up old interest vectors (older than 30 minutes)
+  async cleanupStaleVectors() {
+    try {
+      const thirtyMinutesAgo = new Date(
+        Date.now() - 30 * 60 * 1000,
+      ).toISOString();
+
+      const { error } = await supabase
+        .from("user_interest_vectors")
+        .delete()
+        .lt("updated_at", thirtyMinutesAgo);
+
+      if (error) throw error;
+      console.log("✅ Cleaned up stale interest vectors");
+      return { success: true };
+    } catch (err) {
+      console.error("Failed to cleanup stale vectors:", err);
+      return { success: false };
+    }
+  },
 };

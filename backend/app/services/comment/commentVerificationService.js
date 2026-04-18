@@ -1,7 +1,7 @@
 import { supabase } from "../../database/supabase.js";
 import { AIService } from "../ai/aiService.js";
 import { NotificationService } from "../notification/notification_service.js";
-import { AchievementService } from "../achievement_service.js";
+
 import { getIO } from "../../middlewares/socket.js";
 
 /**
@@ -117,23 +117,21 @@ export const CommentVerificationService = {
             },
           });
           console.log(`  ✅ User notified of verification`);
-
-          // Trigger achievement evaluation for verified comment
-          AchievementService.triggerOnVerificationConfirmed(
-            comment.user_id,
-          ).catch((err) => console.error("Achievement evaluation error:", err));
         } catch (notifErr) {
           console.error(`  ⚠️  Failed to create notification:`, notifErr);
         }
 
-        // Emit real-time event to notify users
+        // Emit real-time event to notify user
         const io = getIO();
         if (io) {
-          io.emit("comment:verified", {
+          io.to(`user:${comment.user_id}`).emit("comment:approved", {
             commentId,
-            isVerified: true,
+            forumId,
+            content,
+            status: "approved",
             sourceUrl: source_url,
             confidence,
+            timestamp: new Date().toISOString(),
           });
         }
       }

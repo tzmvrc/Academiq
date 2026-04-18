@@ -21,7 +21,8 @@ interface User {
 
 const Peers = () => {
   const [followedUsers, setFollowedUsers] = useState<User[]>([]);
-  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
+  const [allSuggestedUsers, setAllSuggestedUsers] = useState<User[]>([]); // Full dataset for search
+  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]); // Currently displayed users
   const [isLoadingFollowed, setIsLoadingFollowed] = useState(true);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
@@ -59,17 +60,28 @@ const Peers = () => {
     const fetchSuggestions = async () => {
       try {
         setIsLoadingSuggestions(true);
-        // Use the same endpoint as Index.tsx
+        // Fetch MORE users (100) so search works across full dataset
         const response = await axiosInstance.get(
-          "/forums/suggestions/people?limit=20",
+          "/forums/suggestions/people?limit=100",
         );
         const users = response.data.users || [];
+
+        // Sort by mutual_count (descending) for consistency
+        const sorted = users.sort(
+          (a: User, b: User) => (b.mutual_count || 0) - (a.mutual_count || 0),
+        );
+
         // Add is_followed = false for suggestions
-        const usersWithFollow = users.map((user: any) => ({
+        const usersWithFollow = sorted.map((user: any) => ({
           ...user,
           is_followed: false,
         }));
-        setSuggestedUsers(usersWithFollow);
+
+        // Store full dataset
+        setAllSuggestedUsers(usersWithFollow);
+
+        // Initially show first 6
+        setSuggestedUsers(usersWithFollow.slice(0, 6));
       } catch (err) {
         console.error("Error fetching suggestions:", err);
         toast({ title: "Failed to load suggestions", variant: "destructive" });
@@ -90,20 +102,36 @@ const Peers = () => {
     try {
       if (isFollowed) {
         await axiosInstance.delete(`/peers/${userId}/unfollow`);
-        // Remove from followed list and maybe add to suggestions? For simplicity, just refetch.
+        // Remove from followed list
         setFollowedUsers((prev) => prev.filter((u) => u.id !== userId));
-        // Optionally move user to suggestions – but we'll just refresh suggestions later
+        // Update in suggested users (mark as not followed)
+        setAllSuggestedUsers((prev) =>
+          prev.map((u) => (u.id === userId ? { ...u, is_followed: false } : u)),
+        );
+        setSuggestedUsers((prev) =>
+          prev.map((u) => (u.id === userId ? { ...u, is_followed: false } : u)),
+        );
         toast({ title: `Unfollowed ${name}` });
       } else {
         await axiosInstance.post(`/peers/${userId}/follow`);
         // Move user from suggestions to followed
-        const followedUser = suggestedUsers.find((u) => u.id === userId);
+        const followedUser = allSuggestedUsers.find((u) => u.id === userId);
         if (followedUser) {
           setFollowedUsers((prev) => [
             { ...followedUser, is_followed: true },
             ...prev,
           ]);
-          setSuggestedUsers((prev) => prev.filter((u) => u.id !== userId));
+          // Update in suggested users
+          setAllSuggestedUsers((prev) =>
+            prev.map((u) =>
+              u.id === userId ? { ...u, is_followed: true } : u,
+            ),
+          );
+          setSuggestedUsers((prev) =>
+            prev.map((u) =>
+              u.id === userId ? { ...u, is_followed: true } : u,
+            ),
+          );
         }
         toast({ title: `Following ${name}` });
       }
@@ -118,23 +146,40 @@ const Peers = () => {
     }
   };
 
+  // Search across ALL users, not just visible ones
   const filteredSuggestions = useMemo(() => {
-    if (!searchTerm.trim()) return suggestedUsers;
-    return suggestedUsers.filter((u) =>
+    if (!searchTerm.trim()) {
+      // No search: use displayed users for visibility, but reference all users
+      return showAllDiscover
+        ? allSuggestedUsers
+        : allSuggestedUsers.slice(0, 6);
+    }
+    // Search across full dataset
+    const results = allSuggestedUsers.filter((u) =>
       u.name.toLowerCase().includes(searchTerm.toLowerCase()),
     );
-  }, [suggestedUsers, searchTerm]);
+    // If searching, show all results that match (or first 6 + View More)
+    return showAllDiscover ? results : results.slice(0, 6);
+  }, [allSuggestedUsers, searchTerm, showAllDiscover]);
+
+  const hasMoreDiscover = () => {
+    if (!searchTerm.trim()) {
+      return allSuggestedUsers.length > 6;
+    }
+    const results = allSuggestedUsers.filter((u) =>
+      u.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+    return results.length > 6;
+  };
 
   const visibleFollowed = showAllFollowed
     ? followedUsers
     : followedUsers.slice(0, 6);
-  const visibleDiscover = showAllDiscover
-    ? filteredSuggestions
-    : filteredSuggestions.slice(0, 6);
+  const visibleDiscover = filteredSuggestions;
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-    setShowAllDiscover(false);
+    // Don't reset showAllDiscover - let user see all results for their search
   };
 
   if (isLoadingFollowed && isLoadingSuggestions) {
@@ -251,7 +296,7 @@ const Peers = () => {
           <h2 className="text-base sm:text-lg font-heading font-semibold text-foreground">
             People You May Know
           </h2>
-          {filteredSuggestions.length > 6 && !searchTerm && (
+          {hasMoreDiscover() && (
             <button
               onClick={() => setShowAllDiscover(!showAllDiscover)}
               className="text-sm text-primary hover:underline">

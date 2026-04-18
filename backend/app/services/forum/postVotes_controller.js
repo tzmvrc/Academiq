@@ -1,5 +1,6 @@
 import { VotesModel } from "../../models/votes_model.js";
 import { ForumModel } from "../../models/forum_model.js";
+import { ActivityService } from "../activity_service.js";
 
 export const PostVotesController = {
   // POST /api/forums/:id/vote
@@ -38,6 +39,10 @@ export const PostVotesController = {
           .status(500)
           .json({ error: "Failed to fetch forum", details: forumErr.message });
       }
+
+      // 📊 Log activity for vector personalization
+      const actionType = voteType === 1 ? "upvote" : "downvote";
+      ActivityService.logActivityAsync(userId, forumId, actionType, forum);
 
       res.json({
         message: "Vote saved",

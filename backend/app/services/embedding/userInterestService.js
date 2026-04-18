@@ -40,7 +40,7 @@ export async function computeUserInterestVector(userId) {
         upvotes_count,
         comments_count
       )
-    `
+    `,
     )
     .eq("user_id", userId)
     .gte("created_at", thirtyMinutesAgo);
@@ -50,11 +50,13 @@ export async function computeUserInterestVector(userId) {
     return null;
   }
 
-  console.log(`📊 Found ${activities?.length || 0} total activities in last 30 minutes`);
+  console.log(
+    `📊 Found ${activities?.length || 0} total activities in last 30 minutes`,
+  );
 
   if (!activities || activities.length < 3) {
     console.log(
-      `❌ Not enough activities (need 3), got ${activities?.length || 0}`
+      `❌ Not enough activities (need 3), got ${activities?.length || 0}`,
     );
     return null;
   }
@@ -77,7 +79,7 @@ export async function computeUserInterestVector(userId) {
 
   if (validActivities.length < 3) {
     console.log(
-      `❌ Not enough valid activities (need 3), got ${validActivities.length}`
+      `❌ Not enough valid activities (need 3), got ${validActivities.length}`,
     );
     return null;
   }
@@ -88,12 +90,12 @@ export async function computeUserInterestVector(userId) {
 
   for (const act of validActivities) {
     console.log(
-      `Processing activity: type=${act.action_type}, forum_id=${act.forum_id}`
+      `Processing activity: type=${act.action_type}, forum_id=${act.forum_id}`,
     );
 
     const embedding = act.parsedEmbedding;
     console.log(
-      `Embedding type: ${typeof embedding}, isArray: ${Array.isArray(embedding)}, length: ${embedding?.length}`
+      `Embedding type: ${typeof embedding}, isArray: ${Array.isArray(embedding)}, length: ${embedding?.length}`,
     );
 
     let weight = ACTION_WEIGHTS[act.action_type] || 0.1;
@@ -107,7 +109,7 @@ export async function computeUserInterestVector(userId) {
     const boost = 1 + Math.min(0.5, engagement / 100);
     const finalWeight = weight * boost;
     console.log(
-      `Weight: ${weight}, boost: ${boost}, finalWeight: ${finalWeight}`
+      `Weight: ${weight}, boost: ${boost}, finalWeight: ${finalWeight}`,
     );
 
     if (!weightedSum) {
@@ -121,12 +123,12 @@ export async function computeUserInterestVector(userId) {
     totalWeight += finalWeight;
     processedCount++;
     console.log(
-      `Processed activity ${processedCount}, totalWeight now ${totalWeight}`
+      `Processed activity ${processedCount}, totalWeight now ${totalWeight}`,
     );
   }
 
   console.log(
-    `Loop finished. Processed ${processedCount} activities, weightedSum = ${!!weightedSum}, totalWeight = ${totalWeight}`
+    `Loop finished. Processed ${processedCount} activities, weightedSum = ${!!weightedSum}, totalWeight = ${totalWeight}`,
   );
 
   if (!weightedSum) {
@@ -136,20 +138,29 @@ export async function computeUserInterestVector(userId) {
 
   const interestVector = weightedSum.map((v) => v / totalWeight);
 
-  // Store in database
-  const { error: upsertError } = await supabase
-    .from("user_interest_vectors")
-    .upsert({
-      user_id: userId,
-      interest_vector: interestVector,
-      updated_at: new Date().toISOString(),
-    });
+  // Store in database - delete old if exists, then insert new
+  try {
+    // First try to delete any existing record
+    await supabase.from("user_interest_vectors").delete().eq("user_id", userId);
 
-  if (upsertError) {
-    console.error("❌ Failed to store interest vector:", upsertError);
+    // Then insert the new record
+    const { error: insertError } = await supabase
+      .from("user_interest_vectors")
+      .insert({
+        user_id: userId,
+        interest_vector: interestVector,
+        updated_at: new Date().toISOString(),
+      });
+
+    if (insertError) {
+      console.error("❌ Failed to store interest vector:", insertError);
+      return null;
+    }
+
+    console.log(`✅ Stored interest vector for user ${userId}`);
+    return interestVector;
+  } catch (err) {
+    console.error("❌ Error storing interest vector:", err);
     return null;
   }
-
-  console.log(`✅ Stored interest vector for user ${userId}`);
-  return interestVector;
 }

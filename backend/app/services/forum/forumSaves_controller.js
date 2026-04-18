@@ -1,7 +1,6 @@
 import { ForumSavesModel } from "../../models/forumSaves_model.js";
 import { ActivityService } from "../activity_service.js";
 import { ForumModel } from "../../models/forum_model.js";
-import { AchievementService } from "../achievement_service.js";
 import { getIO } from "../../middlewares/socket.js";
 
 export const ForumSavesController = {
@@ -41,11 +40,6 @@ export const ForumSavesController = {
           tags: forum?.tags || [],
           subject: forum?.subject,
         }).catch((err) => console.error("Failed to log save:", err));
-
-        // Trigger achievement evaluation when user saves (for total_saves achievement)
-        AchievementService.triggerOnForumSaved(userId).catch((err) =>
-          console.error("Achievement evaluation error:", err),
-        );
       }
 
       res.json({ message, saved });

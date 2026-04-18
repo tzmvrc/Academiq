@@ -24,8 +24,22 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [isNameConfirmed, setIsNameConfirmed] = useState(false);
+  const [showNameConfirmModal, setShowNameConfirmModal] = useState(false);
 
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Password validation helper
+  const isValidPassword = (pwd: string): boolean => {
+    return pwd.length >= 8 && /\d/.test(pwd);
+  };
+
+  const getPasswordErrors = (pwd: string): string[] => {
+    const errors: string[] = [];
+    if (pwd.length < 8) errors.push("At least 8 characters");
+    if (!/\d/.test(pwd)) errors.push("At least one number");
+    return errors;
+  };
 
   useEffect(() => {
     if (step === 2) otpRefs.current[0]?.focus();
@@ -270,10 +284,17 @@ const Signup = () => {
       return;
     }
 
-    if (password.length < 8) {
+    // First click: show confirmation modal
+    if (!isNameConfirmed) {
+      setShowNameConfirmModal(true);
+      return;
+    }
+
+    if (!isValidPassword(password)) {
+      const errors = getPasswordErrors(password);
       toast({
         title: "Weak password",
-        description: "Password must be at least 8 characters.",
+        description: `Password must have: ${errors.join(", ")}`,
         variant: "destructive",
       });
       return;
@@ -528,10 +549,20 @@ const Signup = () => {
                     <input
                       type="text"
                       value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Dr. Jane Smith"
+                      onChange={(e) => {
+                        setFullName(e.target.value);
+                        // Reset confirmation when user edits name
+                        if (isNameConfirmed) {
+                          setIsNameConfirmed(false);
+                        }
+                      }}
+                      placeholder="Juan Dela Cruz"
                       className="w-full rounded-lg border border-border bg-secondary/30 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 font-body"
                     />
+                    <p className="text-xs text-amber-600 dark:text-amber-500 mt-2 flex items-center gap-1">
+                      ⚠️ Your name cannot be changed after signup. Please make
+                      sure it is entered correctly.
+                    </p>
                   </div>
 
                   <div>
@@ -544,7 +575,13 @@ const Signup = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full rounded-lg border border-border bg-secondary/30 px-3 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 font-body"
+                        className={`w-full rounded-lg border px-3 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 font-body transition-colors ${
+                          password
+                            ? isValidPassword(password)
+                              ? "border-green-500/50 bg-green-500/5 focus:border-green-500"
+                              : "border-red-500/50 bg-red-500/5 focus:border-red-500"
+                            : "border-border bg-secondary/30 focus:border-primary/30"
+                        }`}
                       />
                       <button
                         type="button"
@@ -557,6 +594,41 @@ const Signup = () => {
                         )}
                       </button>
                     </div>
+                    {password && (
+                      <div className="mt-2 space-y-1">
+                        {isValidPassword(password) ? (
+                          <p className="text-xs text-green-600 dark:text-green-500 flex items-center gap-1">
+                            ✓ Password is valid
+                          </p>
+                        ) : (
+                          <div className="text-xs text-red-600 dark:text-red-500">
+                            <p className="font-medium mb-1">
+                              ⚠️ Password requirements:
+                            </p>
+                            <ul className="space-y-0.5 ml-2">
+                              <li
+                                className={
+                                  password.length >= 8
+                                    ? "line-through text-green-600 dark:text-green-500"
+                                    : ""
+                                }>
+                                • At least 8 characters{" "}
+                                {password.length >= 8 && "✓"}
+                              </li>
+                              <li
+                                className={
+                                  /\d/.test(password)
+                                    ? "line-through text-green-600 dark:text-green-500"
+                                    : ""
+                                }>
+                                • At least one number{" "}
+                                {/\d/.test(password) && "✓"}
+                              </li>
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -568,14 +640,20 @@ const Signup = () => {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full rounded-lg border border-border bg-secondary/30 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 font-body"
+                      className={`w-full rounded-lg border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 font-body transition-colors ${
+                        confirmPassword
+                          ? password === confirmPassword
+                            ? "border-green-500/50 bg-green-500/5 focus:border-green-500"
+                            : "border-red-500/50 bg-red-500/5 focus:border-red-500"
+                          : "border-border bg-secondary/30 focus:border-primary/30"
+                      }`}
                     />
                   </div>
 
                   {password &&
                     confirmPassword &&
                     password !== confirmPassword && (
-                      <div className="text-red-500 text-sm text-center border border-red-500/40 bg-red-500/10 p-2 rounded-lg">
+                      <div className="text-red-600 dark:text-red-500 text-sm text-center border border-red-500/40 bg-red-500/10 p-2 rounded-lg">
                         Passwords don't match
                       </div>
                     )}
@@ -583,9 +661,9 @@ const Signup = () => {
                   {password &&
                     confirmPassword &&
                     password === confirmPassword &&
-                    password.length >= 8 && (
-                      <div className="text-green-600 text-sm text-center border border-green-500/40 bg-green-500/10 p-2 rounded-lg">
-                        Passwords match
+                    isValidPassword(password) && (
+                      <div className="text-green-600 dark:text-green-500 text-sm text-center border border-green-500/40 bg-green-500/10 p-2 rounded-lg">
+                         Passwords match and are valid
                       </div>
                     )}
 
@@ -611,16 +689,32 @@ const Signup = () => {
                   <div className="flex gap-3">
                     <button
                       type="button"
-                      onClick={() => setStep(2)}
+                      onClick={() => {
+                        setStep(2);
+                        setIsNameConfirmed(false);
+                      }}
                       className="flex items-center justify-center gap-1 rounded-lg border border-border py-2.5 px-4 text-sm font-medium text-foreground hover:bg-secondary transition-colors">
                       <ArrowLeft className="h-4 w-4" /> Back
                     </button>
 
                     <button
                       type="submit"
-                      disabled={loading}
-                      className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50">
-                      {loading ? "Creating Account..." : "Create Account"}
+                      disabled={
+                        loading ||
+                        !isValidPassword(password) ||
+                        password !== confirmPassword ||
+                        !agreedToTerms
+                      }
+                      className={`flex-1 rounded-lg py-2.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+                        isNameConfirmed
+                          ? "bg-green-600 text-white hover:bg-green-700 disabled:hover:bg-green-600"
+                          : "bg-primary text-primary-foreground hover:bg-primary/90 disabled:hover:bg-primary"
+                      }`}>
+                      {loading
+                        ? "Creating Account..."
+                        : isNameConfirmed
+                          ? "Create Account"
+                          : "Create Account"}
                     </button>
                   </div>
                 </form>
@@ -638,6 +732,57 @@ const Signup = () => {
           </Link>
         </p>
       </motion.div>
+
+      {/* Name Confirmation Modal */}
+      <AnimatePresence>
+        {showNameConfirmModal && (
+          <motion.div
+            key="name-confirm-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="rounded-xl border border-border bg-card p-6 max-w-sm w-full">
+              <h2 className="text-lg font-heading font-bold text-foreground mb-2">
+                Confirm Your Name
+              </h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Are you sure your name is correct? You won't be able to change
+                it later.
+              </p>
+
+              <div className="bg-secondary/50 rounded-lg p-3 mb-6">
+                <p className="text-xs text-muted-foreground">Your name:</p>
+                <p className="text-sm font-semibold text-foreground mt-1">
+                  {fullName}
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowNameConfirmModal(false)}
+                  className="flex-1 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground hover:bg-secondary transition-colors">
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsNameConfirmed(true);
+                    setShowNameConfirmModal(false);
+                  }}
+                  className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
+                  Confirm
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

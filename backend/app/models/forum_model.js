@@ -346,4 +346,108 @@ export const ForumModel = {
     }
     return { data, error: null };
   },
+
+  // Embedding Methods
+
+  // Save embedding for a forum
+  async saveEmbedding(forumId, embedding) {
+    try {
+      if (!forumId || !embedding || !Array.isArray(embedding)) {
+        throw new Error("Invalid forumId or embedding format");
+      }
+
+      const { data, error } = await supabase
+        .from("forums")
+        .update({ embedding })
+        .eq("id", forumId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      console.log(`✅ Saved embedding for forum ${forumId}`);
+      return { data, error: null };
+    } catch (err) {
+      console.error("Failed to save forum embedding:", err);
+      return { data: null, error: err };
+    }
+  },
+
+  // Get embedding for a forum
+  async getEmbedding(forumId) {
+    try {
+      const { data, error } = await supabase
+        .from("forums")
+        .select("id, embedding")
+        .eq("id", forumId)
+        .single();
+
+      if (error) throw error;
+      return data?.embedding || null;
+    } catch (err) {
+      console.error("Failed to get forum embedding:", err);
+      return null;
+    }
+  },
+
+  // Get forums without embeddings (for batch processing)
+  async getForumsWithoutEmbeddings(limit = 100) {
+    try {
+      const { data, error } = await supabase
+        .from("forums")
+        .select("id, title, content")
+        .is("embedding", null)
+        .eq("validation_status", "approved")
+        .eq("is_ai_verified", true)
+        .limit(limit);
+
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      console.error("Failed to fetch forums without embeddings:", err);
+      return [];
+    }
+  },
+
+  // Search forums by embedding similarity
+  async searchByEmbeddingSimilarity(queryVector, limit = 10, threshold = 0.5) {
+    try {
+      if (!queryVector || !Array.isArray(queryVector)) {
+        throw new Error("Invalid query vector");
+      }
+
+      // Use PostgreSQL vector similarity search (if available)
+      // For now, we'll fetch approved forums and compute similarity in JS
+      const { data: forums, error } = await supabase
+        .from("forums")
+        .select("id, title, content, embedding, upvotes_count, comments_count")
+        .eq("validation_status", "approved")
+        .eq("is_ai_verified", true)
+        .not("embedding", "is", null)
+        .limit(1000);
+
+      if (error) throw error;
+
+      // Compute similarity scores
+      const { cosineSimilarity } = await import("../utils/vector_utils.js");
+      const forumScores = forums.map((forum) => ({
+        ...forum,
+        similarity: cosineSimilarity(queryVector, forum.embedding),
+      }));
+
+      // Filter by threshold and sort
+      const results = forumScores
+        .filter((f) => f.similarity >= threshold)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, limit)
+        .map(({ embedding, similarity, ...forum }) => ({
+          ...forum,
+          similarity,
+        }));
+
+      return results;
+    } catch (err) {
+      console.error("Failed to search by embedding similarity:", err);
+      return [];
+    }
+  },
 };

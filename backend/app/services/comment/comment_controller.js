@@ -6,7 +6,6 @@ import { UserModel } from "../../models/user_model.js";
 import { ActivityService } from "../activity_service.js";
 import { CommentVerificationService } from "./commentVerificationService.js";
 import { CommentModerationService } from "./commentModerationService.js";
-import { AchievementService } from "../achievement_service.js";
 import { AIService } from "../ai/aiService.js";
 import { supabase } from "../../database/supabase.js";
 
@@ -132,11 +131,6 @@ export const CommentsController = {
                 console.error("Verification service error:", err),
               );
             }
-
-            // --- Trigger achievement evaluation after comment approved ---
-            AchievementService.triggerOnCommentCreated(userId).catch((err) =>
-              console.error("Achievement evaluation error:", err),
-            );
           })
           .catch((err) => console.error("Tier 1 moderation error:", err));
       }

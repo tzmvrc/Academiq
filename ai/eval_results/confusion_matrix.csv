@@ -1,0 +1,4 @@
+AI Feature,Predicted Approved,Predicted Rejected,True Positive,False Positive,False Negative,True Negative
+Forum Moderation,221,38,29,212,,
+Comment Verification,221,36,29,214,,
+Points Validation,228,40,22,210,,

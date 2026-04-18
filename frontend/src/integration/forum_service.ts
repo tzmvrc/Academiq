@@ -385,6 +385,8 @@ export const forumService = {
         query.append("limit", params.limit.toString());
       if (params?.offset !== undefined)
         query.append("offset", params.offset.toString());
+      // 🔥 DEBUG MODE: Add cache buster to force fresh data
+      query.append("t", Date.now().toString());
       const url = `/forums/feed?${query.toString()}`;
 
       console.log(`[forumService] Calling getPersonalizedFeed: ${url}`);

@@ -899,13 +899,97 @@ const PostDetails = () => {
     socket.on("comment_voted", onCommentVoted);
     socket.on("forum_validation_completed", onForumValidationCompleted);
 
-    // Cleanup on unmount
+    // --- Real-time comment moderation events ---
+    const onCommentApproved = (data: {
+      commentId: string;
+      forumId: string;
+      content: string;
+      status: string;
+      sourceUrl?: string;
+      confidence?: number;
+      timestamp: string;
+    }) => {
+      if (data.forumId !== id) return;
+
+      setComments((prev) =>
+        updateCommentInTree(prev, data.commentId, (c) => ({
+          ...c,
+          isVerified: true,
+          verificationSourceUrl: data.sourceUrl || null,
+          isPendingValidation: false,
+        })),
+      );
+
+      toast({
+        title: "✓ Comment Approved",
+        description: "Your comment has been verified by AI.",
+      });
+    };
+
+    const onCommentRejected = (data: {
+      commentId: string;
+      forumId: string;
+      reason: string;
+      status: string;
+      timestamp: string;
+    }) => {
+      if (data.forumId !== id) return;
+
+      // Remove the comment from the tree
+      setComments((prev) => deleteCommentFromTree(prev, data.commentId));
+
+      // Decrement comment count
+      setPostData((prev: any) => ({
+        ...prev,
+        comments: Math.max(0, (prev?.comments || 1) - 1),
+      }));
+
+      toast({
+        title: "✗ Comment Rejected",
+        description: `Your comment was rejected. Reason: ${data.reason}`,
+        variant: "destructive",
+      });
+    };
+
+    const onCommentGraded = (data: {
+      commentId: string;
+      forumId: string;
+      pointsAwarded: number;
+      reason: string;
+      status: string;
+      timestamp: string;
+    }) => {
+      if (data.forumId !== id) return;
+
+      setComments((prev) =>
+        updateCommentInTree(prev, data.commentId, (c) => ({
+          ...c,
+          pointsAwarded: data.pointsAwarded,
+          isPendingValidation: false,
+        })),
+      );
+
+      toast({
+        title: `+${data.pointsAwarded} Points Awarded`,
+        description:
+          data.pointsAwarded > 0
+            ? "Your comment was graded and points were awarded!"
+            : "Your comment was processed.",
+      });
+    };
+
+    socket.on("comment:approved", onCommentApproved);
+    socket.on("comment:rejected", onCommentRejected);
+    socket.on("comment:graded", onCommentGraded);
     return () => {
       socket.off("comment_created", onCommentCreated);
       socket.off("comment_updated", onCommentUpdated);
       socket.off("comment_deleted", onCommentDeleted);
       socket.off("comment_voted", onCommentVoted);
       socket.off("forum_validation_completed", onForumValidationCompleted);
+      socket.off("comment:approved", onCommentApproved);
+      socket.off("comment:rejected", onCommentRejected);
+      socket.off("comment:graded", onCommentGraded);
       socket.emit("leave_post_room", id);
     };
   }, [socket, id, fetchPostDetails]); // Add fetchPostDetails to dependencies if it's not stable
@@ -942,6 +1026,9 @@ const PostDetails = () => {
         myVote: null,
         isAuthor: true,
         replies: [],
+        isPendingValidation: true,
+        pointsAwarded: 0,
+        isVerified: false,
       };
 
       const insertReplyIntoTree = (list: Comment[]): Comment[] =>
@@ -1058,6 +1145,9 @@ const PostDetails = () => {
         myVote: null,
         isAuthor: true,
         replies: [],
+        isPendingValidation: true,
+        pointsAwarded: 0,
+        isVerified: false,
       };
 
       setComments((prev) => [mappedComment, ...prev]);

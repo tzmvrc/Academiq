@@ -1,0 +1,268 @@
+#!/usr/bin/env node
+
+/**
+ * FRONTEND FEED DEBUGGING GUIDE
+ * 
+ * Since backend is verified working, the issue must be one of these 5:
+ * 1. Wrong endpoint being called
+ * 2. Frontend re-sorting the data
+ * 3. Merging multiple data sources
+ * 4. State not updating properly (React)
+ * 5. Caching issue (browser or React Query)
+ */
+
+console.log(`
+╔════════════════════════════════════════════════════════════╗
+║  FRONTEND FEED DEBUG CHECKLIST                             ║
+║  Copy & paste this into browser console (F12)              ║
+╚════════════════════════════════════════════════════════════╝
+
+🔍 STEP 1: Verify API Endpoint Being Called
+═══════════════════════════════════════════════════════════════
+
+Open DevTools Network tab (F12 → Network)
+1. Refresh the page
+2. Look for requests to:
+   ✅ /api/forums/feed    ← Should see this
+   ❌ /api/forums          ← Should NOT see this (unless filtered view)
+
+3. Click on /forums/feed request
+4. Go to "Response" tab
+5. Check the first forum's subject/user to verify priority tier
+
+
+🔍 STEP 2: Check Frontend Console Logs
+═══════════════════════════════════════════════════════════════
+
+Open DevTools Console (F12 → Console)
+1. Refresh page
+2. Look for these log messages:
+
+   ✅ "[forumService] Calling getPersonalizedFeed: /forums/feed?"
+   ✅ "[forumService] getPersonalizedFeed: X forums"
+   ✅ "📡 Fetching personalized feed..."
+   ✅ "📡 Feed result:"
+
+3. Paste this in console to see the exact flow:
+
+   // Check what's in console logs
+   const logs = [];
+   const originalLog = console.log;
+   console.log = function(...args) {
+     logs.push(args);
+     originalLog.apply(console, args);
+   };
+   
+   // Then refresh page and run:
+   logs.filter(l => l[0]?.includes?.("Feed")).forEach(l => console.log(l));
+
+
+🔍 STEP 3: Verify Data Order
+═══════════════════════════════════════════════════════════════
+
+Paste this in browser console:
+
+   // Get the currently displayed forums
+   const forums = Array.from(document.querySelectorAll('[data-forum-id]'));
+   
+   forums.forEach((el, i) => {
+     const title = el.querySelector('h3')?.textContent || 'Unknown';
+     console.log(\`\${i+1}. \${title}\`);
+   });
+
+
+🔍 STEP 4: Check React State
+═════════════════════════════════════════════════════════════════
+
+If using React DevTools:
+1. Install React DevTools browser extension
+2. Go to Components tab
+3. Find <Index> component
+4. Look at "forums" state in the props
+5. Check order of forums in the array
+
+
+🔍 STEP 5: Verify API Response
+═════════════════════════════════════════════════════════════════
+
+Paste this to log the actual API response:
+
+   // Intercept axios and log responses
+   const originalInterceptor = axiosInstance.interceptors.response.handlers;
+   
+   // Or manually test with fetch:
+   const token = localStorage.getItem('authToken') || 'YOUR_TOKEN';
+   fetch('/api/forums/feed', {
+     headers: { 'Authorization': \`Bearer \${token}\` }
+   })
+   .then(r => r.json())
+   .then(data => {
+     console.log('API RESPONSE:', data);
+     console.log('First 3 forums:');
+     data.forums?.slice(0, 3).forEach((f, i) => {
+       console.log(\`\${i+1}. \${f.title} (subject: \${f.subject?.name})\`);
+     });
+   });
+
+
+🔍 STEP 6: Check for Caching
+═════════════════════════════════════════════════════════════════
+
+Paste this:
+
+   // Clear all possible caches
+   if (window.queryClient) {
+     window.queryClient.clear();
+     console.log('✅ React Query cache cleared');
+   }
+   
+   if (window.localStorage) {
+     ['feedCache', 'forums', 'forumData'].forEach(key => {
+       localStorage.removeItem(key);
+     });
+     console.log('✅ LocalStorage caches cleared');
+   }
+   
+   // Then manually refresh feed
+   await forumService.getPersonalizedFeed();
+
+
+📋 EXPECTED LOGS WHEN WORKING:
+═════════════════════════════════════════════════════════════════
+
+When feed is working correctly, you should see:
+
+1. Network request to: /api/forums/feed?limit=10&offset=0
+2. Console logs:
+   [forumService] Calling getPersonalizedFeed: /forums/feed?limit=10&offset=0
+   [forumService] getPersonalizedFeed response status: 200
+   [forumService] getPersonalizedFeed: 10 forums, hasMore=true, total=26
+   📡 Fetching personalized feed...
+   📡 Feed result: { forumsCount: 10, hasMore: true, resultKeys: [...] }
+
+3. Response JSON:
+   {
+     "forums": [
+       { "title": "Who is Jose rizal", "subject": { "name": "Philippine History" }, ... },
+       { "title": "Best Resources for Learning Python?", "subject": { "name": "..." }, ... },
+       ...
+     ],
+     "total": 26,
+     "hasMore": true,
+     "offset": 0,
+     "limit": 10
+   }
+
+
+❌ PROBLEM INDICATORS:
+═════════════════════════════════════════════════════════════════
+
+1. If you see "/api/forums" (not /feed):
+   → Wrong endpoint being called
+   → Check if FeedTab component is being used instead of Index
+
+2. If you see response but order is wrong:
+   → Check if frontend is re-sorting
+   → Look for .sort() calls in Index.tsx
+   → Check useMemo/useCallback for filtering
+
+3. If no logs at all:
+   → Component not rendering
+   → Auth token missing
+   → Component mounted but logic not executing
+
+4. If logs show correct data but UI still shows old data:
+   → State update issue
+   → Cache not cleared
+   → Wrong component state being used
+
+
+💡 MOST LIKELY CULPRIT FOR YOUR CASE:
+═════════════════════════════════════════════════════════════════
+
+Given that backend works but frontend "doesn't apply":
+
+1. 🔥 Component might be using a different state source
+   - Check if forums are coming from Redux, context, or local state
+   - Verify state.forums === what's being rendered
+
+2. 🧊 Browser cache or React Query cache
+   - Clear with Ctrl+Shift+Delete (full browser cache)
+   - Or use the clearing commands above
+
+3. 🔄 State not triggering re-render
+   - Check if setForums is actually being called
+   - Verify component re-renders after fetch
+   - Look for React.memo that might prevent updates
+
+4. 📡 Conditional logic preventing personalized feed
+   - Check if subjectId or tagId are being set
+   - If set, code uses getAllForums() instead of getPersonalizedFeed()
+   - Verify URL params don't have filters
+
+
+🚀 FAST TEST (Do This Now):
+═════════════════════════════════════════════════════════════════
+
+1. Open DevTools (F12)
+2. Go to Network tab
+3. Reload page
+4. Filter for /forums requests
+5. Look for /forums/feed request
+6. Click it and check Response tab
+7. First forum title should be related to your followed subject
+8. If it's not, something is overriding the response
+
+If first forum IS correct but display is wrong:
+   → Issue is in rendering component
+   → Not in backend or endpoint
+
+If first forum is WRONG:
+   → Wrong endpoint or wrong response
+   → Check network tab shows /api/forums/feed
+
+
+🎯 NEXT ACTION:
+═════════════════════════════════════════════════════════════════
+
+Run this in console to diagnose current state:
+
+(function diagnoseFeed() {
+  console.log('=== FEED DIAGNOSIS ===');
+  
+  // Check if on main page
+  const isHomePage = window.location.pathname === '/' || window.location.pathname === '';
+  console.log('On home page:', isHomePage);
+  
+  // Check URL params
+  const params = new URLSearchParams(window.location.search);
+  const subjectId = params.get('subjectId');
+  const tagId = params.get('tagId');
+  console.log('URL params:', { subjectId, tagId });
+  
+  // Check auth
+  const user = localStorage.getItem('user');
+  console.log('User logged in:', !!user);
+  
+  // Predict what endpoint should be called
+  if (!subjectId && !tagId) {
+    console.log('✅ Should call: GET /api/forums/feed');
+  } else {
+    console.log('ℹ️  Should call: GET /api/forums (filtered)');
+  }
+  
+  // Try to find visible forums
+  const forums = Array.from(document.querySelectorAll('[data-forum-id]') || []);
+  console.log('Visible forums count:', forums.length);
+  
+  if (forums.length > 0) {
+    console.log('First 3 forums:');
+    forums.slice(0, 3).forEach((el, i) => {
+      const title = el.querySelector('h3')?.textContent || 'Unknown';
+      console.log(\`  \${i+1}. \${title}\`);
+    });
+  }
+})();
+
+Copy the output and share it!
+`);

@@ -1,0 +1,499 @@
+{"validity":1,"confidence":0.82,"comment":"Exactly what I needed","id":"train_1","points_awarded":10}
+{"validity":1,"confidence":0.99,"comment":"Well structured","id":"train_2","points_awarded":9}
+{"validity":1,"confidence":0.93,"comment":"Exactly what I needed","id":"train_3","points_awarded":8}
+{"validity":0,"confidence":0.72,"comment":"Exactly what I needed","id":"train_4","points_awarded":9}
+{"validity":0,"confidence":0.73,"comment":"Not clear enough","id":"train_5","points_awarded":7}
+{"validity":0,"confidence":0.78,"comment":"Exactly what I needed","id":"train_6","points_awarded":5}
+{"validity":0,"confidence":0.8,"comment":"Excellent resource","id":"train_7","points_awarded":10}
+{"validity":0,"confidence":0.99,"comment":"Too complex","id":"train_8","points_awarded":5}
+{"validity":1,"confidence":0.75,"comment":"Excellent resource","id":"train_9","points_awarded":0}
+{"validity":0,"confidence":0.92,"comment":"Excellent resource","id":"train_10","points_awarded":9}
+{"validity":1,"confidence":0.96,"comment":"Not clear enough","id":"train_11","points_awarded":3}
+{"validity":0,"confidence":0.83,"comment":"Well structured","id":"train_12","points_awarded":8}
+{"validity":0,"confidence":0.97,"comment":"Needs improvement","id":"train_13","points_awarded":1}
+{"validity":1,"confidence":0.68,"comment":"Very helpful","id":"train_14","points_awarded":7}
+{"validity":1,"confidence":0.67,"comment":"Excellent resource","id":"train_15","points_awarded":4}
+{"validity":0,"confidence":0.82,"comment":"Perfect answer","id":"train_16","points_awarded":0}
+{"validity":0,"confidence":0.94,"comment":"Exactly what I needed","id":"train_17","points_awarded":9}
+{"validity":0,"confidence":0.82,"comment":"Exactly what I needed","id":"train_18","points_awarded":10}
+{"validity":0,"confidence":0.76,"comment":"Not clear enough","id":"train_19","points_awarded":5}
+{"validity":1,"confidence":0.83,"comment":"Well structured","id":"train_20","points_awarded":4}
+{"validity":0,"confidence":0.82,"comment":"Too complex","id":"train_21","points_awarded":6}
+{"validity":1,"confidence":0.79,"comment":"Excellent resource","id":"train_22","points_awarded":3}
+{"validity":0,"confidence":0.67,"comment":"Very helpful","id":"train_23","points_awarded":10}
+{"validity":0,"confidence":0.88,"comment":"Missing details","id":"train_24","points_awarded":8}
+{"validity":0,"confidence":0.86,"comment":"Not clear enough","id":"train_25","points_awarded":6}
+{"validity":1,"confidence":0.88,"comment":"Well structured","id":"train_26","points_awarded":2}
+{"validity":0,"confidence":0.68,"comment":"Too complex","id":"train_27","points_awarded":0}
+{"validity":1,"confidence":0.77,"comment":"Perfect answer","id":"train_28","points_awarded":4}
+{"validity":0,"confidence":0.87,"comment":"Excellent resource","id":"train_29","points_awarded":4}
+{"validity":0,"confidence":0.87,"comment":"Missing details","id":"train_30","points_awarded":7}
+{"validity":0,"confidence":0.76,"comment":"Missing details","id":"train_31","points_awarded":4}
+{"validity":1,"confidence":0.82,"comment":"Great explanation!","id":"train_32","points_awarded":5}
+{"validity":1,"confidence":0.96,"comment":"Perfect answer","id":"train_33","points_awarded":7}
+{"validity":0,"confidence":0.91,"comment":"Very helpful","id":"train_34","points_awarded":6}
+{"validity":0,"confidence":0.74,"comment":"Very helpful","id":"train_35","points_awarded":6}
+{"validity":0,"confidence":0.95,"comment":"Excellent resource","id":"train_36","points_awarded":3}
+{"validity":1,"confidence":0.93,"comment":"Well structured","id":"train_37","points_awarded":10}
+{"validity":0,"confidence":0.7,"comment":"Very helpful","id":"train_38","points_awarded":4}
+{"validity":0,"confidence":0.67,"comment":"Too complex","id":"train_39","points_awarded":8}
+{"validity":1,"confidence":0.8,"comment":"Exactly what I needed","id":"train_40","points_awarded":9}
+{"validity":1,"confidence":0.97,"comment":"Excellent resource","id":"train_41","points_awarded":4}
+{"validity":1,"confidence":0.96,"comment":"Excellent resource","id":"train_42","points_awarded":8}
+{"validity":1,"confidence":0.68,"comment":"Exactly what I needed","id":"train_43","points_awarded":8}
+{"validity":1,"confidence":0.71,"comment":"Perfect answer","id":"train_44","points_awarded":5}
+{"validity":0,"confidence":0.95,"comment":"Great explanation!","id":"train_45","points_awarded":1}
+{"validity":0,"confidence":0.93,"comment":"Very helpful","id":"train_46","points_awarded":4}
+{"validity":0,"confidence":0.77,"comment":"Perfect answer","id":"train_47","points_awarded":8}
+{"validity":1,"confidence":0.75,"comment":"Well structured","id":"train_48","points_awarded":1}
+{"validity":1,"confidence":0.73,"comment":"Exactly what I needed","id":"train_49","points_awarded":2}
+{"validity":1,"confidence":0.75,"comment":"Not clear enough","id":"train_50","points_awarded":0}
+{"validity":1,"confidence":0.84,"comment":"Not clear enough","id":"train_51","points_awarded":8}
+{"validity":1,"confidence":0.96,"comment":"Well structured","id":"train_52","points_awarded":2}
+{"validity":1,"confidence":0.94,"comment":"Well structured","id":"train_53","points_awarded":5}
+{"validity":1,"confidence":0.69,"comment":"Missing details","id":"train_54","points_awarded":0}
+{"validity":1,"confidence":0.82,"comment":"Not clear enough","id":"train_55","points_awarded":2}
+{"validity":1,"confidence":0.88,"comment":"Needs improvement","id":"train_56","points_awarded":3}
+{"validity":1,"confidence":0.72,"comment":"Well structured","id":"train_57","points_awarded":10}
+{"validity":1,"confidence":0.65,"comment":"Exactly what I needed","id":"train_58","points_awarded":5}
+{"validity":0,"confidence":0.68,"comment":"Exactly what I needed","id":"train_59","points_awarded":4}
+{"validity":1,"confidence":0.94,"comment":"Well structured","id":"train_60","points_awarded":2}
+{"validity":0,"confidence":0.98,"comment":"Excellent resource","id":"train_61","points_awarded":1}
+{"validity":1,"confidence":0.97,"comment":"Needs improvement","id":"train_62","points_awarded":2}
+{"validity":0,"confidence":0.74,"comment":"Too complex","id":"train_63","points_awarded":6}
+{"validity":0,"confidence":0.92,"comment":"Very helpful","id":"train_64","points_awarded":3}
+{"validity":1,"confidence":0.76,"comment":"Excellent resource","id":"train_65","points_awarded":8}
+{"validity":0,"confidence":0.87,"comment":"Not clear enough","id":"train_66","points_awarded":2}
+{"validity":1,"confidence":0.97,"comment":"Great explanation!","id":"train_67","points_awarded":6}
+{"validity":0,"confidence":0.87,"comment":"Great explanation!","id":"train_68","points_awarded":7}
+{"validity":0,"confidence":0.75,"comment":"Very helpful","id":"train_69","points_awarded":4}
+{"validity":1,"confidence":0.72,"comment":"Missing details","id":"train_70","points_awarded":2}
+{"validity":0,"confidence":0.87,"comment":"Exactly what I needed","id":"train_71","points_awarded":8}
+{"validity":1,"confidence":0.95,"comment":"Too complex","id":"train_72","points_awarded":0}
+{"validity":1,"confidence":0.82,"comment":"Too complex","id":"train_73","points_awarded":9}
+{"validity":1,"confidence":0.98,"comment":"Needs improvement","id":"train_74","points_awarded":4}
+{"validity":0,"confidence":0.98,"comment":"Excellent resource","id":"train_75","points_awarded":7}
+{"validity":1,"confidence":0.72,"comment":"Missing details","id":"train_76","points_awarded":4}
+{"validity":1,"confidence":0.69,"comment":"Missing details","id":"train_77","points_awarded":7}
+{"validity":1,"confidence":0.72,"comment":"Too complex","id":"train_78","points_awarded":10}
+{"validity":0,"confidence":0.9,"comment":"Well structured","id":"train_79","points_awarded":1}
+{"validity":0,"confidence":0.77,"comment":"Excellent resource","id":"train_80","points_awarded":7}
+{"validity":1,"confidence":0.94,"comment":"Exactly what I needed","id":"train_81","points_awarded":2}
+{"validity":0,"confidence":0.75,"comment":"Needs improvement","id":"train_82","points_awarded":4}
+{"validity":0,"confidence":0.74,"comment":"Needs improvement","id":"train_83","points_awarded":7}
+{"validity":0,"confidence":0.81,"comment":"Perfect answer","id":"train_84","points_awarded":7}
+{"validity":0,"confidence":0.71,"comment":"Needs improvement","id":"train_85","points_awarded":6}
+{"validity":1,"confidence":0.99,"comment":"Exactly what I needed","id":"train_86","points_awarded":0}
+{"validity":0,"confidence":0.83,"comment":"Exactly what I needed","id":"train_87","points_awarded":1}
+{"validity":0,"confidence":0.94,"comment":"Perfect answer","id":"train_88","points_awarded":3}
+{"validity":0,"confidence":0.74,"comment":"Very helpful","id":"train_89","points_awarded":0}
+{"validity":1,"confidence":0.88,"comment":"Perfect answer","id":"train_90","points_awarded":5}
+{"validity":0,"confidence":0.85,"comment":"Perfect answer","id":"train_91","points_awarded":0}
+{"validity":1,"confidence":0.75,"comment":"Very helpful","id":"train_92","points_awarded":5}
+{"validity":0,"confidence":0.66,"comment":"Great explanation!","id":"train_93","points_awarded":6}
+{"validity":0,"confidence":0.84,"comment":"Perfect answer","id":"train_94","points_awarded":9}
+{"validity":0,"confidence":0.97,"comment":"Well structured","id":"train_95","points_awarded":5}
+{"validity":0,"confidence":0.88,"comment":"Exactly what I needed","id":"train_96","points_awarded":8}
+{"validity":1,"confidence":0.87,"comment":"Excellent resource","id":"train_97","points_awarded":5}
+{"validity":0,"confidence":0.99,"comment":"Needs improvement","id":"train_98","points_awarded":9}
+{"validity":1,"confidence":0.97,"comment":"Too complex","id":"train_99","points_awarded":8}
+{"validity":1,"confidence":0.75,"comment":"Too complex","id":"train_100","points_awarded":4}
+{"validity":1,"confidence":0.78,"comment":"Too complex","id":"train_101","points_awarded":0}
+{"validity":0,"confidence":0.87,"comment":"Exactly what I needed","id":"train_102","points_awarded":2}
+{"validity":1,"confidence":0.66,"comment":"Very helpful","id":"train_103","points_awarded":5}
+{"validity":1,"confidence":0.89,"comment":"Great explanation!","id":"train_104","points_awarded":9}
+{"validity":1,"confidence":0.99,"comment":"Exactly what I needed","id":"train_105","points_awarded":5}
+{"validity":0,"confidence":0.87,"comment":"Not clear enough","id":"train_106","points_awarded":2}
+{"validity":0,"confidence":0.94,"comment":"Too complex","id":"train_107","points_awarded":2}
+{"validity":1,"confidence":0.73,"comment":"Very helpful","id":"train_108","points_awarded":1}
+{"validity":1,"confidence":0.74,"comment":"Needs improvement","id":"train_109","points_awarded":6}
+{"validity":0,"confidence":0.81,"comment":"Needs improvement","id":"train_110","points_awarded":8}
+{"validity":1,"confidence":0.84,"comment":"Too complex","id":"train_111","points_awarded":6}
+{"validity":0,"confidence":0.98,"comment":"Perfect answer","id":"train_112","points_awarded":6}
+{"validity":0,"confidence":0.96,"comment":"Missing details","id":"train_113","points_awarded":4}
+{"validity":0,"confidence":0.96,"comment":"Exactly what I needed","id":"train_114","points_awarded":2}
+{"validity":0,"confidence":0.88,"comment":"Missing details","id":"train_115","points_awarded":8}
+{"validity":0,"confidence":0.75,"comment":"Perfect answer","id":"train_116","points_awarded":10}
+{"validity":1,"confidence":0.86,"comment":"Too complex","id":"train_117","points_awarded":8}
+{"validity":1,"confidence":0.76,"comment":"Very helpful","id":"train_118","points_awarded":6}
+{"validity":1,"confidence":0.71,"comment":"Exactly what I needed","id":"train_119","points_awarded":6}
+{"validity":0,"confidence":0.83,"comment":"Exactly what I needed","id":"train_120","points_awarded":4}
+{"validity":0,"confidence":0.72,"comment":"Missing details","id":"train_121","points_awarded":10}
+{"validity":0,"confidence":0.67,"comment":"Not clear enough","id":"train_122","points_awarded":5}
+{"validity":0,"confidence":0.95,"comment":"Perfect answer","id":"train_123","points_awarded":1}
+{"validity":1,"confidence":0.88,"comment":"Too complex","id":"train_124","points_awarded":4}
+{"validity":1,"confidence":0.65,"comment":"Well structured","id":"train_125","points_awarded":0}
+{"validity":0,"confidence":0.79,"comment":"Not clear enough","id":"train_126","points_awarded":7}
+{"validity":0,"confidence":0.67,"comment":"Too complex","id":"train_127","points_awarded":6}
+{"validity":0,"confidence":0.81,"comment":"Very helpful","id":"train_128","points_awarded":6}
+{"validity":0,"confidence":0.8,"comment":"Perfect answer","id":"train_129","points_awarded":3}
+{"validity":1,"confidence":0.73,"comment":"Well structured","id":"train_130","points_awarded":0}
+{"validity":0,"confidence":0.84,"comment":"Great explanation!","id":"train_131","points_awarded":7}
+{"validity":0,"confidence":0.97,"comment":"Perfect answer","id":"train_132","points_awarded":6}
+{"validity":0,"confidence":0.69,"comment":"Great explanation!","id":"train_133","points_awarded":6}
+{"validity":1,"confidence":0.87,"comment":"Needs improvement","id":"train_134","points_awarded":3}
+{"validity":0,"confidence":0.7,"comment":"Not clear enough","id":"train_135","points_awarded":5}
+{"validity":0,"confidence":0.98,"comment":"Well structured","id":"train_136","points_awarded":7}
+{"validity":0,"confidence":0.98,"comment":"Very helpful","id":"train_137","points_awarded":8}
+{"validity":0,"confidence":0.97,"comment":"Too complex","id":"train_138","points_awarded":9}
+{"validity":1,"confidence":0.79,"comment":"Too complex","id":"train_139","points_awarded":6}
+{"validity":0,"confidence":0.75,"comment":"Exactly what I needed","id":"train_140","points_awarded":4}
+{"validity":0,"confidence":0.96,"comment":"Well structured","id":"train_141","points_awarded":0}
+{"validity":1,"confidence":0.97,"comment":"Perfect answer","id":"train_142","points_awarded":3}
+{"validity":0,"confidence":0.79,"comment":"Excellent resource","id":"train_143","points_awarded":3}
+{"validity":1,"confidence":0.88,"comment":"Great explanation!","id":"train_144","points_awarded":7}
+{"validity":0,"confidence":0.79,"comment":"Missing details","id":"train_145","points_awarded":8}
+{"validity":0,"confidence":0.87,"comment":"Missing details","id":"train_146","points_awarded":8}
+{"validity":0,"confidence":0.68,"comment":"Very helpful","id":"train_147","points_awarded":5}
+{"validity":1,"confidence":0.83,"comment":"Missing details","id":"train_148","points_awarded":2}
+{"validity":0,"confidence":0.92,"comment":"Excellent resource","id":"train_149","points_awarded":7}
+{"validity":1,"confidence":0.84,"comment":"Very helpful","id":"train_150","points_awarded":9}
+{"validity":0,"confidence":0.7,"comment":"Great explanation!","id":"train_151","points_awarded":7}
+{"validity":0,"confidence":0.91,"comment":"Perfect answer","id":"train_152","points_awarded":4}
+{"validity":1,"confidence":0.71,"comment":"Great explanation!","id":"train_153","points_awarded":1}
+{"validity":1,"confidence":0.74,"comment":"Exactly what I needed","id":"train_154","points_awarded":7}
+{"validity":1,"confidence":0.83,"comment":"Missing details","id":"train_155","points_awarded":5}
+{"validity":0,"confidence":0.7,"comment":"Too complex","id":"train_156","points_awarded":9}
+{"validity":1,"confidence":0.75,"comment":"Great explanation!","id":"train_157","points_awarded":5}
+{"validity":0,"confidence":0.7,"comment":"Perfect answer","id":"train_158","points_awarded":5}
+{"validity":1,"confidence":0.89,"comment":"Great explanation!","id":"train_159","points_awarded":2}
+{"validity":0,"confidence":0.97,"comment":"Well structured","id":"train_160","points_awarded":10}
+{"validity":0,"confidence":0.85,"comment":"Great explanation!","id":"train_161","points_awarded":6}
+{"validity":0,"confidence":0.74,"comment":"Too complex","id":"train_162","points_awarded":7}
+{"validity":0,"confidence":0.99,"comment":"Not clear enough","id":"train_163","points_awarded":9}
+{"validity":1,"confidence":0.95,"comment":"Great explanation!","id":"train_164","points_awarded":7}
+{"validity":1,"confidence":0.66,"comment":"Excellent resource","id":"train_165","points_awarded":6}
+{"validity":1,"confidence":0.9,"comment":"Great explanation!","id":"train_166","points_awarded":6}
+{"validity":0,"confidence":0.98,"comment":"Very helpful","id":"train_167","points_awarded":10}
+{"validity":1,"confidence":0.91,"comment":"Needs improvement","id":"train_168","points_awarded":5}
+{"validity":0,"confidence":0.71,"comment":"Great explanation!","id":"train_169","points_awarded":6}
+{"validity":1,"confidence":0.88,"comment":"Needs improvement","id":"train_170","points_awarded":5}
+{"validity":0,"confidence":0.76,"comment":"Exactly what I needed","id":"train_171","points_awarded":3}
+{"validity":0,"confidence":0.93,"comment":"Not clear enough","id":"train_172","points_awarded":2}
+{"validity":1,"confidence":0.74,"comment":"Not clear enough","id":"train_173","points_awarded":3}
+{"validity":0,"confidence":0.83,"comment":"Very helpful","id":"train_174","points_awarded":0}
+{"validity":0,"confidence":0.69,"comment":"Missing details","id":"train_175","points_awarded":10}
+{"validity":0,"confidence":0.82,"comment":"Needs improvement","id":"train_176","points_awarded":2}
+{"validity":1,"confidence":0.88,"comment":"Too complex","id":"train_177","points_awarded":9}
+{"validity":1,"confidence":0.95,"comment":"Missing details","id":"train_178","points_awarded":0}
+{"validity":0,"confidence":0.71,"comment":"Very helpful","id":"train_179","points_awarded":10}
+{"validity":1,"confidence":0.87,"comment":"Missing details","id":"train_180","points_awarded":0}
+{"validity":1,"confidence":0.98,"comment":"Not clear enough","id":"train_181","points_awarded":0}
+{"validity":0,"confidence":0.95,"comment":"Needs improvement","id":"train_182","points_awarded":1}
+{"validity":0,"confidence":0.7,"comment":"Missing details","id":"train_183","points_awarded":0}
+{"validity":0,"confidence":0.7,"comment":"Excellent resource","id":"train_184","points_awarded":7}
+{"validity":0,"confidence":0.71,"comment":"Great explanation!","id":"train_185","points_awarded":1}
+{"validity":0,"confidence":0.97,"comment":"Excellent resource","id":"train_186","points_awarded":8}
+{"validity":1,"confidence":0.83,"comment":"Too complex","id":"train_187","points_awarded":0}
+{"validity":0,"confidence":0.75,"comment":"Missing details","id":"train_188","points_awarded":0}
+{"validity":0,"confidence":0.96,"comment":"Needs improvement","id":"train_189","points_awarded":4}
+{"validity":0,"confidence":0.67,"comment":"Perfect answer","id":"train_190","points_awarded":4}
+{"validity":0,"confidence":0.82,"comment":"Very helpful","id":"train_191","points_awarded":6}
+{"validity":1,"confidence":0.67,"comment":"Too complex","id":"train_192","points_awarded":4}
+{"validity":1,"confidence":0.89,"comment":"Excellent resource","id":"train_193","points_awarded":7}
+{"validity":0,"confidence":0.91,"comment":"Perfect answer","id":"train_194","points_awarded":5}
+{"validity":0,"confidence":0.87,"comment":"Well structured","id":"train_195","points_awarded":4}
+{"validity":1,"confidence":0.83,"comment":"Needs improvement","id":"train_196","points_awarded":0}
+{"validity":1,"confidence":0.69,"comment":"Great explanation!","id":"train_197","points_awarded":7}
+{"validity":0,"confidence":0.86,"comment":"Great explanation!","id":"train_198","points_awarded":1}
+{"validity":0,"confidence":0.77,"comment":"Missing details","id":"train_199","points_awarded":4}
+{"validity":0,"confidence":0.72,"comment":"Not clear enough","id":"train_200","points_awarded":1}
+{"validity":0,"confidence":0.8,"comment":"Not clear enough","id":"train_201","points_awarded":2}
+{"validity":0,"confidence":0.8,"comment":"Too complex","id":"train_202","points_awarded":2}
+{"validity":0,"confidence":0.74,"comment":"Perfect answer","id":"train_203","points_awarded":4}
+{"validity":0,"confidence":0.75,"comment":"Too complex","id":"train_204","points_awarded":10}
+{"validity":1,"confidence":0.69,"comment":"Perfect answer","id":"train_205","points_awarded":2}
+{"validity":0,"confidence":0.78,"comment":"Not clear enough","id":"train_206","points_awarded":8}
+{"validity":0,"confidence":0.71,"comment":"Well structured","id":"train_207","points_awarded":2}
+{"validity":1,"confidence":0.8,"comment":"Not clear enough","id":"train_208","points_awarded":10}
+{"validity":0,"confidence":0.84,"comment":"Too complex","id":"train_209","points_awarded":8}
+{"validity":1,"confidence":0.92,"comment":"Not clear enough","id":"train_210","points_awarded":3}
+{"validity":1,"confidence":0.67,"comment":"Missing details","id":"train_211","points_awarded":1}
+{"validity":0,"confidence":0.68,"comment":"Needs improvement","id":"train_212","points_awarded":2}
+{"validity":0,"confidence":0.9,"comment":"Perfect answer","id":"train_213","points_awarded":10}
+{"validity":0,"confidence":0.73,"comment":"Perfect answer","id":"train_214","points_awarded":7}
+{"validity":1,"confidence":0.81,"comment":"Perfect answer","id":"train_215","points_awarded":1}
+{"validity":1,"confidence":0.9,"comment":"Very helpful","id":"train_216","points_awarded":0}
+{"validity":1,"confidence":0.98,"comment":"Too complex","id":"train_217","points_awarded":4}
+{"validity":0,"confidence":0.82,"comment":"Too complex","id":"train_218","points_awarded":0}
+{"validity":0,"confidence":0.73,"comment":"Exactly what I needed","id":"train_219","points_awarded":0}
+{"validity":1,"confidence":0.9,"comment":"Excellent resource","id":"train_220","points_awarded":8}
+{"validity":1,"confidence":0.69,"comment":"Very helpful","id":"train_221","points_awarded":3}
+{"validity":1,"confidence":0.74,"comment":"Great explanation!","id":"train_222","points_awarded":8}
+{"validity":1,"confidence":0.8,"comment":"Not clear enough","id":"train_223","points_awarded":7}
+{"validity":1,"confidence":0.78,"comment":"Missing details","id":"train_224","points_awarded":8}
+{"validity":1,"confidence":0.99,"comment":"Needs improvement","id":"train_225","points_awarded":9}
+{"validity":0,"confidence":0.77,"comment":"Not clear enough","id":"train_226","points_awarded":2}
+{"validity":1,"confidence":0.78,"comment":"Perfect answer","id":"train_227","points_awarded":9}
+{"validity":1,"confidence":0.76,"comment":"Too complex","id":"train_228","points_awarded":4}
+{"validity":0,"confidence":0.65,"comment":"Very helpful","id":"train_229","points_awarded":0}
+{"validity":0,"confidence":0.9,"comment":"Too complex","id":"train_230","points_awarded":9}
+{"validity":0,"confidence":0.75,"comment":"Perfect answer","id":"train_231","points_awarded":3}
+{"validity":0,"confidence":0.68,"comment":"Exactly what I needed","id":"train_232","points_awarded":5}
+{"validity":1,"confidence":0.86,"comment":"Excellent resource","id":"train_233","points_awarded":7}
+{"validity":0,"confidence":0.98,"comment":"Exactly what I needed","id":"train_234","points_awarded":0}
+{"validity":0,"confidence":0.65,"comment":"Needs improvement","id":"train_235","points_awarded":4}
+{"validity":1,"confidence":0.79,"comment":"Excellent resource","id":"train_236","points_awarded":0}
+{"validity":0,"confidence":0.94,"comment":"Not clear enough","id":"train_237","points_awarded":6}
+{"validity":0,"confidence":0.79,"comment":"Exactly what I needed","id":"train_238","points_awarded":8}
+{"validity":1,"confidence":0.66,"comment":"Not clear enough","id":"train_239","points_awarded":9}
+{"validity":0,"confidence":0.84,"comment":"Too complex","id":"train_240","points_awarded":4}
+{"validity":1,"confidence":0.88,"comment":"Well structured","id":"train_241","points_awarded":10}
+{"validity":0,"confidence":0.8,"comment":"Exactly what I needed","id":"train_242","points_awarded":4}
+{"validity":1,"confidence":0.73,"comment":"Perfect answer","id":"train_243","points_awarded":6}
+{"validity":0,"confidence":0.72,"comment":"Missing details","id":"train_244","points_awarded":1}
+{"validity":0,"confidence":0.98,"comment":"Very helpful","id":"train_245","points_awarded":9}
+{"validity":1,"confidence":0.98,"comment":"Missing details","id":"train_246","points_awarded":3}
+{"validity":1,"confidence":0.76,"comment":"Exactly what I needed","id":"train_247","points_awarded":8}
+{"validity":1,"confidence":0.81,"comment":"Needs improvement","id":"train_248","points_awarded":2}
+{"validity":1,"confidence":0.69,"comment":"Too complex","id":"train_249","points_awarded":6}
+{"validity":1,"confidence":0.79,"comment":"Excellent resource","id":"train_250","points_awarded":7}
+{"validity":0,"confidence":0.89,"comment":"Exactly what I needed","id":"train_251","points_awarded":8}
+{"validity":1,"confidence":0.66,"comment":"Very helpful","id":"train_252","points_awarded":8}
+{"validity":1,"confidence":0.85,"comment":"Needs improvement","id":"train_253","points_awarded":9}
+{"validity":1,"confidence":0.73,"comment":"Exactly what I needed","id":"train_254","points_awarded":5}
+{"validity":0,"confidence":0.65,"comment":"Not clear enough","id":"train_255","points_awarded":8}
+{"validity":0,"confidence":0.91,"comment":"Not clear enough","id":"train_256","points_awarded":9}
+{"validity":1,"confidence":0.65,"comment":"Very helpful","id":"train_257","points_awarded":5}
+{"validity":1,"confidence":0.73,"comment":"Perfect answer","id":"train_258","points_awarded":5}
+{"validity":1,"confidence":0.71,"comment":"Very helpful","id":"train_259","points_awarded":4}
+{"validity":1,"confidence":0.99,"comment":"Not clear enough","id":"train_260","points_awarded":1}
+{"validity":0,"confidence":0.71,"comment":"Missing details","id":"train_261","points_awarded":4}
+{"validity":1,"confidence":0.74,"comment":"Not clear enough","id":"train_262","points_awarded":5}
+{"validity":0,"confidence":0.78,"comment":"Needs improvement","id":"train_263","points_awarded":5}
+{"validity":1,"confidence":0.92,"comment":"Too complex","id":"train_264","points_awarded":1}
+{"validity":0,"confidence":0.67,"comment":"Needs improvement","id":"train_265","points_awarded":2}
+{"validity":1,"confidence":0.89,"comment":"Missing details","id":"train_266","points_awarded":6}
+{"validity":0,"confidence":0.78,"comment":"Great explanation!","id":"train_267","points_awarded":9}
+{"validity":1,"confidence":0.93,"comment":"Too complex","id":"train_268","points_awarded":0}
+{"validity":0,"confidence":0.69,"comment":"Too complex","id":"train_269","points_awarded":6}
+{"validity":0,"confidence":0.89,"comment":"Exactly what I needed","id":"train_270","points_awarded":7}
+{"validity":0,"confidence":0.87,"comment":"Missing details","id":"train_271","points_awarded":6}
+{"validity":0,"confidence":0.82,"comment":"Not clear enough","id":"train_272","points_awarded":4}
+{"validity":1,"confidence":0.65,"comment":"Very helpful","id":"train_273","points_awarded":10}
+{"validity":0,"confidence":0.72,"comment":"Perfect answer","id":"train_274","points_awarded":6}
+{"validity":1,"confidence":0.94,"comment":"Very helpful","id":"train_275","points_awarded":3}
+{"validity":0,"confidence":0.71,"comment":"Not clear enough","id":"train_276","points_awarded":8}
+{"validity":0,"confidence":0.77,"comment":"Missing details","id":"train_277","points_awarded":6}
+{"validity":1,"confidence":0.68,"comment":"Perfect answer","id":"train_278","points_awarded":8}
+{"validity":0,"confidence":0.7,"comment":"Excellent resource","id":"train_279","points_awarded":0}
+{"validity":1,"confidence":0.88,"comment":"Exactly what I needed","id":"train_280","points_awarded":2}
+{"validity":1,"confidence":0.87,"comment":"Excellent resource","id":"train_281","points_awarded":5}
+{"validity":1,"confidence":0.82,"comment":"Excellent resource","id":"train_282","points_awarded":7}
+{"validity":0,"confidence":0.69,"comment":"Needs improvement","id":"train_283","points_awarded":3}
+{"validity":0,"confidence":0.66,"comment":"Too complex","id":"train_284","points_awarded":6}
+{"validity":1,"confidence":0.81,"comment":"Too complex","id":"train_285","points_awarded":5}
+{"validity":0,"confidence":0.7,"comment":"Great explanation!","id":"train_286","points_awarded":1}
+{"validity":1,"confidence":0.91,"comment":"Not clear enough","id":"train_287","points_awarded":3}
+{"validity":1,"confidence":0.9,"comment":"Excellent resource","id":"train_288","points_awarded":5}
+{"validity":0,"confidence":0.87,"comment":"Not clear enough","id":"train_289","points_awarded":1}
+{"validity":0,"confidence":0.67,"comment":"Too complex","id":"train_290","points_awarded":2}
+{"validity":1,"confidence":0.99,"comment":"Too complex","id":"train_291","points_awarded":2}
+{"validity":1,"confidence":0.69,"comment":"Not clear enough","id":"train_292","points_awarded":6}
+{"validity":1,"confidence":0.74,"comment":"Very helpful","id":"train_293","points_awarded":0}
+{"validity":1,"confidence":0.82,"comment":"Too complex","id":"train_294","points_awarded":3}
+{"validity":0,"confidence":0.83,"comment":"Great explanation!","id":"train_295","points_awarded":4}
+{"validity":1,"confidence":0.65,"comment":"Exactly what I needed","id":"train_296","points_awarded":9}
+{"validity":1,"confidence":0.75,"comment":"Great explanation!","id":"train_297","points_awarded":4}
+{"validity":1,"confidence":0.82,"comment":"Not clear enough","id":"train_298","points_awarded":5}
+{"validity":1,"confidence":0.7,"comment":"Well structured","id":"train_299","points_awarded":6}
+{"validity":1,"confidence":0.92,"comment":"Needs improvement","id":"train_300","points_awarded":9}
+{"validity":1,"confidence":0.93,"comment":"Perfect answer","id":"train_301","points_awarded":6}
+{"validity":1,"confidence":0.77,"comment":"Missing details","id":"train_302","points_awarded":6}
+{"validity":0,"confidence":0.67,"comment":"Excellent resource","id":"train_303","points_awarded":9}
+{"validity":0,"confidence":0.99,"comment":"Needs improvement","id":"train_304","points_awarded":6}
+{"validity":0,"confidence":0.85,"comment":"Very helpful","id":"train_305","points_awarded":0}
+{"validity":1,"confidence":0.8,"comment":"Great explanation!","id":"train_306","points_awarded":6}
+{"validity":1,"confidence":0.75,"comment":"Exactly what I needed","id":"train_307","points_awarded":8}
+{"validity":0,"confidence":0.94,"comment":"Great explanation!","id":"train_308","points_awarded":3}
+{"validity":1,"confidence":0.93,"comment":"Well structured","id":"train_309","points_awarded":7}
+{"validity":1,"confidence":0.96,"comment":"Too complex","id":"train_310","points_awarded":7}
+{"validity":1,"confidence":0.81,"comment":"Needs improvement","id":"train_311","points_awarded":5}
+{"validity":0,"confidence":0.88,"comment":"Excellent resource","id":"train_312","points_awarded":7}
+{"validity":1,"confidence":0.65,"comment":"Well structured","id":"train_313","points_awarded":1}
+{"validity":0,"confidence":0.71,"comment":"Well structured","id":"train_314","points_awarded":10}
+{"validity":1,"confidence":0.81,"comment":"Missing details","id":"train_315","points_awarded":9}
+{"validity":0,"confidence":0.76,"comment":"Exactly what I needed","id":"train_316","points_awarded":10}
+{"validity":0,"confidence":0.95,"comment":"Not clear enough","id":"train_317","points_awarded":10}
+{"validity":1,"confidence":0.7,"comment":"Perfect answer","id":"train_318","points_awarded":2}
+{"validity":1,"confidence":0.67,"comment":"Perfect answer","id":"train_319","points_awarded":4}
+{"validity":0,"confidence":0.73,"comment":"Very helpful","id":"train_320","points_awarded":2}
+{"validity":1,"confidence":0.84,"comment":"Exactly what I needed","id":"train_321","points_awarded":8}
+{"validity":0,"confidence":0.78,"comment":"Great explanation!","id":"train_322","points_awarded":8}
+{"validity":1,"confidence":0.79,"comment":"Exactly what I needed","id":"train_323","points_awarded":0}
+{"validity":1,"confidence":0.99,"comment":"Exactly what I needed","id":"train_324","points_awarded":2}
+{"validity":1,"confidence":0.72,"comment":"Well structured","id":"train_325","points_awarded":10}
+{"validity":1,"confidence":0.93,"comment":"Well structured","id":"train_326","points_awarded":5}
+{"validity":0,"confidence":0.84,"comment":"Not clear enough","id":"train_327","points_awarded":8}
+{"validity":0,"confidence":0.82,"comment":"Perfect answer","id":"train_328","points_awarded":9}
+{"validity":0,"confidence":0.84,"comment":"Great explanation!","id":"train_329","points_awarded":1}
+{"validity":0,"confidence":0.74,"comment":"Perfect answer","id":"train_330","points_awarded":4}
+{"validity":0,"confidence":0.83,"comment":"Excellent resource","id":"train_331","points_awarded":10}
+{"validity":1,"confidence":0.93,"comment":"Great explanation!","id":"train_332","points_awarded":10}
+{"validity":0,"confidence":0.72,"comment":"Excellent resource","id":"train_333","points_awarded":6}
+{"validity":0,"confidence":0.94,"comment":"Too complex","id":"train_334","points_awarded":6}
+{"validity":0,"confidence":0.9,"comment":"Missing details","id":"train_335","points_awarded":5}
+{"validity":1,"confidence":0.95,"comment":"Exactly what I needed","id":"train_336","points_awarded":10}
+{"validity":1,"confidence":0.84,"comment":"Not clear enough","id":"train_337","points_awarded":3}
+{"validity":1,"confidence":0.83,"comment":"Very helpful","id":"train_338","points_awarded":9}
+{"validity":0,"confidence":0.81,"comment":"Very helpful","id":"train_339","points_awarded":1}
+{"validity":0,"confidence":0.93,"comment":"Very helpful","id":"train_340","points_awarded":2}
+{"validity":0,"confidence":0.75,"comment":"Very helpful","id":"train_341","points_awarded":4}
+{"validity":0,"confidence":0.82,"comment":"Not clear enough","id":"train_342","points_awarded":2}
+{"validity":0,"confidence":0.97,"comment":"Missing details","id":"train_343","points_awarded":9}
+{"validity":0,"confidence":0.78,"comment":"Perfect answer","id":"train_344","points_awarded":8}
+{"validity":1,"confidence":0.76,"comment":"Missing details","id":"train_345","points_awarded":0}
+{"validity":1,"confidence":0.97,"comment":"Missing details","id":"train_346","points_awarded":2}
+{"validity":0,"confidence":0.74,"comment":"Well structured","id":"train_347","points_awarded":3}
+{"validity":1,"confidence":0.94,"comment":"Exactly what I needed","id":"train_348","points_awarded":6}
+{"validity":1,"confidence":0.9,"comment":"Exactly what I needed","id":"train_349","points_awarded":8}
+{"validity":1,"confidence":0.91,"comment":"Missing details","id":"train_350","points_awarded":0}
+{"validity":1,"confidence":0.69,"comment":"Too complex","id":"train_351","points_awarded":3}
+{"validity":0,"confidence":0.91,"comment":"Well structured","id":"train_352","points_awarded":10}
+{"validity":1,"confidence":0.8,"comment":"Well structured","id":"train_353","points_awarded":6}
+{"validity":1,"confidence":0.73,"comment":"Excellent resource","id":"train_354","points_awarded":10}
+{"validity":0,"confidence":0.75,"comment":"Needs improvement","id":"train_355","points_awarded":8}
+{"validity":0,"confidence":0.97,"comment":"Too complex","id":"train_356","points_awarded":1}
+{"validity":1,"confidence":0.74,"comment":"Very helpful","id":"train_357","points_awarded":0}
+{"validity":0,"confidence":0.65,"comment":"Very helpful","id":"train_358","points_awarded":8}
+{"validity":0,"confidence":0.65,"comment":"Needs improvement","id":"train_359","points_awarded":5}
+{"validity":0,"confidence":0.78,"comment":"Very helpful","id":"train_360","points_awarded":3}
+{"validity":1,"confidence":0.87,"comment":"Missing details","id":"train_361","points_awarded":8}
+{"validity":0,"confidence":0.95,"comment":"Very helpful","id":"train_362","points_awarded":0}
+{"validity":0,"confidence":0.87,"comment":"Too complex","id":"train_363","points_awarded":10}
+{"validity":1,"confidence":0.92,"comment":"Excellent resource","id":"train_364","points_awarded":3}
+{"validity":0,"confidence":0.76,"comment":"Perfect answer","id":"train_365","points_awarded":1}
+{"validity":0,"confidence":0.87,"comment":"Very helpful","id":"train_366","points_awarded":10}
+{"validity":1,"confidence":0.81,"comment":"Not clear enough","id":"train_367","points_awarded":3}
+{"validity":1,"confidence":0.67,"comment":"Too complex","id":"train_368","points_awarded":7}
+{"validity":0,"confidence":0.66,"comment":"Needs improvement","id":"train_369","points_awarded":7}
+{"validity":0,"confidence":0.7,"comment":"Great explanation!","id":"train_370","points_awarded":7}
+{"validity":1,"confidence":0.68,"comment":"Well structured","id":"train_371","points_awarded":5}
+{"validity":1,"confidence":0.87,"comment":"Perfect answer","id":"train_372","points_awarded":2}
+{"validity":1,"confidence":0.72,"comment":"Needs improvement","id":"train_373","points_awarded":7}
+{"validity":1,"confidence":0.86,"comment":"Well structured","id":"train_374","points_awarded":2}
+{"validity":1,"confidence":0.97,"comment":"Perfect answer","id":"train_375","points_awarded":4}
+{"validity":0,"confidence":0.7,"comment":"Great explanation!","id":"train_376","points_awarded":9}
+{"validity":0,"confidence":0.96,"comment":"Needs improvement","id":"train_377","points_awarded":10}
+{"validity":0,"confidence":0.76,"comment":"Missing details","id":"train_378","points_awarded":3}
+{"validity":0,"confidence":0.81,"comment":"Great explanation!","id":"train_379","points_awarded":2}
+{"validity":0,"confidence":0.89,"comment":"Too complex","id":"train_380","points_awarded":0}
+{"validity":1,"confidence":0.69,"comment":"Perfect answer","id":"train_381","points_awarded":0}
+{"validity":0,"confidence":0.68,"comment":"Great explanation!","id":"train_382","points_awarded":4}
+{"validity":0,"confidence":0.95,"comment":"Needs improvement","id":"train_383","points_awarded":2}
+{"validity":1,"confidence":0.71,"comment":"Exactly what I needed","id":"train_384","points_awarded":4}
+{"validity":0,"confidence":0.71,"comment":"Excellent resource","id":"train_385","points_awarded":9}
+{"validity":0,"confidence":0.65,"comment":"Needs improvement","id":"train_386","points_awarded":10}
+{"validity":0,"confidence":0.92,"comment":"Very helpful","id":"train_387","points_awarded":5}
+{"validity":1,"confidence":0.71,"comment":"Needs improvement","id":"train_388","points_awarded":10}
+{"validity":0,"confidence":0.93,"comment":"Great explanation!","id":"train_389","points_awarded":6}
+{"validity":0,"confidence":0.87,"comment":"Excellent resource","id":"train_390","points_awarded":6}
+{"validity":0,"confidence":0.87,"comment":"Too complex","id":"train_391","points_awarded":4}
+{"validity":1,"confidence":0.69,"comment":"Not clear enough","id":"train_392","points_awarded":5}
+{"validity":1,"confidence":0.84,"comment":"Exactly what I needed","id":"train_393","points_awarded":2}
+{"validity":0,"confidence":0.96,"comment":"Not clear enough","id":"train_394","points_awarded":3}
+{"validity":1,"confidence":0.98,"comment":"Perfect answer","id":"train_395","points_awarded":7}
+{"validity":1,"confidence":0.87,"comment":"Perfect answer","id":"train_396","points_awarded":10}
+{"validity":0,"confidence":0.86,"comment":"Well structured","id":"train_397","points_awarded":4}
+{"validity":1,"confidence":0.84,"comment":"Too complex","id":"train_398","points_awarded":3}
+{"validity":1,"confidence":0.7,"comment":"Missing details","id":"train_399","points_awarded":0}
+{"validity":0,"confidence":0.75,"comment":"Perfect answer","id":"train_400","points_awarded":0}
+{"validity":1,"confidence":0.98,"comment":"Very helpful","id":"train_401","points_awarded":0}
+{"validity":1,"confidence":0.98,"comment":"Excellent resource","id":"train_402","points_awarded":3}
+{"validity":0,"confidence":0.91,"comment":"Excellent resource","id":"train_403","points_awarded":10}
+{"validity":0,"confidence":0.81,"comment":"Perfect answer","id":"train_404","points_awarded":6}
+{"validity":1,"confidence":0.82,"comment":"Missing details","id":"train_405","points_awarded":8}
+{"validity":1,"confidence":0.77,"comment":"Perfect answer","id":"train_406","points_awarded":10}
+{"validity":1,"confidence":0.9,"comment":"Well structured","id":"train_407","points_awarded":9}
+{"validity":1,"confidence":0.92,"comment":"Too complex","id":"train_408","points_awarded":5}
+{"validity":0,"confidence":0.68,"comment":"Too complex","id":"train_409","points_awarded":3}
+{"validity":0,"confidence":0.74,"comment":"Excellent resource","id":"train_410","points_awarded":8}
+{"validity":0,"confidence":0.97,"comment":"Well structured","id":"train_411","points_awarded":9}
+{"validity":0,"confidence":0.7,"comment":"Not clear enough","id":"train_412","points_awarded":0}
+{"validity":1,"confidence":0.98,"comment":"Well structured","id":"train_413","points_awarded":8}
+{"validity":0,"confidence":0.92,"comment":"Well structured","id":"train_414","points_awarded":4}
+{"validity":1,"confidence":0.76,"comment":"Exactly what I needed","id":"train_415","points_awarded":1}
+{"validity":1,"confidence":0.96,"comment":"Exactly what I needed","id":"train_416","points_awarded":2}
+{"validity":0,"confidence":0.91,"comment":"Very helpful","id":"train_417","points_awarded":8}
+{"validity":0,"confidence":0.88,"comment":"Very helpful","id":"train_418","points_awarded":9}
+{"validity":0,"confidence":0.83,"comment":"Missing details","id":"train_419","points_awarded":0}
+{"validity":1,"confidence":0.81,"comment":"Exactly what I needed","id":"train_420","points_awarded":5}
+{"validity":1,"confidence":0.93,"comment":"Exactly what I needed","id":"train_421","points_awarded":10}
+{"validity":0,"confidence":0.97,"comment":"Great explanation!","id":"train_422","points_awarded":6}
+{"validity":1,"confidence":0.82,"comment":"Great explanation!","id":"train_423","points_awarded":8}
+{"validity":1,"confidence":0.93,"comment":"Not clear enough","id":"train_424","points_awarded":7}
+{"validity":0,"confidence":0.78,"comment":"Needs improvement","id":"train_425","points_awarded":7}
+{"validity":0,"confidence":0.99,"comment":"Needs improvement","id":"train_426","points_awarded":10}
+{"validity":1,"confidence":0.99,"comment":"Very helpful","id":"train_427","points_awarded":5}
+{"validity":1,"confidence":0.67,"comment":"Needs improvement","id":"train_428","points_awarded":4}
+{"validity":0,"confidence":0.86,"comment":"Missing details","id":"train_429","points_awarded":0}
+{"validity":1,"confidence":0.84,"comment":"Perfect answer","id":"train_430","points_awarded":7}
+{"validity":1,"confidence":0.71,"comment":"Perfect answer","id":"train_431","points_awarded":2}
+{"validity":0,"confidence":0.81,"comment":"Missing details","id":"train_432","points_awarded":10}
+{"validity":0,"confidence":0.98,"comment":"Needs improvement","id":"train_433","points_awarded":4}
+{"validity":0,"confidence":0.94,"comment":"Exactly what I needed","id":"train_434","points_awarded":7}
+{"validity":1,"confidence":0.97,"comment":"Not clear enough","id":"train_435","points_awarded":5}
+{"validity":1,"confidence":0.82,"comment":"Not clear enough","id":"train_436","points_awarded":9}
+{"validity":0,"confidence":0.69,"comment":"Needs improvement","id":"train_437","points_awarded":10}
+{"validity":0,"confidence":0.85,"comment":"Not clear enough","id":"train_438","points_awarded":4}
+{"validity":1,"confidence":0.66,"comment":"Too complex","id":"train_439","points_awarded":6}
+{"validity":1,"confidence":0.83,"comment":"Missing details","id":"train_440","points_awarded":10}
+{"validity":1,"confidence":0.74,"comment":"Missing details","id":"train_441","points_awarded":8}
+{"validity":1,"confidence":0.7,"comment":"Very helpful","id":"train_442","points_awarded":3}
+{"validity":0,"confidence":0.71,"comment":"Very helpful","id":"train_443","points_awarded":5}
+{"validity":1,"confidence":0.91,"comment":"Perfect answer","id":"train_444","points_awarded":3}
+{"validity":1,"confidence":0.66,"comment":"Perfect answer","id":"train_445","points_awarded":0}
+{"validity":0,"confidence":0.97,"comment":"Needs improvement","id":"train_446","points_awarded":9}
+{"validity":0,"confidence":0.93,"comment":"Exactly what I needed","id":"train_448","points_awarded":1}
+{"validity":1,"confidence":0.74,"comment":"Not clear enough","id":"train_449","points_awarded":1}
+{"validity":1,"confidence":0.77,"comment":"Missing details","id":"train_450","points_awarded":9}
+{"validity":1,"confidence":0.72,"comment":"Too complex","id":"train_451","points_awarded":7}
+{"validity":1,"confidence":0.75,"comment":"Exactly what I needed","id":"train_452","points_awarded":3}
+{"validity":0,"confidence":0.83,"comment":"Excellent resource","id":"train_453","points_awarded":3}
+{"validity":0,"confidence":0.99,"comment":"Exactly what I needed","id":"train_454","points_awarded":5}
+{"validity":0,"confidence":0.84,"comment":"Not clear enough","id":"train_455","points_awarded":5}
+{"validity":1,"confidence":0.65,"comment":"Needs improvement","id":"train_456","points_awarded":4}
+{"validity":0,"confidence":0.93,"comment":"Exactly what I needed","id":"train_457","points_awarded":2}
+{"validity":1,"confidence":0.95,"comment":"Great explanation!","id":"train_458","points_awarded":9}
+{"validity":0,"confidence":0.75,"comment":"Needs improvement","id":"train_459","points_awarded":10}
+{"validity":1,"confidence":0.87,"comment":"Exactly what I needed","id":"train_460","points_awarded":4}
+{"validity":1,"confidence":0.73,"comment":"Excellent resource","id":"train_461","points_awarded":10}
+{"validity":0,"confidence":0.76,"comment":"Great explanation!","id":"train_462","points_awarded":3}
+{"validity":1,"confidence":0.71,"comment":"Exactly what I needed","id":"train_463","points_awarded":4}
+{"validity":0,"confidence":0.77,"comment":"Missing details","id":"train_464","points_awarded":2}
+{"validity":0,"confidence":0.82,"comment":"Perfect answer","id":"train_465","points_awarded":8}
+{"validity":1,"confidence":0.88,"comment":"Exactly what I needed","id":"train_466","points_awarded":5}
+{"validity":1,"confidence":0.74,"comment":"Very helpful","id":"train_467","points_awarded":6}
+{"validity":0,"confidence":0.74,"comment":"Great explanation!","id":"train_468","points_awarded":0}
+{"validity":1,"confidence":0.92,"comment":"Very helpful","id":"train_469","points_awarded":4}
+{"validity":1,"confidence":0.86,"comment":"Too complex","id":"train_470","points_awarded":3}
+{"validity":0,"confidence":0.67,"comment":"Exactly what I needed","id":"train_471","points_awarded":9}
+{"validity":0,"confidence":0.89,"comment":"Very helpful","id":"train_472","points_awarded":7}
+{"validity":1,"confidence":0.79,"comment":"Too complex","id":"train_473","points_awarded":7}
+{"validity":0,"confidence":0.86,"comment":"Not clear enough","id":"train_474","points_awarded":1}
+{"validity":0,"confidence":0.72,"comment":"Very helpful","id":"train_475","points_awarded":2}
+{"validity":1,"confidence":0.93,"comment":"Great explanation!","id":"train_476","points_awarded":4}
+{"validity":1,"confidence":0.75,"comment":"Too complex","id":"train_477","points_awarded":5}
+{"validity":0,"confidence":0.93,"comment":"Missing details","id":"train_478","points_awarded":5}
+{"validity":1,"confidence":0.76,"comment":"Perfect answer","id":"train_479","points_awarded":1}
+{"validity":0,"confidence":0.87,"comment":"Exactly what I needed","id":"train_480","points_awarded":9}
+{"validity":0,"confidence":0.71,"comment":"Missing details","id":"train_481","points_awarded":9}
+{"validity":0,"confidence":0.86,"comment":"Missing details","id":"train_482","points_awarded":9}
+{"validity":1,"confidence":0.83,"comment":"Exactly what I needed","id":"train_483","points_awarded":6}
+{"validity":1,"confidence":0.86,"comment":"Well structured","id":"train_484","points_awarded":8}
+{"validity":0,"confidence":0.78,"comment":"Great explanation!","id":"train_485","points_awarded":6}
+{"validity":0,"confidence":0.73,"comment":"Too complex","id":"train_486","points_awarded":9}
+{"validity":0,"confidence":0.85,"comment":"Well structured","id":"train_487","points_awarded":2}
+{"validity":1,"confidence":0.83,"comment":"Excellent resource","id":"train_488","points_awarded":0}
+{"validity":0,"confidence":0.85,"comment":"Excellent resource","id":"train_489","points_awarded":3}
+{"validity":1,"confidence":0.7,"comment":"Great explanation!","id":"train_490","points_awarded":4}
+{"validity":1,"confidence":0.75,"comment":"Excellent resource","id":"train_491","points_awarded":8}
+{"validity":1,"confidence":0.95,"comment":"Excellent resource","id":"train_492","points_awarded":10}
+{"validity":0,"confidence":0.77,"comment":"Not clear enough","id":"train_493","points_awarded":4}
+{"validity":0,"confidence":0.93,"comment":"Well structured","id":"train_494","points_awarded":7}
+{"validity":0,"confidence":0.71,"comment":"Too complex","id":"train_495","points_awarded":3}
+{"validity":0,"confidence":0.78,"comment":"Perfect answer","id":"train_496","points_awarded":0}
+{"validity":1,"confidence":0.83,"comment":"Great explanation!","id":"train_497","points_awarded":0}
+{"validity":1,"confidence":0.67,"comment":"Missing details","id":"train_498","points_awarded":4}
+{"validity":1,"confidence":0.97,"comment":"Very helpful","id":"train_499","points_awarded":4}
+{"validity":0,"confidence":0.81,"comment":"Missing details","id":"train_500","points_awarded":10}

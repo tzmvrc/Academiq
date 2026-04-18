@@ -1,0 +1,100 @@
+{"id": 1, "comment": "This is a great explanation of photosynthesis!", "source_url": "https://example.com/biology", "is_valid": true, "confidence": 0.95}
+{"id": 2, "comment": "I disagree with the analysis provided", "source_url": "https://example.com/article", "is_valid": false, "confidence": 0.78}
+{"id": 3, "comment": "Can someone explain quantum mechanics to me?", "source_url": "https://example.com/physics", "is_valid": true, "confidence": 0.92}
+{"id": 4, "comment": "The answer is obviously wrong lol", "source_url": null, "is_valid": false, "confidence": 0.85}
+{"id": 5, "comment": "According to Einstein's theory of relativity, time is relative.", "source_url": "https://example.com/physics-paper", "is_valid": true, "confidence": 0.89}
+{"id": 6, "comment": "This doesn't make sense at all", "source_url": null, "is_valid": false, "confidence": 0.82}
+{"id": 7, "comment": "The mitochondria is the powerhouse of the cell", "source_url": "https://example.com/biology", "is_valid": true, "confidence": 0.91}
+{"id": 8, "comment": "Spam spam spam", "source_url": null, "is_valid": false, "confidence": 0.99}
+{"id": 9, "comment": "Great resource for learning algebra", "source_url": "https://example.com/math", "is_valid": true, "confidence": 0.88}
+{"id": 10, "comment": "Who cares about this topic", "source_url": null, "is_valid": false, "confidence": 0.80}
+{"id": 11, "comment": "The Pythagorean theorem states that a² + b² = c²", "source_url": "https://example.com/math", "is_valid": true, "confidence": 0.93}
+{"id": 12, "comment": "This is completely irrelevant", "source_url": null, "is_valid": false, "confidence": 0.79}
+{"id": 13, "comment": "Newton's first law of motion explains inertia perfectly", "source_url": "https://example.com/physics", "is_valid": true, "confidence": 0.90}
+{"id": 14, "comment": "I don't believe this is true", "source_url": null, "is_valid": false, "confidence": 0.75}
+{"id": 15, "comment": "The periodic table organizes elements by atomic number", "source_url": "https://example.com/chemistry", "is_valid": true, "confidence": 0.87}
+{"id": 16, "comment": "This is garbage information", "source_url": null, "is_valid": false, "confidence": 0.81}
+{"id": 17, "comment": "Very helpful explanation of calculus concepts", "source_url": "https://example.com/math", "is_valid": true, "confidence": 0.89}
+{"id": 18, "comment": "Not worth my time reading this", "source_url": null, "is_valid": false, "confidence": 0.77}
+{"id": 19, "comment": "DNA carries genetic information in living organisms", "source_url": "https://example.com/biology", "is_valid": true, "confidence": 0.92}
+{"id": 20, "comment": "Total nonsense in my opinion", "source_url": null, "is_valid": false, "confidence": 0.76}
+{"id": 21, "comment": "Excellent breakdown of historical events", "source_url": "https://example.com/history", "is_valid": true, "confidence": 0.85}
+{"id": 22, "comment": "Why would anyone believe this", "source_url": null, "is_valid": false, "confidence": 0.80}
+{"id": 23, "comment": "The water cycle involves evaporation and condensation", "source_url": "https://example.com/science", "is_valid": true, "confidence": 0.88}
+{"id": 24, "comment": "This makes no sense whatsoever", "source_url": null, "is_valid": false, "confidence": 0.83}
+{"id": 25, "comment": "Great insight on the French Revolution", "source_url": "https://example.com/history", "is_valid": true, "confidence": 0.86}
+{"id": 26, "comment": "Completely false and misleading", "source_url": null, "is_valid": false, "confidence": 0.84}
+{"id": 27, "comment": "Photosynthesis converts light into chemical energy", "source_url": "https://example.com/biology", "is_valid": true, "confidence": 0.91}
+{"id": 28, "comment": "I find this hard to believe", "source_url": null, "is_valid": false, "confidence": 0.78}
+{"id": 29, "comment": "Excellent resource for learning programming", "source_url": "https://example.com/coding", "is_valid": true, "confidence": 0.89}
+{"id": 30, "comment": "Absolute waste of time", "source_url": null, "is_valid": false, "confidence": 0.81}
+{"id": 31, "comment": "The solar system consists of eight planets", "source_url": "https://example.com/astronomy", "is_valid": true, "confidence": 0.90}
+{"id": 32, "comment": "Disagree with everything stated here", "source_url": null, "is_valid": false, "confidence": 0.77}
+{"id": 33, "comment": "Very informative explanation of gravity", "source_url": "https://example.com/physics", "is_valid": true, "confidence": 0.88}
+{"id": 34, "comment": "This is all wrong and misleading", "source_url": null, "is_valid": false, "confidence": 0.82}
+{"id": 35, "comment": "The heart pumps blood throughout the body", "source_url": "https://example.com/biology", "is_valid": true, "confidence": 0.92}
+{"id": 36, "comment": "Who even cares about this subject", "source_url": null, "is_valid": false, "confidence": 0.79}
+{"id": 37, "comment": "Great explanation of supply and demand", "source_url": "https://example.com/economics", "is_valid": true, "confidence": 0.87}
+{"id": 38, "comment": "Nonsense and bad information", "source_url": null, "is_valid": false, "confidence": 0.80}
+{"id": 39, "comment": "Osmosis explains water movement across membranes", "source_url": "https://example.com/biology", "is_valid": true, "confidence": 0.89}
+{"id": 40, "comment": "I strongly disagree with this perspective", "source_url": null, "is_valid": false, "confidence": 0.76}
+{"id": 41, "comment": "Excellent analysis of Shakespeare's works", "source_url": "https://example.com/literature", "is_valid": true, "confidence": 0.85}
+{"id": 42, "comment": "This contradicts everything I know", "source_url": null, "is_valid": false, "confidence": 0.83}
+{"id": 43, "comment": "The speed of light is approximately 300,000 km/s", "source_url": "https://example.com/physics", "is_valid": true, "confidence": 0.91}
+{"id": 44, "comment": "Completely incorrect and unhelpful", "source_url": null, "is_valid": false, "confidence": 0.81}
+{"id": 45, "comment": "Great summary of constitutional law", "source_url": "https://example.com/law", "is_valid": true, "confidence": 0.86}
+{"id": 46, "comment": "This is total garbage", "source_url": null, "is_valid": false, "confidence": 0.84}
+{"id": 47, "comment": "Photosynthesis requires sunlight and water", "source_url": "https://example.com/biology", "is_valid": true, "confidence": 0.90}
+{"id": 48, "comment": "I don't believe any of this", "source_url": null, "is_valid": false, "confidence": 0.78}
+{"id": 49, "comment": "Excellent guide to organic chemistry", "source_url": "https://example.com/chemistry", "is_valid": true, "confidence": 0.88}
+{"id": 50, "comment": "Worst explanation ever provided", "source_url": null, "is_valid": false, "confidence": 0.82}
+{"id": 51, "comment": "Good information about climate change", "source_url": "https://example.com/environment", "is_valid": true, "confidence": 0.87}
+{"id": 52, "comment": "Hard to understand and confusing", "source_url": null, "is_valid": false, "confidence": 0.80}
+{"id": 53, "comment": "Excellent breakdown of machine learning", "source_url": "https://example.com/ai", "is_valid": true, "confidence": 0.89}
+{"id": 54, "comment": "Completely misleading information", "source_url": null, "is_valid": false, "confidence": 0.81}
+{"id": 55, "comment": "The Earth revolves around the Sun", "source_url": "https://example.com/astronomy", "is_valid": true, "confidence": 0.93}
+{"id": 56, "comment": "I disagree with every point made", "source_url": null, "is_valid": false, "confidence": 0.79}
+{"id": 57, "comment": "Great explanation of human anatomy", "source_url": "https://example.com/medicine", "is_valid": true, "confidence": 0.86}
+{"id": 58, "comment": "This is irrelevant and unhelpful", "source_url": null, "is_valid": false, "confidence": 0.83}
+{"id": 59, "comment": "Excellent resource on data structures", "source_url": "https://example.com/coding", "is_valid": true, "confidence": 0.88}
+{"id": 60, "comment": "Absolutely wrong and misleading", "source_url": null, "is_valid": false, "confidence": 0.82}
+{"id": 61, "comment": "Good explanation of thermodynamics", "source_url": "https://example.com/physics", "is_valid": true, "confidence": 0.87}
+{"id": 62, "comment": "I find this very hard to believe", "source_url": null, "is_valid": false, "confidence": 0.77}
+{"id": 63, "comment": "Great analysis of global economics", "source_url": "https://example.com/economics", "is_valid": true, "confidence": 0.85}
+{"id": 64, "comment": "Complete nonsense", "source_url": null, "is_valid": false, "confidence": 0.80}
+{"id": 65, "comment": "Excellent guide to evolutionary biology", "source_url": "https://example.com/biology", "is_valid": true, "confidence": 0.89}
+{"id": 66, "comment": "This information is wrong", "source_url": null, "is_valid": false, "confidence": 0.81}
+{"id": 67, "comment": "Good explanation of quantum physics", "source_url": "https://example.com/physics", "is_valid": true, "confidence": 0.88}
+{"id": 68, "comment": "I strongly object to this", "source_url": null, "is_valid": false, "confidence": 0.78}
+{"id": 69, "comment": "Great resource for learning languages", "source_url": "https://example.com/language", "is_valid": true, "confidence": 0.86}
+{"id": 70, "comment": "Worst information I have read", "source_url": null, "is_valid": false, "confidence": 0.83}
+{"id": 71, "comment": "Excellent breakdown of statistical methods", "source_url": "https://example.com/stats", "is_valid": true, "confidence": 0.87}
+{"id": 72, "comment": "Completely false statement", "source_url": null, "is_valid": false, "confidence": 0.81}
+{"id": 73, "comment": "Great explanation of cellular respiration", "source_url": "https://example.com/biology", "is_valid": true, "confidence": 0.90}
+{"id": 74, "comment": "I doubt the accuracy of this", "source_url": null, "is_valid": false, "confidence": 0.79}
+{"id": 75, "comment": "Excellent guide to database design", "source_url": "https://example.com/coding", "is_valid": true, "confidence": 0.88}
+{"id": 76, "comment": "Total rubbish", "source_url": null, "is_valid": false, "confidence": 0.82}
+{"id": 77, "comment": "Good analysis of Roman history", "source_url": "https://example.com/history", "is_valid": true, "confidence": 0.85}
+{"id": 78, "comment": "This makes no sense at all", "source_url": null, "is_valid": false, "confidence": 0.80}
+{"id": 79, "comment": "Excellent explanation of genetics", "source_url": "https://example.com/biology", "is_valid": true, "confidence": 0.89}
+{"id": 80, "comment": "Completely inaccurate information", "source_url": null, "is_valid": false, "confidence": 0.81}
+{"id": 81, "comment": "Great resource on web development", "source_url": "https://example.com/coding", "is_valid": true, "confidence": 0.87}
+{"id": 82, "comment": "I don't agree with any of this", "source_url": null, "is_valid": false, "confidence": 0.78}
+{"id": 83, "comment": "Good explanation of photon behavior", "source_url": "https://example.com/physics", "is_valid": true, "confidence": 0.86}
+{"id": 84, "comment": "Absolutely wrong", "source_url": null, "is_valid": false, "confidence": 0.83}
+{"id": 85, "comment": "Excellent guide to algorithms", "source_url": "https://example.com/coding", "is_valid": true, "confidence": 0.88}
+{"id": 86, "comment": "This is misleading", "source_url": null, "is_valid": false, "confidence": 0.80}
+{"id": 87, "comment": "Great analysis of modern art", "source_url": "https://example.com/art", "is_valid": true, "confidence": 0.85}
+{"id": 88, "comment": "I strongly disagree", "source_url": null, "is_valid": false, "confidence": 0.81}
+{"id": 89, "comment": "Good explanation of polymers", "source_url": "https://example.com/chemistry", "is_valid": true, "confidence": 0.87}
+{"id": 90, "comment": "Bad information", "source_url": null, "is_valid": false, "confidence": 0.79}
+{"id": 91, "comment": "Excellent resource on medieval history", "source_url": "https://example.com/history", "is_valid": true, "confidence": 0.86}
+{"id": 92, "comment": "Completely wrong interpretation", "source_url": null, "is_valid": false, "confidence": 0.82}
+{"id": 93, "comment": "Great explanation of ecosystems", "source_url": "https://example.com/biology", "is_valid": true, "confidence": 0.89}
+{"id": 94, "comment": "I find this unbelievable", "source_url": null, "is_valid": false, "confidence": 0.78}
+{"id": 95, "comment": "Good guide to microservices", "source_url": "https://example.com/coding", "is_valid": true, "confidence": 0.88}
+{"id": 96, "comment": "Nonsense", "source_url": null, "is_valid": false, "confidence": 0.80}
+{"id": 97, "comment": "Excellent analysis of supply chains", "source_url": "https://example.com/business", "is_valid": true, "confidence": 0.85}
+{"id": 98, "comment": "Wrong and harmful information", "source_url": null, "is_valid": false, "confidence": 0.83}
+{"id": 99, "comment": "Great explanation of photosynthesis pathways", "source_url": "https://example.com/biology", "is_valid": true, "confidence": 0.90}
+{"id": 100, "comment": "I object to this completely", "source_url": null, "is_valid": false, "confidence": 0.81}

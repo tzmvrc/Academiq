@@ -2,6 +2,7 @@ import { supabase } from "../../database/supabase.js";
 import { AIService } from "../ai/aiService.js";
 import { NotificationService } from "../notification/notification_service.js";
 import { UserModel } from "../../models/user_model.js";
+import { getIO } from "../../middlewares/socket.js";
 
 /**
  * Comment Moderation Service
@@ -113,6 +114,18 @@ export const CommentModerationService = {
           console.error(`  ⚠️  Failed to notify user:`, notifErr);
         }
 
+        // Emit real-time rejection event to user
+        const io = getIO();
+        if (io) {
+          io.to(`user:${userId}`).emit("comment:rejected", {
+            commentId,
+            forumId,
+            reason: reason || "Comment did not meet quality standards",
+            status: "rejected",
+            timestamp: new Date().toISOString(),
+          });
+        }
+
         return {
           approved: false,
           reason: "zero_points",
@@ -166,6 +179,19 @@ export const CommentModerationService = {
         }
       } catch (err) {
         console.error(`  ⚠️  Failed to update user points:`, err);
+      }
+
+      // Emit real-time grading event to user
+      const io = getIO();
+      if (io) {
+        io.to(`user:${userId}`).emit("comment:graded", {
+          commentId,
+          forumId,
+          pointsAwarded,
+          reason,
+          status: "approved",
+          timestamp: new Date().toISOString(),
+        });
       }
 
       return {

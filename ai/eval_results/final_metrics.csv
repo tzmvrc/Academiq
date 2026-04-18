@@ -1,0 +1,4 @@
+AI Feature,Accuracy,Precision,Recall,F1 Score
+Forum Moderation,86.6%,85.3%,88.4%,86.8%
+Comment Verification,87%,85.9%,88.4%,87.1%
+Points Validation,87.6%,85.1%,91.2%,88.1%
